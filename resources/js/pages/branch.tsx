@@ -4,6 +4,7 @@ import Heading from "@/components/heading";
 import { CreateAdminDialog } from "@/components/partials/branch/create-admin-dialog";
 import { CreateBranchDialog } from "@/components/partials/branch/create-branch-dialog";
 import { UpdateAdminDialog } from "@/components/partials/branch/update-admin-dialog";
+import { UpdateBranchDialog } from "@/components/partials/branch/update-branch-dialog";
 import { Button } from "@/components/ui/button";
 import { dashboard } from "@/routes";
 import { updateStatus as updateAdminStatus } from "@/routes/admin";
@@ -21,7 +22,7 @@ export type BranchType = {
     status: boolean;
 };
 
-type UserType = {
+export type UserType = {
     id: number;
     name: string;
     address: string;
@@ -103,8 +104,7 @@ export default function Branch({ branches, users }: BranchProps) {
                 return (
                     <div className="flex justify-center items-center gap-1">
                         <UpdateAdminDialog
-                            id={row.original.id}
-                            branch={row.original.branch}
+                            admin={row.original}
                             branches={branches}
                         />
                     </div>
@@ -144,11 +144,10 @@ export default function Branch({ branches, users }: BranchProps) {
         },
         {
             header: "Aksi",
-            cell: () => {
+            cell: ({ row }) => {
                 return (
                     <div className="flex items-center justify-center gap-1">
-                        <Button>Edit</Button>
-                        <Button variant="destructive">Hapus</Button>
+                        <UpdateBranchDialog branch={row.original} />
                     </div>
                 );
             },

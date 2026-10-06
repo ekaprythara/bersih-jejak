@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Branch;
+use App\Models\ExpenseCategory;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -50,6 +51,10 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@example.com',
             'role_id' => 2,
             'branch_id' => 1,
+        ]);
+
+        ExpenseCategory::factory()->create([
+            "name" => "Air & Listrik"
         ]);
     }
 }

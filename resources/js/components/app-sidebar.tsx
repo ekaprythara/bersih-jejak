@@ -1,7 +1,15 @@
 import { Link } from "@inertiajs/react";
-import { BookOpen, Building2, FolderGit2, LayoutGrid } from "lucide-react";
+import {
+    BookOpen,
+    Building2,
+    FolderGit2,
+    LayoutGrid,
+    Receipt,
+    Settings,
+    UsersRound,
+    Wrench,
+} from "lucide-react";
 import AppLogo from "@/components/app-logo";
-import { NavFooter } from "@/components/nav-footer";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -13,9 +21,13 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { dashboard } from "@/routes";
+import { dashboard, settings } from "@/routes";
 import type { NavItem } from "@/types";
-import branch from "@/routes/branches";
+import services from "@/routes/services";
+import customers from "@/routes/customers";
+import branches from "@/routes/branches";
+import profile from "@/routes/profile";
+import expenses from "@/routes/expenses";
 
 const mainNavItems: NavItem[] = [
     {
@@ -24,9 +36,29 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
+        title: "Pelanggan",
+        href: customers.index(),
+        icon: UsersRound,
+    },
+    {
+        title: "Layanan",
+        href: services.index(),
+        icon: Wrench,
+    },
+    {
+        title: "Pengeluaran",
+        href: expenses.index(),
+        icon: Receipt,
+    },
+    {
         title: "Admin & Cabang",
-        href: branch.index(),
+        href: branches.index(),
         icon: Building2,
+    },
+    {
+        title: "Pengaturan",
+        href: settings(),
+        icon: Settings,
     },
 ];
 

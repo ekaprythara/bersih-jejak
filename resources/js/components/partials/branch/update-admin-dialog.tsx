@@ -20,7 +20,7 @@ import { Field, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { BranchType } from "@/pages/branch";
+import { BranchType, UserType } from "@/pages/branch";
 import { useForm } from "@inertiajs/react";
 import { toast } from "sonner";
 import { SubmitEventHandler, useEffect, useState } from "react";
@@ -28,36 +28,32 @@ import { update } from "@/routes/admin";
 import InputError from "@/components/input-error";
 
 export const UpdateAdminDialog = ({
-    id,
-    branch,
+    admin,
     branches,
 }: {
-    id: number;
-    branch: BranchType;
+    admin: UserType;
     branches: BranchType[];
 }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const form = useForm({
-        branch_id: branch.id,
+        branch_id: admin.branch.id,
     });
-
-    useEffect(() => {
-        form.setData("branch_id", branch.id);
-    }, [branch.id]);
 
     const handleSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
         e.preventDefault();
 
-        form.patch(update.url(id), {
+        form.patch(update.url(admin.id), {
             onSuccess: () => {
-                toast.success("Cabang Admin berhasil diperbarui.");
+                toast.success(
+                    `Cabang Operasional ${admin.name} berhasil diperbarui.`,
+                );
 
                 setIsOpen(false);
             },
             onError: (errors) => {
                 console.log("Validation Errors:", errors);
-                toast.error("Gagal memperbarui data Cabang Admin.");
+                toast.error(`Gagal memperbarui data Cabang ${admin.name}.`);
             },
         });
     };
@@ -79,7 +75,9 @@ export const UpdateAdminDialog = ({
 
                     <FieldGroup>
                         <Field>
-                            <Label htmlFor="branch_id">Cabang Penempatan</Label>
+                            <Label htmlFor="branch_id">
+                                Cabang Operasional
+                            </Label>
                             <Select
                                 value={String(form.data.branch_id)}
                                 onValueChange={(value) =>
@@ -116,7 +114,7 @@ export const UpdateAdminDialog = ({
                             </Button>
                         </DialogClose>
                         <Button type="submit" disabled={form.processing}>
-                            {form.processing ? "Menyimpan..." : "Tambah"}
+                            {form.processing ? "Menyimpan..." : "Simpan"}
                         </Button>
                     </DialogFooter>
                 </form>

@@ -29,13 +29,19 @@ const DataTable = <TData extends RowData>({
     });
 
     return (
-        <div>
+        <div className="rounded-xl border border-sidebar-border/70 bg-card shadow-sm overflow-hidden">
             <Table>
-                <TableHeader>
+                <TableHeader className="bg-muted/50">
                     {table.getHeaderGroups().map((headerGroup) => (
-                        <TableRow key={headerGroup.id}>
+                        <TableRow
+                            key={headerGroup.id}
+                            className="border-b border-sidebar-border/70 hover:bg-transparent"
+                        >
                             {headerGroup.headers.map((header) => (
-                                <TableHead key={header.id}>
+                                <TableHead
+                                    key={header.id}
+                                    className="h-11 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                                >
                                     {header.isPlaceholder
                                         ? null
                                         : flexRender(
@@ -48,12 +54,18 @@ const DataTable = <TData extends RowData>({
                     ))}
                 </TableHeader>
 
-                <TableBody>
+                <TableBody className="divide-y divide-sidebar-border/50">
                     {table.getRowModel().rows.length ? (
                         table.getRowModel().rows.map((row) => (
-                            <TableRow key={row.id}>
+                            <TableRow
+                                key={row.id}
+                                className="transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted"
+                            >
                                 {row.getAllCells().map((cell) => (
-                                    <TableCell key={cell.id}>
+                                    <TableCell
+                                        key={cell.id}
+                                        className="px-4 py-3.5 text-sm text-foreground/90"
+                                    >
                                         {flexRender(
                                             cell.column.columnDef.cell,
                                             cell.getContext(),
@@ -64,7 +76,10 @@ const DataTable = <TData extends RowData>({
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={columns.length}>
+                            <TableCell
+                                colSpan={columns.length}
+                                className="h-24 text-center text-sm text-muted-foreground"
+                            >
                                 Tidak ada data.
                             </TableCell>
                         </TableRow>
