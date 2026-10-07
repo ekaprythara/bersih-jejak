@@ -10,31 +10,10 @@ import { dashboard } from "@/routes";
 import { updateStatus as updateAdminStatus } from "@/routes/admin";
 import { updateStatus as updateBranchStatus } from "@/routes/branches";
 import { index } from "@/routes/branches";
+import { BranchProps, BranchType, UserType } from "@/types/data-types";
 import { Head, router } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
-
-export type BranchType = {
-    id: number;
-    name: string;
-    address: string;
-    phone_number: string;
-    status: boolean;
-};
-
-export type UserType = {
-    id: number;
-    name: string;
-    address: string;
-    branch: BranchType;
-    branch_id: number;
-    status: boolean;
-};
-
-type BranchProps = {
-    branches: BranchType[];
-    users: UserType[];
-};
 
 const handleAdminStatusChange = (id: number, newStatus: boolean) => {
     router.patch(

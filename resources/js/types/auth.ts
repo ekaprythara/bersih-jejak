@@ -1,3 +1,5 @@
+import { UserType } from "./data-types";
+
 export type User = {
     id: number;
     name: string;
@@ -11,7 +13,7 @@ export type User = {
 };
 
 export type Auth = {
-    user: User;
+    user: UserType;
 };
 
 export type Passkey = {

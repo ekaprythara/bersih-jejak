@@ -1,9 +1,10 @@
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import {
     BookOpen,
     Building2,
     FolderGit2,
     LayoutGrid,
+    LogOut,
     Receipt,
     Settings,
     UsersRound,
@@ -11,7 +12,6 @@ import {
 } from "lucide-react";
 import AppLogo from "@/components/app-logo";
 import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
 import {
     Sidebar,
     SidebarContent,
@@ -21,13 +21,14 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { dashboard, settings } from "@/routes";
+import { dashboard, logout, settings } from "@/routes";
 import type { NavItem } from "@/types";
 import services from "@/routes/services";
 import customers from "@/routes/customers";
 import branches from "@/routes/branches";
-import profile from "@/routes/profile";
 import expenses from "@/routes/expenses";
+import { useMobileNavigation } from "@/hooks/use-mobile-navigation";
+import { Separator } from "@/components/ui/separator";
 
 const mainNavItems: NavItem[] = [
     {
@@ -76,6 +77,12 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const cleanup = useMobileNavigation();
+
+    const handleLogout = () => {
+        cleanup();
+        router.flushAll();
+    };
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -95,8 +102,17 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                {/* <NavFooter items={footerNavItems} className="mt-auto" /> */}
-                <NavUser />
+                <Separator className="px-4" />
+                <Link
+                    className="flex gap-2 cursor-pointer text-sm py-2 px-2"
+                    href={logout()}
+                    as="button"
+                    onClick={handleLogout}
+                    data-test="logout-button"
+                >
+                    <LogOut size={18} />
+                    Log out
+                </Link>
             </SidebarFooter>
         </Sidebar>
     );

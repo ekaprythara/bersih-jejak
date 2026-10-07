@@ -1,4 +1,33 @@
-import { BranchType, UserType } from "@/pages/branch";
+export type BranchType = {
+    id: number;
+    name: string;
+    address: string;
+    phone_number: string;
+    status: boolean;
+};
+
+export type RoleType = {
+    id: number;
+    name: string;
+};
+
+export interface UserType {
+    id: number;
+    name: string;
+    email: string;
+    username?: string;
+    role: RoleType;
+    avatar?: string;
+    branch: BranchType;
+    branch_id: number;
+    status: boolean;
+}
+
+export type BranchProps = {
+    branches: BranchType[];
+    users: UserType[];
+};
+
 export type CustomerType = {
     id: number;
     name: string;
