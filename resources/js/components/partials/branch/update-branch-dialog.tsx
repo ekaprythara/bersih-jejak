@@ -12,12 +12,12 @@ import { Field, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { BranchType } from "@/pages/branch";
 import { useForm } from "@inertiajs/react";
 import { toast } from "sonner";
 import { SubmitEventHandler, useState } from "react";
 import { update } from "@/routes/branches";
 import InputError from "@/components/input-error";
+import { BranchType } from "@/types/data-types";
 
 export const UpdateBranchDialog = ({ branch }: { branch: BranchType }) => {
     const [isOpen, setIsOpen] = useState(false);

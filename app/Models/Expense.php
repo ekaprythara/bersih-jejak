@@ -13,7 +13,10 @@ use Illuminate\Database\Eloquent\Model;
     "expense_category_id",
     "amount",
     "user_id",
-    "branch_id"
+    "branch_id",
+    "image_url",
+    "image_public_id"
+
 ])]
 
 

@@ -2,6 +2,7 @@ import { Link, router } from "@inertiajs/react";
 import {
     BookOpen,
     Building2,
+    CreditCard,
     FolderGit2,
     LayoutGrid,
     LogOut,
@@ -29,12 +30,18 @@ import branches from "@/routes/branches";
 import expenses from "@/routes/expenses";
 import { useMobileNavigation } from "@/hooks/use-mobile-navigation";
 import { Separator } from "@/components/ui/separator";
+import transactions from "@/routes/transactions";
 
 const mainNavItems: NavItem[] = [
     {
         title: "Dashboard",
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: "Transaksi",
+        href: transactions.index(),
+        icon: CreditCard,
     },
     {
         title: "Pelanggan",

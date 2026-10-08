@@ -18,7 +18,11 @@ import { SubmitEventHandler, useState } from "react";
 import { store } from "@/routes/customers";
 import InputError from "@/components/input-error";
 
-export const CreateCustomerDialog = () => {
+export const CreateCustomerDialog = ({
+    btnTitle = "Tambah Pelanggan",
+}: {
+    btnTitle?: string;
+}) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const form = useForm({
@@ -46,7 +50,7 @@ export const CreateCustomerDialog = () => {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Tambah Pelanggan</Button>
+                <Button>{btnTitle}</Button>
             </DialogTrigger>
 
             <DialogContent>

@@ -20,12 +20,12 @@ import { Field, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { BranchType, UserType } from "@/pages/branch";
 import { useForm } from "@inertiajs/react";
 import { toast } from "sonner";
 import { SubmitEventHandler, useEffect, useState } from "react";
 import { update } from "@/routes/admin";
 import InputError from "@/components/input-error";
+import { BranchType, UserType } from "@/types/data-types";
 
 export const UpdateAdminDialog = ({
     admin,

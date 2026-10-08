@@ -19,6 +19,8 @@ return new class extends Migration
             $table->unsignedBigInteger("amount");
             $table->foreignId("user_id")->constrained('users');
             $table->foreignId("branch_id")->constrained("branches");
+            $table->string('image_url');
+            $table->string('image_public_id');
             $table->timestamps();
         });
     }

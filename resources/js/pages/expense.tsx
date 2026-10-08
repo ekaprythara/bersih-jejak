@@ -7,9 +7,8 @@ import { index } from "@/routes/expenses";
 import { updateStatus } from "@/routes/services";
 import { Head, router } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
-import { toast } from "sonner";
-import { CreateServiceDialog } from "@/components/partials/service/create-service-dialog";
 import type {
+    BranchType,
     ExpenseCategoryType,
     ExpenseType,
     ServiceType,
@@ -17,7 +16,7 @@ import type {
 import ServiceStatusSwitch from "@/components/service-status-switch";
 import { UpdateServiceDialog } from "@/components/partials/service/update-service-dialog";
 import { CreateExpenseDialog } from "@/components/partials/expense/create-expense-dialog";
-import { BranchType } from "./branch";
+import { UpdateExpenseDialog } from "@/components/partials/expense/update-expense-dialog";
 
 export default function Expense({
     expenses,
@@ -61,16 +60,20 @@ export default function Expense({
                 return `Cabang ${row.branch.name}`;
             },
         },
-        // {
-        //     header: "Aksi",
-        //     cell: ({ row }) => {
-        //         return (
-        //             <div className="flex items-center justify-center gap-1">
-        //                 <UpdateServiceDialog service={row.original} />
-        //             </div>
-        //         );
-        //     },
-        // },
+        {
+            header: "Aksi",
+            cell: ({ row }) => {
+                return (
+                    <div className="flex items-center justify-center gap-1">
+                        <UpdateExpenseDialog
+                            expense={row.original}
+                            expenseCategories={expenseCategories}
+                            branches={branches}
+                        />
+                    </div>
+                );
+            },
+        },
     ];
 
     return (

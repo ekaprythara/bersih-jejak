@@ -19,7 +19,6 @@ import {
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { BranchType, UserType } from "@/pages/branch";
 import { useForm } from "@inertiajs/react";
 import { toast } from "sonner";
 import { SubmitEventHandler, useState } from "react";

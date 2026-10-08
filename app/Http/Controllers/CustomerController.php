@@ -20,7 +20,7 @@ class CustomerController extends Controller
     {
         Customer::create($request->validated());
 
-        return redirect()->route('customers.index');
+        return redirect()->back();
     }
 
     public function updateStatus(Request $request, Customer $customer)

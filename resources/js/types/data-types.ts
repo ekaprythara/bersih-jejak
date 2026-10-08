@@ -52,15 +52,53 @@ export type ExpenseType = {
     id: number;
     expense_date: string;
     description: string;
-    expense_category_id: number;
+    expense_category_id: string;
     expense_category: ExpenseCategoryType;
-    amount: number;
-    user_id: number;
+    amount: string;
+    user_id: string;
     user: UserType;
-    branch_id: number;
+    image?: File | string;
+    image_url?: string;
+    image_public_id: string;
+    branch_id: string;
     branch: BranchType;
     created_at: string;
     updated_at: string;
+};
+
+export type TransactionStatusType = {
+    id: number;
+    name: string;
+};
+
+export type PaymentStatusType = {
+    id: number;
+    name: string;
+};
+
+export type TransactionType = {
+    id: number;
+    customer_id: number;
+    transaction_date: string; // Bisa menggunakan string (YYYY-MM-DD) atau Date
+    pickup_date: string;
+    service_id: number;
+    transaction_status_id: number;
+    payment_status_id: number;
+
+    // Kolom foto Cloudinary (opsional/nullable karena bisa kosong)
+    before_image_url?: string | null;
+    before_image_public_id?: string | null;
+    after_image_url?: string | null;
+    after_image_public_id?: string | null;
+
+    created_at?: string;
+    updated_at?: string;
+
+    // Opsional: Jika Anda menggunakan Eloquent Relationship dengan eager loading (with)
+    customer?: CustomerType;
+    service?: ServiceType;
+    transaction_status?: TransactionStatusType;
+    payment_status?: PaymentStatusType;
 };
 
 export type ExpenseCategoryType = {

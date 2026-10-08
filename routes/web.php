@@ -4,6 +4,7 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -17,6 +18,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('admin/create', [UserController::class, 'store'])->name("admin.store");
     Route::patch('admin/{admin}/status', [UserController::class, 'updateStatus'])->name("admin.updateStatus");
     Route::patch('admin/{admin}/edit', [UserController::class, 'update'])->name("admin.update");
+
+    Route::get('transactions', [TransactionController::class, 'index'])->name("transactions.index");
+    Route::post('transactions/create', [TransactionController::class, 'store'])->name("transactions.store");
 
     Route::get('customers', [CustomerController::class, 'index'])->name("customers.index");
     Route::post('customers/create', [CustomerController::class, 'store'])->name("customers.store");
