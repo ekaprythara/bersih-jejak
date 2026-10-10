@@ -29,6 +29,15 @@ import { BranchType, CustomerType } from "@/types/data-types";
 import { Textarea } from "@/components/ui/textarea";
 import { CreateCustomerDialog } from "../customer/create-customer-dialog";
 
+import {
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxList,
+} from "@/components/ui/combobox";
+
 export const CreateTransactionDialog = ({
     customers,
 }: {
@@ -64,7 +73,6 @@ export const CreateTransactionDialog = ({
         // });
         console.log(form.data);
     };
-    const frameworks = ["Next.js", "SvelteKit", "Nuxt.js", "Remix", "Astro"];
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -88,31 +96,40 @@ export const CreateTransactionDialog = ({
                                 Pilih Pelanggan...
                             </Label>
 
-                            <Select
-                                value={form.data.customer_id}
-                                onValueChange={(value) =>
-                                    form.setData("customer_id", value)
+                            <Combobox
+                                items={customers.map((customers) => ({
+                                    label: customers.name,
+                                    value: customers.id,
+                                }))}
+                                onValueChange={(
+                                    customer: {
+                                        label: string;
+                                        value: string;
+                                    } | null,
+                                ) =>
+                                    form.setData(
+                                        "customer_id",
+                                        customer?.value ?? "",
+                                    )
                                 }
                             >
-                                <SelectTrigger
-                                    id="customer_id"
-                                    className="w-full"
-                                >
-                                    <SelectValue placeholder="Pilih Pelanggan..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        {customers.map((customer) => (
-                                            <SelectItem
-                                                key={customer.id}
-                                                value={String(customer.id)}
+                                <ComboboxInput placeholder="Pilih Pelanggan" />
+                                <ComboboxContent className="pointer-events-auto">
+                                    <ComboboxEmpty>
+                                        Tidak ada data.
+                                    </ComboboxEmpty>
+                                    <ComboboxList>
+                                        {(customer) => (
+                                            <ComboboxItem
+                                                key={customer.value}
+                                                value={customer}
                                             >
-                                                {customer.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                                                {customer.label}
+                                            </ComboboxItem>
+                                        )}
+                                    </ComboboxList>
+                                </ComboboxContent>
+                            </Combobox>
 
                             <InputError message={form.errors.customer_id} />
                         </Field>
