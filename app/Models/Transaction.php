@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
     "pickup_date",
     "service_id",
     "transaction_status_id",
+    'shoe_count',
+    'total_amount',
     "payment_status_id",
     "payment_method_id",
     "description",

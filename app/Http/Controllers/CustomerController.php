@@ -12,7 +12,7 @@ class CustomerController extends Controller
     public function index()
     {
         return inertia('customer', [
-            'customers' => Customer::all()
+            'customers' => Customer::with('transactions')->get()
         ]);
     }
 

@@ -16,4 +16,9 @@ class Customer extends Model
 {
     /** @use HasFactory<\Database\Factories\CustomerFactory> */
     use HasFactory;
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'customer_id');
+    }
 }

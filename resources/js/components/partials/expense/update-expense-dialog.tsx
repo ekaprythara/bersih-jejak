@@ -251,13 +251,10 @@ export const UpdateExpenseDialog = ({
                         </Field>
 
                         {/* Field Upload / Preview Gambar */}
-                        <div className="space-y-1.5">
-                            <label
-                                htmlFor="image-edit"
-                                className="text-xs font-semibold text-gray-700"
-                            >
+                        <Field>
+                            <Label htmlFor="image-edit">
                                 Lampiran Nota / Struk (Opsional)
-                            </label>
+                            </Label>
 
                             <div className="mt-2 w-full">
                                 <label
@@ -317,12 +314,8 @@ export const UpdateExpenseDialog = ({
                                     />
                                 </label>
                             </div>
-                            {form.errors.image && (
-                                <div className="text-red-500 text-xs mt-1">
-                                    {form.errors.image}
-                                </div>
-                            )}
-                        </div>
+                            <InputError>{form.errors.image}</InputError>
+                        </Field>
                     </FieldGroup>
 
                     <DialogFooter>

@@ -52,7 +52,9 @@ export default function Customer({ customers }: { customers: CustomerType[] }) {
         },
         {
             header: "Total Transaksi",
-            accessorKey: "#",
+            accessorFn: (row) => {
+                return row.transactions.length || "0";
+            },
         },
         {
             header: "Status",
@@ -81,6 +83,7 @@ export default function Customer({ customers }: { customers: CustomerType[] }) {
             },
         },
     ];
+
     return (
         <>
             <Head title="Pelanggan" />

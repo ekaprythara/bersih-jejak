@@ -6,15 +6,27 @@ import { updateStatus } from "@/routes/customers";
 import { Head, router } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
-import type { CustomerType, TransactionType } from "@/types/data-types";
+import type {
+    CustomerType,
+    PaymentMethodType,
+    PaymentStatusType,
+    ServiceType,
+    TransactionType,
+} from "@/types/data-types";
 import { CreateTransactionDialog } from "@/components/partials/transaction/create-transaction-dialog";
 
 export default function Transaction({
     transactions,
     customers,
+    services,
+    paymentMethods,
+    paymentStatuses,
 }: {
     transactions: TransactionType[];
     customers: CustomerType[];
+    services: ServiceType[];
+    paymentMethods: PaymentMethodType[];
+    paymentStatuses: PaymentStatusType[];
 }) {
     const columns: ColumnDef<typeof features, TransactionType>[] = [
         {
@@ -60,7 +72,12 @@ export default function Transaction({
 
                 <div className="flex flex-col gap-4">
                     <div className="flex justify-end items-center">
-                        <CreateTransactionDialog customers={customers} />
+                        <CreateTransactionDialog
+                            customers={customers}
+                            services={services}
+                            paymentMethods={paymentMethods}
+                            paymentStatuses={paymentStatuses}
+                        />
                     </div>
 
                     <DataTable columns={columns} data={transactions} />

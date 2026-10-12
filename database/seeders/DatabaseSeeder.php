@@ -107,6 +107,8 @@ class DatabaseSeeder extends Seeder
             'transaction_date' => Carbon::now(),
             'pickup_date' => Carbon::now()->addDays(3), // Tanggal ambil 3 hari kedepan
             'service_id' => 1, // Cuci Reguler
+            'shoe_count' => 1,
+            'total_amount' => 10000,
             'transaction_status_id' => 1, // Pending
             'payment_status_id' => 1, // Belum Lunas
             'payment_method_id' => 3, // cash

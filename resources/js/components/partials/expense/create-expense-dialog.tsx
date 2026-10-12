@@ -239,13 +239,8 @@ export const CreateExpenseDialog = ({
                             <InputError message={form.errors.branch_id} />
                         </Field>
 
-                        <div className="space-y-1.5">
-                            <label
-                                htmlFor="image"
-                                className="text-xs font-semibold text-gray-700"
-                            >
-                                Lampiran Nota / Struk (Opsional)
-                            </label>
+                        <Field>
+                            <Label htmlFor="image">Image</Label>
 
                             <div className="mt-2 w-full">
                                 <label
@@ -305,12 +300,8 @@ export const CreateExpenseDialog = ({
                                     />
                                 </label>
                             </div>
-                            {form.errors.image && (
-                                <div className="text-red-500 text-xs mt-1">
-                                    {form.errors.image}
-                                </div>
-                            )}
-                        </div>
+                            <InputError>{form.errors.image}</InputError>
+                        </Field>
                     </FieldGroup>
 
                     <DialogFooter>

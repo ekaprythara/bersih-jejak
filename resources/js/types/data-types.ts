@@ -34,6 +34,7 @@ export type CustomerType = {
     phone_number: string;
     email: string;
     status: boolean;
+    transactions: TransactionType[];
     created_at: string;
     updated_at: string;
 };
@@ -106,4 +107,9 @@ export type ExpenseCategoryType = {
     name: string;
     created_at: string;
     updated_at: string;
+};
+
+export type PaymentMethodType = {
+    id: number;
+    name: string;
 };

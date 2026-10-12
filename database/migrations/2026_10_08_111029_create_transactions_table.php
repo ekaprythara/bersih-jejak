@@ -17,9 +17,11 @@ return new class extends Migration
             $table->date("transaction_date");
             $table->date("pickup_date");
             $table->foreignId("service_id")->constrained("services");
-            $table->foreignId("transaction_status_id")->constrained("transaction_statuses");
-            $table->foreignId("payment_status_id")->constrained("payment_statuses");
+            $table->unsignedBigInteger("shoe_count");
+            $table->unsignedBigInteger("total_amount");
             $table->foreignId('payment_method_id')->constrained("payment_methods");
+            $table->foreignId("payment_status_id")->constrained("payment_statuses");
+            $table->foreignId("transaction_status_id")->constrained("transaction_statuses");
             $table->text('description');
 
             // Foto Before
