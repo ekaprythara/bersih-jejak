@@ -39,6 +39,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Pencil } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { update } from "@/routes/expenses";
+import { useAuth } from "@/hooks/use-auth";
 
 export const UpdateExpenseDialog = ({
     expense,
@@ -50,6 +51,7 @@ export const UpdateExpenseDialog = ({
     expenseCategories: ExpenseCategoryType[];
 }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const { isOwner } = useAuth();
 
     const initialDate = expense.expense_date
         ? parseISO(expense.expense_date)
@@ -220,35 +222,39 @@ export const UpdateExpenseDialog = ({
                         </Field>
 
                         {/* Field Cabang */}
-                        <Field>
-                            <Label htmlFor="branch_id">Pilih Cabang...</Label>
-                            <Select
-                                value={form.data.branch_id}
-                                onValueChange={(value) =>
-                                    form.setData("branch_id", value)
-                                }
-                            >
-                                <SelectTrigger
-                                    id="branch_id"
-                                    className="w-full"
+                        {isOwner && (
+                            <Field>
+                                <Label htmlFor="branch_id">
+                                    Pilih Cabang...
+                                </Label>
+                                <Select
+                                    value={form.data.branch_id}
+                                    onValueChange={(value) =>
+                                        form.setData("branch_id", value)
+                                    }
                                 >
-                                    <SelectValue placeholder="Pilih Cabang..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        {branches.map((branch) => (
-                                            <SelectItem
-                                                key={branch.id}
-                                                value={String(branch.id)}
-                                            >
-                                                {branch.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                            <InputError message={form.errors.branch_id} />
-                        </Field>
+                                    <SelectTrigger
+                                        id="branch_id"
+                                        className="w-full"
+                                    >
+                                        <SelectValue placeholder="Pilih Cabang..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            {branches.map((branch) => (
+                                                <SelectItem
+                                                    key={branch.id}
+                                                    value={String(branch.id)}
+                                                >
+                                                    {branch.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={form.errors.branch_id} />
+                            </Field>
+                        )}
 
                         {/* Field Upload / Preview Gambar */}
                         <Field>

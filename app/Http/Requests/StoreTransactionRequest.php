@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class StoreTransactionRequest extends FormRequest
 {
@@ -13,6 +14,17 @@ class StoreTransactionRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $user = Auth::user();
+
+        if (!$user->is_owner) {
+            $this->merge([
+                'branch_id' => $user->branch_id,
+            ]);
+        }
     }
 
     /**
@@ -31,6 +43,7 @@ class StoreTransactionRequest extends FormRequest
             'payment_method_id'   => ['required', 'exists:payment_methods,id'],
             'payment_status_id'   => ['required', 'exists:payment_statuses,id'],
             'description'         => ['nullable', 'string'],
+            'branch_id'           => ['required', 'exists:branches,id'],
 
             // Validasi gambar (opsional, max 2MB dengan format gambar umum)
             'before_image'        => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
@@ -46,7 +59,8 @@ class StoreTransactionRequest extends FormRequest
 
             'transaction_date.required'    => 'Tanggal transaksi wajib diisi.',
             'transaction_date.date'        => 'Format tanggal transaksi tidak valid.',
-
+            'branch_id.required'           => 'Cabang wajib diisi.',
+            'branch_id.exists'             => 'Cabang tidak ditemukan.',
             'pickup_date.required'         => 'Tanggal pengambilan wajib diisi.',
             'pickup_date.date'             => 'Format tanggal pengambilan tidak valid.',
             'pickup_date.after_or_equal'   => 'Tanggal pengambilan tidak boleh lebih awal dari tanggal transaksi.',

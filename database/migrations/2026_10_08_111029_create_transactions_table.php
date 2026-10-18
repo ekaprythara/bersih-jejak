@@ -23,6 +23,7 @@ return new class extends Migration
             $table->foreignId('payment_method_id')->constrained("payment_methods");
             $table->foreignId("payment_status_id")->constrained("payment_statuses");
             $table->foreignId("transaction_status_id")->constrained("transaction_statuses");
+            $table->foreignId('user_id')->constrained("users");
             $table->text('description');
 
             // Foto Before

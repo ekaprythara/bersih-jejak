@@ -36,6 +36,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { ExpenseCategoryType } from "@/types/data-types";
+import { useAuth } from "@/hooks/use-auth";
 
 export const CreateExpenseDialog = ({
     branches,
@@ -48,6 +49,8 @@ export const CreateExpenseDialog = ({
     const today = new Date();
     const [date, setDate] = useState<Date | undefined>(today);
     const [previewImage, setPreviewImage] = useState<string>();
+
+    const { isOwner } = useAuth();
 
     const form = useForm({
         expense_date: format(today, "yyyy-MM-dd"),
@@ -209,35 +212,39 @@ export const CreateExpenseDialog = ({
                         </Field>
 
                         {/* Field Cabang */}
-                        <Field>
-                            <Label htmlFor="branch_id">Pilih Cabang...</Label>
-                            <Select
-                                value={form.data.branch_id}
-                                onValueChange={(value) =>
-                                    form.setData("branch_id", value)
-                                }
-                            >
-                                <SelectTrigger
-                                    id="branch_id"
-                                    className="w-full"
+                        {isOwner && (
+                            <Field>
+                                <Label htmlFor="branch_id">
+                                    Pilih Cabang...
+                                </Label>
+                                <Select
+                                    value={form.data.branch_id}
+                                    onValueChange={(value) =>
+                                        form.setData("branch_id", value)
+                                    }
                                 >
-                                    <SelectValue placeholder="Pilih Cabang..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        {branches.map((branch) => (
-                                            <SelectItem
-                                                key={branch.id}
-                                                value={String(branch.id)}
-                                            >
-                                                {branch.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                            <InputError message={form.errors.branch_id} />
-                        </Field>
+                                    <SelectTrigger
+                                        id="branch_id"
+                                        className="w-full"
+                                    >
+                                        <SelectValue placeholder="Pilih Cabang..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            {branches.map((branch) => (
+                                                <SelectItem
+                                                    key={branch.id}
+                                                    value={String(branch.id)}
+                                                >
+                                                    {branch.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={form.errors.branch_id} />
+                            </Field>
+                        )}
 
                         <Field>
                             <Label htmlFor="image">Image</Label>

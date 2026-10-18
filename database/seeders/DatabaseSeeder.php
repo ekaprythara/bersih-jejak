@@ -63,6 +63,26 @@ class DatabaseSeeder extends Seeder
             'branch_id' => 1, // Pandu
         ]);
 
+        User::factory()->create([
+            'name' => 'Chandra',
+            'username' => 'chandra',
+            'address' => 'Jalan Nangka',
+            'phone_number' => '085877775557',
+            'email' => 'chandra@example.com',
+            'role_id' => 2, // Admin
+            'branch_id' => 2, // Tukad Badung
+        ]);
+
+        User::factory()->create([
+            'name' => 'ari',
+            'username' => 'ari',
+            'address' => 'Jalan Kenanga',
+            'phone_number' => '085877775552',
+            'email' => 'ariani@example.com',
+            'role_id' => 2, // Admin
+            'branch_id' => 2, // Tukad Badung
+        ]);
+
         ExpenseCategory::factory()->create([
             "name" => "Air & Listrik"
         ]);
@@ -196,6 +216,7 @@ class DatabaseSeeder extends Seeder
             'payment_status_id' => 1, // Belum Lunas
             'payment_method_id' => 3, // cash
             'description' => "asdasdasas",
+            'user_id' => 1, // Mahayana
             'before_image_url' => null,
             'before_image_public_id' => null,
             'after_image_url' => null,

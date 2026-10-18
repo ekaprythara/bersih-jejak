@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class StoreExpenseRequest extends FormRequest
 {
@@ -13,6 +14,17 @@ class StoreExpenseRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $user = Auth::user();
+
+        if (!$user->is_owner) {
+            $this->merge([
+                'branch_id' => $user->branch_id,
+            ]);
+        }
     }
 
     /**
@@ -28,7 +40,7 @@ class StoreExpenseRequest extends FormRequest
             'expense_category_id' => ['required', 'exists:expense_categories,id'],
             'amount'              => ['required', 'numeric', 'min:0'],
             'branch_id'           => ['required', 'exists:branches,id'],
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'image'               => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
         ];
     }
 
@@ -42,8 +54,9 @@ class StoreExpenseRequest extends FormRequest
             'expense_category_id.exists'   => 'Kategori pengeluaran tidak ditemukan.',
             'amount.required'              => 'Jumlah nominal wajib diisi.',
             'amount.numeric'               => 'Jumlah nominal harus berupa angka.',
-            'branch_id.required'           => 'Cabang wajib dipilih.',
+            'branch_id.required'           => 'Cabang wajib diisi.',
             'branch_id.exists'             => 'Cabang tidak ditemukan.',
+            'image.required'              => 'Gambar wajib diisi.',
             'image.image'                  => 'Berkas yang diunggah harus berupa gambar.',
             'image.mimes'                  => 'Format gambar harus berjenis: jpeg, png, jpg, atau webp.',
             'image.max'                    => 'Ukuran gambar maksimal adalah 5 MB.',

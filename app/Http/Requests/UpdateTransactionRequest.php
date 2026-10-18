@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class UpdateTransactionRequest extends FormRequest
 {
@@ -12,7 +13,25 @@ class UpdateTransactionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $user = Auth::user();
+        $transaction = $this->route('transaction');
+
+        if ($user->is_owner) {
+            return true;
+        }
+
+        return $transaction && $transaction->branch_id === $user->branch_id;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $user = Auth::user();
+
+        if (!$user->is_owner) {
+            $this->merge([
+                'branch_id' => $user->branch_id,
+            ]);
+        }
     }
 
     /**
@@ -28,6 +47,7 @@ class UpdateTransactionRequest extends FormRequest
             'payment_status_id'       => ['required', 'exists:payment_statuses,id'],
             'transaction_status_id'   => ['required', 'exists:transaction_statuses,id'],
             'description'             => ['nullable', 'string'],
+            'branch_id'           => ['required', 'exists:branches,id'],
 
             // Validasi file gambar opsional saat update (karena bisa jadi user tidak mengganti foto)
             'beforeImage'             => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
@@ -43,6 +63,8 @@ class UpdateTransactionRequest extends FormRequest
 
             'payment_method_id.required'    => 'Metode pembayaran wajib dipilih.',
             'payment_method_id.exists'      => 'Metode pembayaran tidak valid.',
+            'branch_id.required'           => 'Cabang wajib diisi.',
+            'branch_id.exists'             => 'Cabang tidak ditemukan.',
 
             'payment_status_id.required'    => 'Status pembayaran wajib dipilih.',
             'payment_status_id.exists'      => 'Status pembayaran tidak valid.',

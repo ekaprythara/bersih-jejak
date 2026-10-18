@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
     'shoe_count',
     'total_amount',
     "branch_id",
+    "user_id",
     "payment_status_id",
     "payment_method_id",
     "description",
@@ -35,6 +36,16 @@ class Transaction extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\UpdateTransactionRequest;
+use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\PaymentMethod;
 use App\Models\PaymentStatus;
@@ -11,19 +12,24 @@ use App\Models\Service;
 use App\Models\Transaction;
 use App\Models\TransactionStatus;
 use App\Services\CloudinaryService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index()
     {
         return inertia("transaction", [
-            "transactions" => Transaction::with(["customer", "service", "transactionStatus", "paymentStatus", "paymentMethod"])->get(),
+            "transactions" => Transaction::with(["customer", "service", "branch", "user", "transactionStatus", "paymentStatus", "paymentMethod"])->get(),
             "customers" => Customer::get(['id', 'name']),
             "services" => Service::get(['id', 'name', 'price']),
             "paymentMethods" => PaymentMethod::get(['id', 'name']),
             "paymentStatuses" => PaymentStatus::get(['id', 'name']),
-            "transactionStatuses" => TransactionStatus::get(['id', 'name'])
+            "transactionStatuses" => TransactionStatus::get(['id', 'name']),
+            "branches" => Branch::get(['id', 'name'])
         ]);
     }
 
@@ -52,6 +58,7 @@ class TransactionController extends Controller
         Transaction::create(array_merge(
             $request->validated(),
             [
+                'user_id'               => Auth::id(),
                 'total_amount'            => $totalAmount,
                 'transaction_status_id'   => $defaultTransactionStatusId,
                 'before_image_url'        => $imageUrl,
@@ -65,6 +72,7 @@ class TransactionController extends Controller
 
     public function update(UpdateTransactionRequest $request, Transaction $transaction, CloudinaryService $cloudinaryService)
     {
+        $this->authorize('update', $transaction);
         $validatedData = $request->validated();
 
         // 1. Hitung ulang total_amount jika service_id atau shoe_count ikut diperbarui

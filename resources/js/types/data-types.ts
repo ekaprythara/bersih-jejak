@@ -86,8 +86,12 @@ export type TransactionType = {
     service_id: number;
     transaction_status_id: number;
     payment_status_id: number;
+    user_id: number;
+    user: UserType;
     payment_method_id: number;
     description: string;
+    branch_id: number;
+    branch: BranchType;
 
     // Kolom foto Cloudinary (opsional/nullable karena bisa kosong)
     before_image_url?: string | null;

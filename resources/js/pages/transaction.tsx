@@ -3,10 +3,11 @@ import Heading from "@/components/heading";
 import { dashboard } from "@/routes";
 import { index } from "@/routes/transactions";
 import { updateStatus } from "@/routes/customers";
-import { Head, router } from "@inertiajs/react";
+import { Head, router, usePage } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
 import type {
+    BranchType,
     CustomerType,
     PaymentMethodType,
     PaymentStatusType,
@@ -22,17 +23,31 @@ export default function Transaction({
     transactions,
     customers,
     services,
+    branches,
     paymentMethods,
     paymentStatuses,
     transactionStatuses,
 }: {
     transactions: TransactionType[];
     customers: CustomerType[];
+    branches: BranchType[];
     services: ServiceType[];
     paymentMethods: PaymentMethodType[];
     paymentStatuses: PaymentStatusType[];
     transactionStatuses: TransactionStatusType[];
 }) {
+    const { auth } = usePage().props;
+    const currentUser = auth.user;
+    const canModify = (trx: TransactionType) => {
+        // Jika user yang login adalah Owner
+        if (currentUser.is_owner) {
+            return trx.user_id === currentUser.id;
+        }
+
+        // Jika user yang login adalah Admin (!currentUser.is_owner)
+        // Syarat: Cabang harus sama DAN yang membuat data BUKAN owner
+        return trx.branch_id === currentUser.branch_id && !trx.user?.is_owner;
+    };
     const columns: ColumnDef<typeof features, TransactionType>[] = [
         {
             accessorKey: "transaction_date",
@@ -67,12 +82,27 @@ export default function Transaction({
             header: "Metode Pembayaran",
         },
         {
+            accessorKey: "branch.name",
+            header: "Cabang",
+        },
+        {
+            accessorKey: "user.name",
+            header: "Dibuat Oleh",
+        },
+        {
             header: "Aksi",
             cell: ({ row }) => {
+                // Gunakan fungsi canModify untuk pengecekan
+                if (!canModify(row.original)) {
+                    return null; // Jika tidak boleh edit, kembalikan null (kosong)
+                }
+
+                // Jika boleh edit, return komponennya
                 return (
                     <div className="flex items-center justify-center gap-1">
                         <UpdateTransactionDialog
                             transaction={row.original}
+                            branches={branches}
                             paymentMethods={paymentMethods}
                             paymentStatuses={paymentStatuses}
                             transactionStatuses={transactionStatuses}
@@ -98,6 +128,7 @@ export default function Transaction({
                         <CreateTransactionDialog
                             customers={customers}
                             services={services}
+                            branches={branches}
                             paymentMethods={paymentMethods}
                             paymentStatuses={paymentStatuses}
                         />

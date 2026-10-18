@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { SubmitEventHandler, useState } from "react";
 import InputError from "@/components/input-error";
 import {
+    BranchType,
     CustomerType,
     PaymentMethodType,
     PaymentStatusType,
@@ -43,19 +44,23 @@ import { CalendarIcon } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { ChangeEvent } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 export const UpdateTransactionDialog = ({
     transaction,
     paymentMethods,
+    branches,
     paymentStatuses,
     transactionStatuses,
 }: {
     transaction: TransactionType;
+    branches: BranchType[];
     paymentMethods: PaymentMethodType[];
     paymentStatuses: PaymentStatusType[];
     transactionStatuses: TransactionStatusType[];
 }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const { isOwner } = useAuth();
 
     // Parse tanggal string dari database ke objek Date untuk kalender
     const [pickupDate, setPickupDate] = useState<Date | undefined>(
@@ -74,6 +79,7 @@ export const UpdateTransactionDialog = ({
         payment_status_id: transaction.payment_status_id,
         transaction_status_id: transaction.transaction_status_id,
         description: transaction.description || "",
+        branch_id: transaction.branch_id || "",
         beforeImage: null as File | null,
         afterImage: null as File | null,
     });
@@ -172,6 +178,40 @@ export const UpdateTransactionDialog = ({
                             </Popover>
                             <InputError message={form.errors.pickup_date} />
                         </Field>
+
+                        {isOwner && (
+                            <Field>
+                                <Label htmlFor="branch_id">
+                                    Pilih Cabang...
+                                </Label>
+                                <Select
+                                    value={String(form.data.branch_id)}
+                                    onValueChange={(value) =>
+                                        form.setData("branch_id", value)
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="branch_id"
+                                        className="w-full"
+                                    >
+                                        <SelectValue placeholder="Pilih Cabang..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            {branches.map((branch) => (
+                                                <SelectItem
+                                                    key={branch.id}
+                                                    value={String(branch.id)}
+                                                >
+                                                    {branch.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={form.errors.branch_id} />
+                            </Field>
+                        )}
 
                         <div className="grid grid-cols-2 gap-4">
                             <Field>

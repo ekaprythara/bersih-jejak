@@ -24,6 +24,8 @@ class ExpenseController extends Controller
 
     public function store(StoreExpenseRequest $request, CloudinaryService $cloudinaryService)
     {
+        // dd($request->all());
+        // dd(Auth::user()->is_owner);
         $imageUrl = null;
         $imagePublicId = null;
 

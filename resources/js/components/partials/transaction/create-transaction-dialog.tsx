@@ -53,20 +53,24 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 
 import { format } from "date-fns";
+import { useAuth } from "@/hooks/use-auth";
 
 export const CreateTransactionDialog = ({
     customers,
     services,
+    branches,
     paymentMethods,
     paymentStatuses,
 }: {
     customers: CustomerType[];
     services: ServiceType[];
+    branches: BranchType[];
     paymentMethods: PaymentMethodType[];
     paymentStatuses: PaymentStatusType[];
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const today = new Date();
+    const { isOwner } = useAuth();
 
     const [transactionDate, setTransactionDate] = useState<Date | undefined>(
         today,
@@ -81,6 +85,7 @@ export const CreateTransactionDialog = ({
         service_id: "",
         shoe_count: "1",
         total_amount: "",
+        branch_id: "",
         payment_method_id: "",
         transaction_status_id: "",
         payment_status_id: "",
@@ -196,6 +201,40 @@ export const CreateTransactionDialog = ({
                         </Field>
 
                         <CreateCustomerDialog btnTitle="Tambah Pelanggan Baru" />
+
+                        {isOwner && (
+                            <Field>
+                                <Label htmlFor="branch_id">
+                                    Pilih Cabang...
+                                </Label>
+                                <Select
+                                    value={form.data.branch_id}
+                                    onValueChange={(value) =>
+                                        form.setData("branch_id", value)
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="branch_id"
+                                        className="w-full"
+                                    >
+                                        <SelectValue placeholder="Pilih Cabang..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            {branches.map((branch) => (
+                                                <SelectItem
+                                                    key={branch.id}
+                                                    value={String(branch.id)}
+                                                >
+                                                    {branch.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={form.errors.branch_id} />
+                            </Field>
+                        )}
 
                         <Field>
                             <Label htmlFor="service_id">Pilih Layanan</Label>

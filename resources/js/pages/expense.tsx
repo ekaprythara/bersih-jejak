@@ -11,7 +11,6 @@ import type {
     BranchType,
     ExpenseCategoryType,
     ExpenseType,
-    ServiceType,
 } from "@/types/data-types";
 import ServiceStatusSwitch from "@/components/service-status-switch";
 import { UpdateServiceDialog } from "@/components/partials/service/update-service-dialog";
@@ -57,7 +56,7 @@ export default function Expense({
         {
             header: "Cabang",
             accessorFn: (row) => {
-                return `Cabang ${row.branch.name}`;
+                return row.branch ? `Cabang ${row.branch.name}` : "-";
             },
         },
         {

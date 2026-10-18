@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class UpdateExpenseRequest extends FormRequest
 {
@@ -12,7 +13,25 @@ class UpdateExpenseRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $user = Auth::user();
+        $expense = $this->route('expense');
+
+        if ($user->is_owner) {
+            return true;
+        }
+
+        return $expense && $expense->branch_id === $user->branch_id;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $user = Auth::user();
+
+        if ($user && !$user->is_owner) {
+            $this->merge([
+                'branch_id' => $user->branch_id,
+            ]);
+        }
     }
 
     /**
@@ -28,7 +47,6 @@ class UpdateExpenseRequest extends FormRequest
             'expense_category_id' => ['required', 'exists:expense_categories,id'],
             'amount'              => ['required', 'numeric', 'min:0'],
             'branch_id'           => ['required', 'exists:branches,id'],
-            // 'image' bersifat nullable karena user boleh tidak mengganti gambar saat edit
             'image'               => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'], // Max 5MB
         ];
     }
