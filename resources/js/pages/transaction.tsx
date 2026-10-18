@@ -11,9 +11,12 @@ import type {
     PaymentMethodType,
     PaymentStatusType,
     ServiceType,
+    TransactionStatusType,
     TransactionType,
 } from "@/types/data-types";
 import { CreateTransactionDialog } from "@/components/partials/transaction/create-transaction-dialog";
+import { UpdateTransactionDialog } from "@/components/partials/transaction/update-transaction-dialog";
+import { Badge } from "@/components/ui/badge";
 
 export default function Transaction({
     transactions,
@@ -21,12 +24,14 @@ export default function Transaction({
     services,
     paymentMethods,
     paymentStatuses,
+    transactionStatuses,
 }: {
     transactions: TransactionType[];
     customers: CustomerType[];
     services: ServiceType[];
     paymentMethods: PaymentMethodType[];
     paymentStatuses: PaymentStatusType[];
+    transactionStatuses: TransactionStatusType[];
 }) {
     const columns: ColumnDef<typeof features, TransactionType>[] = [
         {
@@ -48,6 +53,9 @@ export default function Transaction({
         {
             accessorKey: "transaction_status.name",
             header: "Status Transaksi",
+            cell: ({ row }) => {
+                return <Badge>{row.original.transaction_status?.name}</Badge>;
+            },
         },
         {
             accessorKey: "payment_status.name",
@@ -57,6 +65,21 @@ export default function Transaction({
         {
             accessorKey: "payment_method.name",
             header: "Metode Pembayaran",
+        },
+        {
+            header: "Aksi",
+            cell: ({ row }) => {
+                return (
+                    <div className="flex items-center justify-center gap-1">
+                        <UpdateTransactionDialog
+                            transaction={row.original}
+                            paymentMethods={paymentMethods}
+                            paymentStatuses={paymentStatuses}
+                            transactionStatuses={transactionStatuses}
+                        />
+                    </div>
+                );
+            },
         },
     ];
 

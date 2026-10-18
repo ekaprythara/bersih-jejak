@@ -1,9 +1,9 @@
-import { usePage } from '@inertiajs/react';
+import { usePage } from "@inertiajs/react";
 
-import AppLogoIcon from '@/components/app-logo-icon';
+import AppLogoIcon from "@/components/app-logo-icon";
 
 export default function AppLogo() {
-    const { name } = usePage().props;
+    const { name, auth } = usePage().props;
 
     return (
         <>
@@ -14,6 +14,11 @@ export default function AppLogo() {
                 <span className="mb-0.5 truncate leading-tight font-semibold">
                     {name}
                 </span>
+                {auth.user.branch ? (
+                    <span className="text-xs text-neutral-500">
+                        {`Cabang ${auth.user.branch.name}`}
+                    </span>
+                ) : null}
             </div>
         </>
     );

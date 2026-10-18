@@ -111,7 +111,7 @@ export const UpdateExpenseDialog = ({
                 <Button>Edit</Button>
             </DialogTrigger>
 
-            <DialogContent>
+            <DialogContent className="overflow-y-scroll scrollbar-none max-h-[95vh]">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <DialogHeader>
                         <DialogTitle>Edit Pengeluaran</DialogTitle>

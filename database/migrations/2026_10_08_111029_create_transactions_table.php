@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId("service_id")->constrained("services");
             $table->unsignedBigInteger("shoe_count");
             $table->unsignedBigInteger("total_amount");
+            $table->foreignId("branch_id")->constrained('branches');
             $table->foreignId('payment_method_id')->constrained("payment_methods");
             $table->foreignId("payment_status_id")->constrained("payment_statuses");
             $table->foreignId("transaction_status_id")->constrained("transaction_statuses");

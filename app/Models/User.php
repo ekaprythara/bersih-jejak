@@ -37,7 +37,6 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
     'password',
     'role_id',
     'branch_id'
-
 ])]
 
 #[Hidden([
@@ -66,6 +65,8 @@ class User extends Authenticatable implements PasskeyUser
         ];
     }
 
+    protected $appends = ['is_owner'];
+
     public function role()
     {
         return $this->belongsTo(Role::class);
@@ -74,5 +75,12 @@ class User extends Authenticatable implements PasskeyUser
     public function branch()
     {
         return $this->belongsTo(Branch::class);
+    }
+
+    public function getIsOwnerAttribute()
+    {
+        $roleName = optional($this->role)->name;
+
+        return $roleName ? strtolower($roleName) === 'owner' : false;
     }
 }

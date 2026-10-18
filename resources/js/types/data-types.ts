@@ -17,6 +17,7 @@ export interface UserType {
     email: string;
     username?: string;
     role: RoleType;
+    is_owner: boolean;
     avatar?: string;
     branch: BranchType;
     branch_id: number;
@@ -85,6 +86,8 @@ export type TransactionType = {
     service_id: number;
     transaction_status_id: number;
     payment_status_id: number;
+    payment_method_id: number;
+    description: string;
 
     // Kolom foto Cloudinary (opsional/nullable karena bisa kosong)
     before_image_url?: string | null;

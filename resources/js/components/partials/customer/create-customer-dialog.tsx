@@ -50,7 +50,7 @@ export const CreateCustomerDialog = ({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>{btnTitle}</Button>
+                <Button className="border-dashed">{btnTitle}</Button>
             </DialogTrigger>
 
             <DialogContent>

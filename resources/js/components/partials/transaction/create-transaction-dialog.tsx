@@ -85,14 +85,13 @@ export const CreateTransactionDialog = ({
         transaction_status_id: "",
         payment_status_id: "",
         description: "",
-        beforeImage: null as File | null,
-        afterImage: null as File | null,
+        image: null as File | null,
     });
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
 
         if (file) {
-            form.setData("beforeImage", file);
+            form.setData("image", file);
             setPreviewImage(URL.createObjectURL(file));
         }
     };
@@ -142,7 +141,7 @@ export const CreateTransactionDialog = ({
                 <Button>Tambah Transaksi</Button>
             </DialogTrigger>
 
-            <DialogContent className="overflow-y-scroll scrollbar-none scroll-smooth h-[95dvh]">
+            <DialogContent className="overflow-y-scroll scrollbar-none scroll-smooth max-h-[95dvh]">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <DialogHeader>
                         <DialogTitle>Tambah Transaksi</DialogTitle>
@@ -358,15 +357,11 @@ export const CreateTransactionDialog = ({
                                     <PopoverTrigger asChild disabled>
                                         <Button
                                             variant="outline"
-                                            data-empty={!transactionDate}
                                             className="justify-start text-left font-normal data-[empty=true]:text-muted-foreground w-full"
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {transactionDate ? (
-                                                format(
-                                                    transactionDate,
-                                                    "dd-MM-yyyy",
-                                                )
+                                            {today ? (
+                                                format(today, "dd-MM-yyyy")
                                             ) : (
                                                 <span>Pilih Tanggal</span>
                                             )}
@@ -375,7 +370,7 @@ export const CreateTransactionDialog = ({
                                     <PopoverContent className="w-auto p-0">
                                         <Calendar
                                             mode="single"
-                                            selected={transactionDate}
+                                            selected={today}
                                             disabled
                                         />
                                     </PopoverContent>
@@ -409,6 +404,7 @@ export const CreateTransactionDialog = ({
                                             mode="single"
                                             selected={pickupDate}
                                             onSelect={handleDateSelect}
+                                            disabled={(date) => date < today}
                                         />
                                     </PopoverContent>
                                 </Popover>
@@ -430,7 +426,9 @@ export const CreateTransactionDialog = ({
                         </Field>
 
                         <Field>
-                            <Label htmlFor="before_image">Sebelum</Label>
+                            <Label htmlFor="before_image">
+                                Foto Sepatu (Sebelum)
+                            </Label>
                             <div className="mt-2 w-full">
                                 <label
                                     htmlFor="image"
@@ -456,12 +454,12 @@ export const CreateTransactionDialog = ({
                                             </div>
                                             <div className="flex flex-col gap-1">
                                                 <p className="text-xs font-medium text-gray-600">
-                                                    Choose image or drag and
-                                                    drop it here.
+                                                    Pilih gambar atau
+                                                    drag-and-drop di sini.
                                                 </p>
                                                 <p className="text-xs text-gray-400">
-                                                    PNG, JPG, dan WEBP. Max 5
-                                                    MB.
+                                                    PNG, JPG, dan WEBP <br />
+                                                    Maks. 5 MB
                                                 </p>
                                             </div>
                                         </div>
@@ -489,7 +487,7 @@ export const CreateTransactionDialog = ({
                                     />
                                 </label>
                             </div>
-                            <InputError message={form.errors.beforeImage} />
+                            <InputError message={form.errors.image} />
                         </Field>
                     </FieldGroup>
 

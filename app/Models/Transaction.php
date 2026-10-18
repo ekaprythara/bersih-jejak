@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
     "transaction_status_id",
     'shoe_count',
     'total_amount',
+    "branch_id",
     "payment_status_id",
     "payment_method_id",
     "description",
