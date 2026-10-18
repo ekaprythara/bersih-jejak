@@ -73,6 +73,7 @@ class TransactionController extends Controller
     public function update(UpdateTransactionRequest $request, Transaction $transaction, CloudinaryService $cloudinaryService)
     {
         $this->authorize('update', $transaction);
+
         $validatedData = $request->validated();
 
         // 1. Hitung ulang total_amount jika service_id atau shoe_count ikut diperbarui

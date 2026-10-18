@@ -8,11 +8,14 @@ use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Services\CloudinaryService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ExpenseController extends Controller
 {
+    use AuthorizesRequests;
+
     public function index()
     {
         return inertia('expense', [
@@ -53,6 +56,8 @@ class ExpenseController extends Controller
 
     public function update(UpdateExpenseRequest $request, Expense $expense, CloudinaryService $cloudinaryService)
     {
+        $this->authorize('update', $expense);
+
         $validatedData = $request->validated();
 
         $imageUrl = $expense->image_url;

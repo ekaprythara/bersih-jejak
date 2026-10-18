@@ -57,12 +57,12 @@ export type ExpenseType = {
     expense_category_id: string;
     expense_category: ExpenseCategoryType;
     amount: string;
-    user_id: string;
+    user_id: number;
     user: UserType;
     image?: File | string;
     image_url?: string;
     image_public_id: string;
-    branch_id: string;
+    branch_id: number;
     branch: BranchType;
     created_at: string;
     updated_at: string;

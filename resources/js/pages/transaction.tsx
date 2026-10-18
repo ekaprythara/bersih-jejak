@@ -38,16 +38,20 @@ export default function Transaction({
 }) {
     const { auth } = usePage().props;
     const currentUser = auth.user;
-    const canModify = (trx: TransactionType) => {
-        // Jika user yang login adalah Owner
+
+    const canModify = (transaction: TransactionType) => {
         if (currentUser.is_owner) {
-            return trx.user_id === currentUser.id;
+            return transaction.user_id === currentUser.id;
         }
 
         // Jika user yang login adalah Admin (!currentUser.is_owner)
         // Syarat: Cabang harus sama DAN yang membuat data BUKAN owner
-        return trx.branch_id === currentUser.branch_id && !trx.user?.is_owner;
+        return (
+            transaction.branch_id === currentUser.branch_id &&
+            !transaction.user?.is_owner
+        );
     };
+
     const columns: ColumnDef<typeof features, TransactionType>[] = [
         {
             accessorKey: "transaction_date",

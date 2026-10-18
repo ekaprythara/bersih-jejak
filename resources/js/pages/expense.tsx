@@ -5,7 +5,7 @@ import { CreateCustomerDialog } from "@/components/partials/customer/create-cust
 import { dashboard } from "@/routes";
 import { index } from "@/routes/expenses";
 import { updateStatus } from "@/routes/services";
-import { Head, router } from "@inertiajs/react";
+import { Head, router, usePage } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
 import type {
     BranchType,
@@ -26,6 +26,22 @@ export default function Expense({
     branches: BranchType[];
     expenseCategories: ExpenseCategoryType[];
 }) {
+    const { auth } = usePage().props;
+    const currentUser = auth.user;
+
+    const canModify = (expense: ExpenseType) => {
+        if (currentUser.is_owner) {
+            return expense.user_id === currentUser.id;
+        }
+
+        // Jika user yang login adalah Admin (!currentUser.is_owner)
+        // Syarat: Cabang harus sama DAN yang membuat data BUKAN owner
+        return (
+            expense.branch_id === currentUser.branch_id &&
+            !expense.user?.is_owner
+        );
+    };
+
     const columns: ColumnDef<typeof features, ExpenseType>[] = [
         {
             header: "Tanggal Pengeluaran",
@@ -62,6 +78,10 @@ export default function Expense({
         {
             header: "Aksi",
             cell: ({ row }) => {
+                if (!canModify(row.original)) {
+                    return null;
+                }
+
                 return (
                     <div className="flex items-center justify-center gap-1">
                         <UpdateExpenseDialog
