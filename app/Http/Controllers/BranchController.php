@@ -13,7 +13,8 @@ class BranchController extends Controller
     public function index()
     {
         return inertia('branch', [
-            'branches' => Branch::latest()->get(),
+            'branches' => Branch::active()->latest()->get(),
+            'branchOptions' => Branch::get(['id', 'name', 'status']),
             'users' => User::with(['role', 'branch'])
                 ->where('role_id', 2)
                 ->latest()

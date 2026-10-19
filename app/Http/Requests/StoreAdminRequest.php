@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreAdminRequest extends FormRequest
 {
@@ -28,7 +29,10 @@ class StoreAdminRequest extends FormRequest
             'address' => ['required', 'string', 'max:500'],
             'phone_number' => ['required', 'string', 'max:20'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'branch_id' => ['required', 'exists:branches,id'],
+            'branch_id'           => [
+                'required',
+                Rule::exists('branches', 'id')->where('status', true)
+            ],
         ];
     }
 
@@ -64,7 +68,7 @@ class StoreAdminRequest extends FormRequest
             'email.unique' => 'Email ini sudah terdaftar.',
 
             'branch_id.required' => 'Cabang Penempatan wajib dipilih.',
-            'branch_id.exists' => 'Cabang Penempatan yang dipilih tidak valid.',
+            'branch_id.exists'             => 'Cabang tidak ditemukan atau sudah tidak aktif.',
         ];
     }
 }

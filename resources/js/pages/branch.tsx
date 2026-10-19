@@ -45,7 +45,11 @@ const handleBranchStatusChange = (id: number, newStatus: boolean) => {
     );
 };
 
-export default function Branch({ branches, users }: BranchProps) {
+export default function Branch({
+    branches,
+    branchOptions,
+    users,
+}: BranchProps) {
     const adminColumns: ColumnDef<typeof features, UserType>[] = [
         {
             header: "Nama",
@@ -84,7 +88,7 @@ export default function Branch({ branches, users }: BranchProps) {
                     <div className="flex justify-center items-center gap-1">
                         <UpdateAdminDialog
                             admin={row.original}
-                            branches={branches}
+                            branches={branchOptions}
                         />
                     </div>
                 );
@@ -169,7 +173,7 @@ export default function Branch({ branches, users }: BranchProps) {
                         <div>
                             <DataTable
                                 columns={branchColumns}
-                                data={branches}
+                                data={branchOptions}
                             />
                         </div>
                     </div>

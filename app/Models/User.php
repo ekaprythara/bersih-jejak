@@ -12,6 +12,8 @@ use Illuminate\Support\Carbon;
 use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Illuminate\Database\Eloquent\Builder;
+
 
 /**
  * @property int $id
@@ -82,5 +84,10 @@ class User extends Authenticatable implements PasskeyUser
         $roleName = optional($this->role)->name;
 
         return $roleName ? strtolower($roleName) === 'owner' : false;
+    }
+
+    public function scopeActive(Builder $query)
+    {
+        $query->where("status", true);
     }
 }

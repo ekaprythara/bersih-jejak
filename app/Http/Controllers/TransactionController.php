@@ -24,12 +24,13 @@ class TransactionController extends Controller
     {
         return inertia("transaction", [
             "transactions" => Transaction::with(["customer", "service", "branch", "user", "transactionStatus", "paymentStatus", "paymentMethod"])->get(),
-            "customers" => Customer::get(['id', 'name']),
-            "services" => Service::get(['id', 'name', 'price']),
+            "customers" => Customer::active()->get(['id', 'name']),
+            "services" => Service::active()->get(['id', 'name', 'price']),
             "paymentMethods" => PaymentMethod::get(['id', 'name']),
             "paymentStatuses" => PaymentStatus::get(['id', 'name']),
             "transactionStatuses" => TransactionStatus::get(['id', 'name']),
-            "branches" => Branch::get(['id', 'name'])
+            "branches" => Branch::active()->get(['id', 'name']),
+            "branchOptions" => Branch::get(['id', 'name', 'status']),
         ]);
     }
 

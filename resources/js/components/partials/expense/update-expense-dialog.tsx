@@ -36,10 +36,17 @@ import {
 } from "@/components/ui/popover";
 import { format, parseISO } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Pencil } from "lucide-react";
+import {
+    BadgeCheck,
+    CalendarIcon,
+    CircleCheck,
+    CircleMinus,
+    Pencil,
+} from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { update } from "@/routes/expenses";
 import { useAuth } from "@/hooks/use-auth";
+import { Badge } from "@/components/ui/badge";
 
 export const UpdateExpenseDialog = ({
     expense,
@@ -247,6 +254,12 @@ export const UpdateExpenseDialog = ({
                                                     value={String(branch.id)}
                                                 >
                                                     {branch.name}
+
+                                                    {!branch.status && (
+                                                        <Badge className="bg-red-50 text-xs text-red-700 dark:bg-red-950 dark:text-red-300">
+                                                            Nonaktif
+                                                        </Badge>
+                                                    )}
                                                 </SelectItem>
                                             ))}
                                         </SelectGroup>

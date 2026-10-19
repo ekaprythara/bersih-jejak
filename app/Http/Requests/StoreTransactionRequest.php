@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class StoreTransactionRequest extends FormRequest
 {
@@ -35,16 +36,24 @@ class StoreTransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'customer_id'         => ['required', 'exists:customers,id'],
+            'customer_id' => [
+                'required',
+                Rule::exists('customers', 'id')->where('status', true)
+            ],
             'transaction_date'    => ['required', 'date'],
             'pickup_date'         => ['required', 'date', 'after_or_equal:transaction_date'],
-            'service_id'          => ['required', 'exists:services,id'],
+            'service_id' => [
+                'required',
+                Rule::exists('services', 'id')->where('status', true)
+            ],
             'shoe_count'          => ['required', 'integer', 'min:1'],
             'payment_method_id'   => ['required', 'exists:payment_methods,id'],
             'payment_status_id'   => ['required', 'exists:payment_statuses,id'],
             'description'         => ['nullable', 'string'],
-            'branch_id'           => ['required', 'exists:branches,id'],
-
+            'branch_id'           => [
+                'required',
+                Rule::exists('branches', 'id')->where('status', true)
+            ],
             // Validasi gambar (opsional, max 2MB dengan format gambar umum)
             'before_image'        => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
             'after_image'         => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
@@ -55,19 +64,17 @@ class StoreTransactionRequest extends FormRequest
     {
         return [
             'customer_id.required'         => 'Pelanggan wajib dipilih.',
-            'customer_id.exists'           => 'Pelanggan yang dipilih tidak valid.',
-
+            'customer_id.exists'           => 'Pelanggan yang dipilih tidak valid atau sudah tidak aktif.', // Pesan diperjelas
             'transaction_date.required'    => 'Tanggal transaksi wajib diisi.',
             'transaction_date.date'        => 'Format tanggal transaksi tidak valid.',
             'branch_id.required'           => 'Cabang wajib diisi.',
-            'branch_id.exists'             => 'Cabang tidak ditemukan.',
+            'branch_id.exists'             => 'Cabang tidak ditemukan atau sudah tidak aktif.',
             'pickup_date.required'         => 'Tanggal pengambilan wajib diisi.',
             'pickup_date.date'             => 'Format tanggal pengambilan tidak valid.',
             'pickup_date.after_or_equal'   => 'Tanggal pengambilan tidak boleh lebih awal dari tanggal transaksi.',
 
             'service_id.required'          => 'Layanan wajib dipilih.',
-            'service_id.exists'            => 'Layanan yang dipilih tidak valid.',
-
+            'service_id.exists'            => 'Layanan yang dipilih tidak valid atau sudah tidak aktif.', // Pesan diperjelas
             'shoe_count.required'          => 'Jumlah sepatu wajib diisi.',
             'shoe_count.integer'           => 'Jumlah sepatu harus berupa angka bulat.',
             'shoe_count.min'               => 'Jumlah sepatu minimal adalah 1.',

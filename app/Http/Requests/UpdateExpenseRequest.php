@@ -27,7 +27,7 @@ class UpdateExpenseRequest extends FormRequest
     {
         $user = Auth::user();
 
-        if ($user && !$user->is_owner) {
+        if (!$user->is_owner) {
             $this->merge([
                 'branch_id' => $user->branch_id,
             ]);

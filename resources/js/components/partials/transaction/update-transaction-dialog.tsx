@@ -45,6 +45,7 @@ import { format, parseISO } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { ChangeEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { Badge } from "@/components/ui/badge";
 
 export const UpdateTransactionDialog = ({
     transaction,
@@ -204,6 +205,12 @@ export const UpdateTransactionDialog = ({
                                                     value={String(branch.id)}
                                                 >
                                                     {branch.name}
+
+                                                    {!branch.status && (
+                                                        <Badge className="bg-red-50 text-xs text-red-700 dark:bg-red-950 dark:text-red-300">
+                                                            Nonaktif
+                                                        </Badge>
+                                                    )}
                                                 </SelectItem>
                                             ))}
                                         </SelectGroup>

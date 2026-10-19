@@ -24,6 +24,7 @@ export default function Transaction({
     customers,
     services,
     branches,
+    branchOptions,
     paymentMethods,
     paymentStatuses,
     transactionStatuses,
@@ -32,6 +33,7 @@ export default function Transaction({
     customers: CustomerType[];
     branches: BranchType[];
     services: ServiceType[];
+    branchOptions: BranchType[];
     paymentMethods: PaymentMethodType[];
     paymentStatuses: PaymentStatusType[];
     transactionStatuses: TransactionStatusType[];
@@ -106,7 +108,7 @@ export default function Transaction({
                     <div className="flex items-center justify-center gap-1">
                         <UpdateTransactionDialog
                             transaction={row.original}
-                            branches={branches}
+                            branches={branchOptions}
                             paymentMethods={paymentMethods}
                             paymentStatuses={paymentStatuses}
                             transactionStatuses={transactionStatuses}

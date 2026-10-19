@@ -20,7 +20,8 @@ class ExpenseController extends Controller
     {
         return inertia('expense', [
             "expenses" => Expense::with(["branch", "user", "expenseCategory"])->get(),
-            "branches" => Branch::all(),
+            "branches" => Branch::active()->get(),
+            "branchOptions" => Branch::get(['id', 'name', 'status']), // Spesific for branch dropdown on UpdateExpenseDialog
             "expenseCategories" => ExpenseCategory::all()
         ]);
     }

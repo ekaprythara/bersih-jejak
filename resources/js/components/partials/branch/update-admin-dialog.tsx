@@ -26,6 +26,7 @@ import { SubmitEventHandler, useEffect, useState } from "react";
 import { update } from "@/routes/admin";
 import InputError from "@/components/input-error";
 import { BranchType, UserType } from "@/types/data-types";
+import { Badge } from "@/components/ui/badge";
 
 export const UpdateAdminDialog = ({
     admin,
@@ -98,6 +99,12 @@ export const UpdateAdminDialog = ({
                                                 value={String(branch.id)}
                                             >
                                                 {`Cabang ${branch.name}`}
+
+                                                {!branch.status && (
+                                                    <Badge className="bg-red-50 text-xs text-red-700 dark:bg-red-950 dark:text-red-300">
+                                                        Nonaktif
+                                                    </Badge>
+                                                )}
                                             </SelectItem>
                                         ))}
                                     </SelectGroup>

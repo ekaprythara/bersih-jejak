@@ -20,10 +20,12 @@ import { UpdateExpenseDialog } from "@/components/partials/expense/update-expens
 export default function Expense({
     expenses,
     branches,
+    branchOptions,
     expenseCategories,
 }: {
     expenses: ExpenseType[];
     branches: BranchType[];
+    branchOptions: BranchType[];
     expenseCategories: ExpenseCategoryType[];
 }) {
     const { auth } = usePage().props;
@@ -87,7 +89,7 @@ export default function Expense({
                         <UpdateExpenseDialog
                             expense={row.original}
                             expenseCategories={expenseCategories}
-                            branches={branches}
+                            branches={branchOptions}
                         />
                     </div>
                 );
