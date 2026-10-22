@@ -13,12 +13,13 @@ class BranchController extends Controller
     public function index()
     {
         return inertia('branch', [
-            'branches' => Branch::active()->latest()->get(),
-            'branchOptions' => Branch::get(['id', 'name', 'status']),
+            'branches' => Branch::latest()->paginate(10), // untuk menampilkan data table cabang
+            'branchOptionsCreate' => Branch::active()->latest()->get(['id', 'name', 'status']), // dropdown di create admin
+            'branchOptionsUpdate' => Branch::latest()->get(['id', 'name', 'status']), //dropdown di edit admin
             'users' => User::with(['role', 'branch'])
                 ->where('role_id', 2)
                 ->latest()
-                ->get(),
+                ->paginate(10), // untuk menampilkan data table cabang
         ]);
     }
 

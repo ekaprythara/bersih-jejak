@@ -18,6 +18,7 @@ import type {
 import { CreateTransactionDialog } from "@/components/partials/transaction/create-transaction-dialog";
 import { UpdateTransactionDialog } from "@/components/partials/transaction/update-transaction-dialog";
 import { Badge } from "@/components/ui/badge";
+import SortTransactionForm from "@/components/partials/transaction/sort-transaction-form";
 
 export default function Transaction({
     transactions,
@@ -28,12 +29,18 @@ export default function Transaction({
     paymentMethods,
     paymentStatuses,
     transactionStatuses,
+    filters,
 }: {
     transactions: TransactionType[];
     customers: CustomerType[];
     branches: BranchType[];
     services: ServiceType[];
     branchOptions: BranchType[];
+    filters: {
+        branch_id: string;
+        transaction_status_id: string;
+        payment_status_id: string;
+    };
     paymentMethods: PaymentMethodType[];
     paymentStatuses: PaymentStatusType[];
     transactionStatuses: TransactionStatusType[];
@@ -130,7 +137,13 @@ export default function Transaction({
                 />
 
                 <div className="flex flex-col gap-4">
-                    <div className="flex justify-end items-center">
+                    <div className="flex justify-between items-center">
+                        <SortTransactionForm
+                            branches={branchOptions}
+                            transactionStatuses={transactionStatuses}
+                            paymentStatuses={paymentStatuses}
+                            filters={filters}
+                        />
                         <CreateTransactionDialog
                             customers={customers}
                             services={services}
@@ -140,7 +153,7 @@ export default function Transaction({
                         />
                     </div>
 
-                    <DataTable columns={columns} data={transactions} />
+                    <DataTable columns={columns} data={transactions.data} />
                 </div>
             </div>
         </>

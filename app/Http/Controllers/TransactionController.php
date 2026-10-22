@@ -20,10 +20,42 @@ class TransactionController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index()
+    public function index(Request $request)
     {
+        // Ambil parameter filter dari request, default 'all'
+        $branchId = $request->input('branch_id', 'all');
+        $transactionStatusId = $request->input('transaction_status_id', 'all');
+        $paymentStatusId = $request->input('payment_status_id', 'all');
+
+        // Buat base query dengan relasi yang dibutuhkan
+        $query = Transaction::with([
+            "customer",
+            "service",
+            "branch",
+            "user",
+            "transactionStatus",
+            "paymentStatus",
+            "paymentMethod"
+        ]);
+
+        // 1. Filter berdasarkan Branch
+        if ($branchId && $branchId !== 'all') {
+            $query->where('branch_id', $branchId);
+        }
+
+        // 2. Filter berdasarkan Transaction Status
+        if ($transactionStatusId && $transactionStatusId !== 'all') {
+            $query->where('transaction_status_id', $transactionStatusId);
+        }
+
+        // 3. Filter berdasarkan Payment Status
+        if ($paymentStatusId && $paymentStatusId !== 'all') {
+            $query->where('payment_status_id', $paymentStatusId);
+        }
+
         return inertia("transaction", [
-            "transactions" => Transaction::with(["customer", "service", "branch", "user", "transactionStatus", "paymentStatus", "paymentMethod"])->get(),
+            // Eksekusi query dengan urutan latest dan pagination
+            "transactions" => $query->latest()->paginate(10)->withQueryString(),
             "customers" => Customer::active()->get(['id', 'name']),
             "services" => Service::active()->get(['id', 'name', 'price']),
             "paymentMethods" => PaymentMethod::get(['id', 'name']),
@@ -31,6 +63,11 @@ class TransactionController extends Controller
             "transactionStatuses" => TransactionStatus::get(['id', 'name']),
             "branches" => Branch::active()->get(['id', 'name']),
             "branchOptions" => Branch::get(['id', 'name', 'status']),
+            "filters" => $request->only([
+                'branch_id',
+                'transaction_status_id',
+                'payment_status_id'
+            ]),
         ]);
     }
 

@@ -47,7 +47,8 @@ const handleBranchStatusChange = (id: number, newStatus: boolean) => {
 
 export default function Branch({
     branches,
-    branchOptions,
+    branchOptionsCreate,
+    branchOptionsUpdate,
     users,
 }: BranchProps) {
     const adminColumns: ColumnDef<typeof features, UserType>[] = [
@@ -88,7 +89,7 @@ export default function Branch({
                     <div className="flex justify-center items-center gap-1">
                         <UpdateAdminDialog
                             admin={row.original}
-                            branches={branchOptions}
+                            branches={branchOptionsUpdate}
                         />
                     </div>
                 );
@@ -153,11 +154,14 @@ export default function Branch({
                                 Data Admin
                             </h2>
 
-                            <CreateAdminDialog branches={branches} />
+                            <CreateAdminDialog branches={branchOptionsCreate} />
                         </div>
 
                         <div>
-                            <DataTable columns={adminColumns} data={users} />
+                            <DataTable
+                                columns={adminColumns}
+                                data={users.data}
+                            />
                         </div>
                     </div>
 
@@ -173,7 +177,7 @@ export default function Branch({
                         <div>
                             <DataTable
                                 columns={branchColumns}
-                                data={branchOptions}
+                                data={branches.data}
                             />
                         </div>
                     </div>

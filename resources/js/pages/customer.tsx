@@ -98,7 +98,7 @@ export default function Customer({ customers }: { customers: CustomerType[] }) {
                     <div className="flex justify-end items-center">
                         <CreateCustomerDialog />
                     </div>
-                    <DataTable columns={columns} data={customers} />
+                    <DataTable columns={columns} data={customers.data} />
                 </div>
             </div>
         </>

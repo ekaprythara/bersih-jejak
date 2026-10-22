@@ -83,7 +83,7 @@ export default function Service({ services }: { services: ServiceType[] }) {
                         <CreateServiceDialog />
                     </div>
 
-                    <DataTable columns={columns} data={services} />
+                    <DataTable columns={columns} data={services.data} />
                 </div>
             </div>
         </>

@@ -121,6 +121,7 @@ class DatabaseSeeder extends Seeder
             'price' => 40000,
             'estimated_days' => 3
         ]);
+        Service::factory()->count(50)->create();
 
         Customer::factory()->create([
             'name' => 'Budi Santoso',

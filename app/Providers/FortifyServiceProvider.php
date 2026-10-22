@@ -59,7 +59,7 @@ class FortifyServiceProvider extends ServiceProvider
                 // Jika user ATAU cabangnya nonaktif, gagalkan login dan munculkan pesan error
                 if ($isUserDisabled || $isBranchDisabled) {
                     throw ValidationException::withMessages([
-                        Fortify::username() => 'Akun Anda atau cabang tempat Anda bertugas telah dinonaktifkan.',
+                        Fortify::username() => 'Akun Anda atau cabang tempat Anda bertugas telah dinonaktifkan. Hubungi Owner untuk dapat login kembali.',
                     ]);
                 }
 

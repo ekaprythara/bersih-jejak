@@ -27,7 +27,8 @@ export interface UserType {
 export type BranchProps = {
     branches: BranchType[];
     users: UserType[];
-    branchOptions: BranchType[];
+    branchOptionsCreate: BranchType[];
+    branchOptionsUpdate: BranchType[];
 };
 
 export type CustomerType = {

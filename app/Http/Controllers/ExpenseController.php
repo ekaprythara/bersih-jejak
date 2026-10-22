@@ -16,13 +16,32 @@ class ExpenseController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index()
+
+    public function index(Request $request)
     {
+        $authenticatedUserBranch = Auth::user()->branch_id;
+
+        $branchId = $request->input("branch_id", "all");
+
+        $query = Expense::with(["branch", "user", "expenseCategory"]);
+
+        if ($authenticatedUserBranch) {
+            $query->where("branch_id", $authenticatedUserBranch);
+        } else if ($branchId && $branchId !== "all") {
+            $query->where("branch_id", $branchId);
+        }
+
+        $branchData = $query->latest()->paginate(10);
+
         return inertia('expense', [
-            "expenses" => Expense::with(["branch", "user", "expenseCategory"])->get(),
+            "expenses" => $branchData,
+            "allBranches" => Branch::get(['id', 'name']),
             "branches" => Branch::active()->get(),
             "branchOptions" => Branch::get(['id', 'name', 'status']), // Spesific for branch dropdown on UpdateExpenseDialog
-            "expenseCategories" => ExpenseCategory::all()
+            "expenseCategories" => ExpenseCategory::all(),
+            "filters" => $request->only([
+                'branch_id',
+            ])
         ]);
     }
 

@@ -6,11 +6,10 @@ import {
     globalFilteringFeature,
     createSortedRowModel,
     rowSortingFeature,
-    sortFn_alphanumeric,
-    sortFn_datetime,
-    sortFn_text,
     createFilteredRowModel,
     filterFn_includesString,
+    rowPaginationFeature,
+    createPaginatedRowModel,
 } from "@tanstack/react-table";
 
 import type { ColumnDef, RowData } from "@tanstack/react-table";
@@ -24,7 +23,16 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Input } from "./ui/input";
-import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import {
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    ChevronsLeft,
+    ChevronsRight,
+    ChevronUp,
+    Search,
+} from "lucide-react";
+import { Button } from "./ui/button";
 
 export const features = tableFeatures({
     rowSortingFeature,
@@ -33,15 +41,11 @@ export const features = tableFeatures({
     filteredRowModel: createFilteredRowModel(),
     filterFns: { includesString: filterFn_includesString },
     sortedRowModel: createSortedRowModel(),
-    sortFns: {
-        alphanumeric: sortFn_alphanumeric,
-        datetime: sortFn_datetime,
-        text: sortFn_text,
-    },
+    rowPaginationFeature,
+    paginatedRowModel: createPaginatedRowModel(),
 });
 
 type DataTableProps<TData extends RowData> = {
-    // Perbaikan tipe ColumnDef agar menerima tipe data TData yang benar
     columns: ColumnDef<typeof features, any>[];
     data: TData[];
 };
@@ -50,27 +54,32 @@ const DataTable = <TData extends RowData>({
     columns,
     data,
 }: DataTableProps<TData>) => {
-    const table = useTable({
-        features,
-        columns,
-        data,
-        globalFilterFn: "includesString",
-    });
+    const table = useTable(
+        {
+            features,
+            columns,
+            data,
+            globalFilterFn: "includesString",
+        },
+        (state) => state,
+    );
 
     return (
         <div className="flex flex-col gap-4">
+            {/* Input Pencarian */}
             <div className="w-fit ms-auto relative">
-                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-
+                <Search className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                     value={table.state.globalFilter ?? ""}
                     onChange={(e) =>
                         table.setGlobalFilter(String(e.target.value))
                     }
                     placeholder="Cari..."
-                    className="pl-8"
+                    className="pl-8 h-8"
                 />
             </div>
+
+            {/* Tabel */}
             <div className="rounded-xl border border-sidebar-border/70 bg-card shadow-sm overflow-hidden">
                 <Table>
                     <TableHeader className="bg-muted/50">
@@ -82,29 +91,17 @@ const DataTable = <TData extends RowData>({
                                 {headerGroup.headers.map((header) => (
                                     <TableHead
                                         key={header.id}
-                                        className="h-11 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                                        className="h-10 px-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider"
                                     >
                                         {header.isPlaceholder ? null : (
                                             <div
                                                 className={
                                                     header.column.getCanSort()
-                                                        ? "sortable-header cursor-pointer select-none flex items-center gap-1"
+                                                        ? "cursor-pointer select-none flex items-center gap-1"
                                                         : ""
                                                 }
                                                 onClick={header.column.getToggleSortingHandler()}
-                                                title={
-                                                    header.column.getCanSort()
-                                                        ? header.column.getNextSortingOrder() ===
-                                                          "asc"
-                                                            ? "Sort ascending"
-                                                            : header.column.getNextSortingOrder() ===
-                                                                "desc"
-                                                              ? "Sort descending"
-                                                              : "Clear sort"
-                                                        : undefined
-                                                }
                                             >
-                                                {/* Perbaikan: Gunakan flexRender yang diimport di atas, bukan table.FlexRender */}
                                                 {flexRender(
                                                     header.column.columnDef
                                                         .header,
@@ -112,10 +109,10 @@ const DataTable = <TData extends RowData>({
                                                 )}
                                                 {{
                                                     asc: (
-                                                        <ChevronUp className="h-4 w-4" />
+                                                        <ChevronUp className="h-3.5 w-3.5" />
                                                     ),
                                                     desc: (
-                                                        <ChevronDown className="h-4 w-4" />
+                                                        <ChevronDown className="h-3.5 w-3.5" />
                                                     ),
                                                 }[
                                                     header.column.getIsSorted() as string
@@ -133,12 +130,12 @@ const DataTable = <TData extends RowData>({
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
-                                    className="transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted"
+                                    className="transition-colors hover:bg-muted/40"
                                 >
                                     {row.getAllCells().map((cell) => (
                                         <TableCell
                                             key={cell.id}
-                                            className="px-4 py-3.5 text-sm text-foreground/90"
+                                            className="px-4 py-3 text-foreground/90"
                                         >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
@@ -152,7 +149,7 @@ const DataTable = <TData extends RowData>({
                             <TableRow>
                                 <TableCell
                                     colSpan={columns.length}
-                                    className="h-24 text-center text-sm text-muted-foreground"
+                                    className="h-24 text-center text-muted-foreground"
                                 >
                                     Tidak ada data.
                                 </TableCell>
@@ -160,6 +157,52 @@ const DataTable = <TData extends RowData>({
                         )}
                     </TableBody>
                 </Table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between">
+                <div className="text-muted-foreground font-medium text-sm">
+                    {`Halaman ${table.state.pagination.pageIndex + 1} dari ${table.getPageCount().toLocaleString()}`}
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => table.firstPage()}
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        <ChevronsLeft className="h-3.5 w-3.5 text-neutral-600" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => table.previousPage()}
+                        disabled={!table.getCanPreviousPage()}
+                    >
+                        <ChevronLeft className="h-3.5 w-3.5 text-neutral-600" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => table.nextPage()}
+                        disabled={!table.getCanNextPage()}
+                    >
+                        <ChevronRight className="h-3.5 w-3.5 text-neutral-600" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => table.lastPage()}
+                        disabled={!table.getCanNextPage()}
+                    >
+                        <ChevronsRight className="h-3.5 w-3.5 text-neutral-600" />
+                    </Button>
+                </div>
             </div>
         </div>
     );

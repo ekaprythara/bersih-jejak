@@ -16,16 +16,25 @@ import ServiceStatusSwitch from "@/components/service-status-switch";
 import { UpdateServiceDialog } from "@/components/partials/service/update-service-dialog";
 import { CreateExpenseDialog } from "@/components/partials/expense/create-expense-dialog";
 import { UpdateExpenseDialog } from "@/components/partials/expense/update-expense-dialog";
+import SortExpenseForm from "@/components/partials/expense/sort-expense-form";
 
 export default function Expense({
     expenses,
     branches,
     branchOptions,
+    allBranches,
     expenseCategories,
+    filters,
 }: {
     expenses: ExpenseType[];
     branches: BranchType[];
+    allBranches: BranchType[];
     branchOptions: BranchType[];
+    filters: {
+        branch_id: string;
+        transaction_status_id: string;
+        payment_status_id: string;
+    };
     expenseCategories: ExpenseCategoryType[];
 }) {
     const { auth } = usePage().props;
@@ -108,14 +117,20 @@ export default function Expense({
                 />
 
                 <div className="flex flex-col gap-4">
-                    <div className="flex justify-end items-center">
+                    <div className="flex justify-between items-center">
+                        {currentUser.is_owner && (
+                            <SortExpenseForm
+                                branches={allBranches}
+                                filters={filters}
+                            />
+                        )}
                         <CreateExpenseDialog
                             branches={branches}
                             expenseCategories={expenseCategories}
                         />
                     </div>
 
-                    <DataTable columns={columns} data={expenses} />
+                    <DataTable columns={columns} data={expenses.data} />
                 </div>
             </div>
         </>
