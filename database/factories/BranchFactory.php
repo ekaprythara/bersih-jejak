@@ -10,15 +10,15 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class BranchFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Branch::class;
+
     public function definition(): array
     {
         return [
-            //
+            'name'         => 'Cabang ' . $this->faker->city(),
+            'address'      => $this->faker->address(), // Tambahkan ini
+            'phone_number' => $this->faker->phoneNumber(), // Tambahkan ini jika wajib
+            'status'       => true,
         ];
     }
 }

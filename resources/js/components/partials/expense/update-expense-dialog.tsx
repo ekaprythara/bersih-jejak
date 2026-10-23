@@ -42,6 +42,7 @@ import {
     CircleCheck,
     CircleMinus,
     Pencil,
+    SquarePen,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { update } from "@/routes/expenses";
@@ -117,7 +118,9 @@ export const UpdateExpenseDialog = ({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Edit</Button>
+                <Button size="icon" variant="warning">
+                    <SquarePen />
+                </Button>
             </DialogTrigger>
 
             <DialogContent className="overflow-y-scroll scrollbar-none max-h-[95vh]">

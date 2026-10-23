@@ -158,10 +158,7 @@ export default function Branch({
                         </div>
 
                         <div>
-                            <DataTable
-                                columns={adminColumns}
-                                data={users.data}
-                            />
+                            <DataTable columns={adminColumns} data={users} />
                         </div>
                     </div>
 
@@ -177,7 +174,7 @@ export default function Branch({
                         <div>
                             <DataTable
                                 columns={branchColumns}
-                                data={branches.data}
+                                data={branches}
                             />
                         </div>
                     </div>

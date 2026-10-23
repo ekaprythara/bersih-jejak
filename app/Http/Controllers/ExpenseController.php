@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Services\CloudinaryService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,10 @@ class ExpenseController extends Controller
         $authenticatedUserBranch = Auth::user()->branch_id;
 
         $branchId = $request->input("branch_id", "all");
+        $expenseCategoryId = $request->input('expense_category_id', "all");
+        $minDate = $request->input("min_date", "");
+        $maxDate = $request->input("max_date", "");
+
 
         $query = Expense::with(["branch", "user", "expenseCategory"]);
 
@@ -31,7 +36,18 @@ class ExpenseController extends Controller
             $query->where("branch_id", $branchId);
         }
 
-        $branchData = $query->latest()->paginate(10);
+        if ($minDate && $minDate !== "") {
+            $query->where('expense_date', ">=", $minDate);
+        }
+        if ($maxDate && $maxDate !== "") {
+            $query->where('expense_date', "<=", $maxDate);
+        }
+
+        if ($expenseCategoryId && $expenseCategoryId !== "all") {
+            $query->where('expense_category_id', $expenseCategoryId);
+        }
+
+        $branchData = $query->latest('expense_date')->get();
 
         return inertia('expense', [
             "expenses" => $branchData,
@@ -40,7 +56,10 @@ class ExpenseController extends Controller
             "branchOptions" => Branch::get(['id', 'name', 'status']), // Spesific for branch dropdown on UpdateExpenseDialog
             "expenseCategories" => ExpenseCategory::all(),
             "filters" => $request->only([
+                'min_date',
+                'max_date',
                 'branch_id',
+                'expense_category_id',
             ])
         ]);
     }
@@ -106,5 +125,42 @@ class ExpenseController extends Controller
 
         return redirect()->route('expenses.index')
             ->with('success', 'Pengeluaran berhasil diperbarui.');
+    }
+
+    public function printPdf(Request $request)
+    {
+        $authenticatedUserBranch = Auth::user()->branch_id;
+        $branchId = $request->query('branch_id'); // Gunakan $request->query() untuk GET
+        $expenseCategoryId = $request->input('expense_category_id', "all");
+        $minDate = $request->input("min_date", "");
+        $maxDate = $request->input("max_date", "");
+
+        $query = Expense::with(['expenseCategory', 'branch', 'user']);
+
+        if ($authenticatedUserBranch) {
+            $query->where("branch_id", $authenticatedUserBranch);
+        } else if ($branchId && $branchId !== "all") {
+            $query->where("branch_id", $branchId);
+        }
+
+        if ($minDate && $minDate !== "") {
+            $query->where('expense_date', ">=", $minDate);
+        }
+        if ($maxDate && $maxDate !== "") {
+            $query->where('expense_date', "<=", $maxDate);
+        }
+
+        if ($expenseCategoryId && $expenseCategoryId !== "all") {
+            $query->where('expense_category_id', $expenseCategoryId);
+        }
+
+        $expenses = $query->oldest('expense_date')->get();
+
+        $selectedBranch = Branch::find($authenticatedUserBranch);
+
+        $pdf = Pdf::loadView('prints.expense.expense-report', compact('expenses', 'selectedBranch'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->stream('laporan-pengeluaran.pdf');
     }
 }

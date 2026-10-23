@@ -12,6 +12,7 @@ use App\Models\Service;
 use App\Models\Transaction;
 use App\Models\TransactionStatus;
 use App\Services\CloudinaryService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,10 +23,15 @@ class TransactionController extends Controller
 
     public function index(Request $request)
     {
-        // Ambil parameter filter dari request, default 'all'
+        $authenticatedUserBranch = Auth::user()->branch_id;
+
+        $minDate = $request->input("min_date", "");
+        $maxDate = $request->input("max_date", "");
         $branchId = $request->input('branch_id', 'all');
+        $serviceId = $request->input('service_id', 'all');
         $transactionStatusId = $request->input('transaction_status_id', 'all');
         $paymentStatusId = $request->input('payment_status_id', 'all');
+        $paymentMethodId = $request->input('payment_method_id', 'all');
 
         // Buat base query dengan relasi yang dibutuhkan
         $query = Transaction::with([
@@ -38,35 +44,54 @@ class TransactionController extends Controller
             "paymentMethod"
         ]);
 
-        // 1. Filter berdasarkan Branch
-        if ($branchId && $branchId !== 'all') {
-            $query->where('branch_id', $branchId);
+        if ($authenticatedUserBranch) {
+            $query->where("branch_id", $authenticatedUserBranch);
+        } else if ($branchId && $branchId !== "all") {
+            $query->where("branch_id", $branchId);
         }
 
-        // 2. Filter berdasarkan Transaction Status
+        if ($minDate && $minDate !== "") {
+            $query->where('transaction_date', ">=", $minDate);
+        }
+        if ($maxDate && $maxDate !== "") {
+            $query->where('transaction_date', "<=", $maxDate);
+        }
+
+        if ($serviceId && $serviceId !== 'all') {
+            $query->where('service_id', $serviceId);
+        }
+
         if ($transactionStatusId && $transactionStatusId !== 'all') {
             $query->where('transaction_status_id', $transactionStatusId);
         }
 
-        // 3. Filter berdasarkan Payment Status
         if ($paymentStatusId && $paymentStatusId !== 'all') {
             $query->where('payment_status_id', $paymentStatusId);
         }
 
+        if ($paymentMethodId && $paymentMethodId !== 'all') {
+            $query->where('payment_method_id', $paymentMethodId);
+        }
+
         return inertia("transaction", [
             // Eksekusi query dengan urutan latest dan pagination
-            "transactions" => $query->latest()->paginate(10)->withQueryString(),
+            "transactions" => $query->latest('transaction_date')->get(),
             "customers" => Customer::active()->get(['id', 'name']),
             "services" => Service::active()->get(['id', 'name', 'price']),
             "paymentMethods" => PaymentMethod::get(['id', 'name']),
             "paymentStatuses" => PaymentStatus::get(['id', 'name']),
             "transactionStatuses" => TransactionStatus::get(['id', 'name']),
             "branches" => Branch::active()->get(['id', 'name']),
+            "serviceOptions" => Service::get(['id', 'name', 'status']),
             "branchOptions" => Branch::get(['id', 'name', 'status']),
             "filters" => $request->only([
+                'min_date',
+                'max_date',
                 'branch_id',
+                'service_id',
                 'transaction_status_id',
-                'payment_status_id'
+                'payment_status_id',
+                'payment_method_id',
             ]),
         ]);
     }
@@ -96,7 +121,7 @@ class TransactionController extends Controller
         Transaction::create(array_merge(
             $request->validated(),
             [
-                'user_id'               => Auth::id(),
+                'user_id'                 => Auth::id(),
                 'total_amount'            => $totalAmount,
                 'transaction_status_id'   => $defaultTransactionStatusId,
                 'before_image_url'        => $imageUrl,
@@ -147,5 +172,82 @@ class TransactionController extends Controller
         $transaction->update($validatedData);
 
         return redirect()->back()->with('success', 'Transaksi berhasil diperbarui!');
+    }
+
+    public function printPdf(Request $request)
+    {
+        // dd($request->all());
+        $authenticatedUserBranch = Auth::user()->branch_id;
+
+        $minDate = $request->input("min_date", "");
+        $maxDate = $request->input("max_date", "");
+        $branchId = $request->input('branch_id', 'all');
+        $serviceId = $request->input('service_id', 'all');
+        $transactionStatusId = $request->input('transaction_status_id', 'all');
+        $paymentStatusId = $request->input('payment_status_id', 'all');
+        $paymentMethodId = $request->input('payment_method_id', 'all');
+
+        // Query dengan relasi lengkap
+        $query = Transaction::with([
+            "customer",
+            "service",
+            "branch",
+            "user",
+            "transactionStatus",
+            "paymentStatus",
+            "paymentMethod"
+        ]);
+
+        if ($authenticatedUserBranch) {
+            $query->where("branch_id", $authenticatedUserBranch);
+        } else if ($branchId && $branchId !== "all") {
+            $query->where("branch_id", $branchId);
+        }
+
+        if ($minDate && $minDate !== "") {
+            $query->where('transaction_date', ">=", $minDate);
+        }
+        if ($maxDate && $maxDate !== "") {
+            $query->where('transaction_date', "<=", $maxDate);
+        }
+
+        if ($serviceId && $serviceId !== 'all') {
+            $query->where('service_id', $serviceId);
+        }
+
+        if ($transactionStatusId && $transactionStatusId !== 'all') {
+            $query->where('transaction_status_id', $transactionStatusId);
+        }
+
+        if ($paymentStatusId && $paymentStatusId !== 'all') {
+            $query->where('payment_status_id', $paymentStatusId);
+        }
+
+        if ($paymentMethodId && $paymentMethodId !== 'all') {
+            $query->where('payment_method_id', $paymentMethodId);
+        }
+
+        if ($authenticatedUserBranch) {
+            $selectedBranch = Branch::find($authenticatedUserBranch);
+        } else if ($branchId) {
+            $selectedBranch = Branch::find($branchId);
+        }
+
+
+        $transactions = $query->oldest('transaction_date')->get();
+
+        $pdf = Pdf::loadView('prints.transaction.transaction-report', compact('transactions', 'selectedBranch'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->stream('laporan-transaksi.pdf');
+    }
+
+    public function printTransaction(Request $request, Transaction $transaction)
+    {
+        $customPaper = [0, 0, 226.77, 800]; // 80mm x menyesuaikan panjang konten
+        $pdf = Pdf::loadView('prints.transaction.transaction-notes', compact('transaction'))
+            ->setPaper($customPaper, 'portrait');
+
+        return $pdf->stream('nota-transaksi-' . date('Y-m-d') . '.pdf');
     }
 }

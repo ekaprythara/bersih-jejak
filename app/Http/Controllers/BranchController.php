@@ -19,7 +19,7 @@ class BranchController extends Controller
             'users' => User::with(['role', 'branch'])
                 ->where('role_id', 2)
                 ->latest()
-                ->paginate(10), // untuk menampilkan data table cabang
+                ->get(), // untuk menampilkan data table cabang
         ]);
     }
 

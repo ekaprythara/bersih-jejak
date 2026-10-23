@@ -23,6 +23,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('transactions', [TransactionController::class, 'index'])->name("transactions.index");
     Route::post('transactions/create', [TransactionController::class, 'store'])->name("transactions.store");
     Route::patch('transactions/{transaction}/edit', [TransactionController::class, 'update'])->name('transactions.update');
+    Route::get('transactions/print', [TransactionController::class, 'printPdf'])->name('transactions.printPdf');
+    Route::get('transactions/{transaction}/print-transaction', [TransactionController::class, 'printTransaction'])->name('transactions.printTransaction');
+
 
     Route::get('customers', [CustomerController::class, 'index'])->name("customers.index");
     Route::post('customers/create', [CustomerController::class, 'store'])->name("customers.store");
@@ -48,6 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('expenses/create', [ExpenseController::class, 'store'])->name("expenses.store");
     Route::patch('expenses/{expense}/status', [ExpenseController::class, 'updateStatus'])->name("expenses.updateStatus");
     Route::patch('expenses/{expense}/edit', [ExpenseController::class, 'update'])->name('expenses.update');
+    Route::get('expenses/print', [ExpenseController::class, 'printPdf'])->name('expenses.printPdf');
 });
 
 require __DIR__ . '/settings.php';

@@ -1,7 +1,7 @@
 import DataTable, { features } from "@/components/data-table";
 import Heading from "@/components/heading";
 import { dashboard } from "@/routes";
-import { index } from "@/routes/transactions";
+import { index, printTransaction } from "@/routes/transactions";
 import { updateStatus } from "@/routes/customers";
 import { Head, router, usePage } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
@@ -19,6 +19,7 @@ import { CreateTransactionDialog } from "@/components/partials/transaction/creat
 import { UpdateTransactionDialog } from "@/components/partials/transaction/update-transaction-dialog";
 import { Badge } from "@/components/ui/badge";
 import SortTransactionForm from "@/components/partials/transaction/sort-transaction-form";
+import { Button } from "@/components/ui/button";
 
 export default function Transaction({
     transactions,
@@ -29,6 +30,7 @@ export default function Transaction({
     paymentMethods,
     paymentStatuses,
     transactionStatuses,
+    serviceOptions,
     filters,
 }: {
     transactions: TransactionType[];
@@ -36,10 +38,15 @@ export default function Transaction({
     branches: BranchType[];
     services: ServiceType[];
     branchOptions: BranchType[];
+    serviceOptions: ServiceType[];
     filters: {
-        branch_id: string;
-        transaction_status_id: string;
-        payment_status_id: string;
+        min_date?: string | null;
+        max_date?: string | null;
+        branch_id?: string | number | null;
+        service_id?: string | number | null;
+        transaction_status_id?: string | number | null;
+        payment_status_id?: string | number | null;
+        payment_method_id?: string | number | null;
     };
     paymentMethods: PaymentMethodType[];
     paymentStatuses: PaymentStatusType[];
@@ -67,36 +74,70 @@ export default function Transaction({
             header: "Tanggal Transaksi",
         },
         {
-            accessorKey: "customer.name",
-            header: "Nama Pelanggan",
-        },
-        {
             accessorKey: "pickup_date",
             header: "Tanggal Ambil",
         },
         {
-            accessorKey: "service.name", // Jika menggunakan relasi Eloquent (eager load)
+            accessorKey: "branch.name",
+            header: "Cabang",
+        },
+        {
+            accessorKey: "customer.name",
+            header: "Nama Pelanggan",
+        },
+        {
+            accessorKey: "service.name",
             header: "Layanan",
         },
         {
             accessorKey: "transaction_status.name",
             header: "Status Transaksi",
             cell: ({ row }) => {
-                return <Badge>{row.original.transaction_status?.name}</Badge>;
+                const statusName =
+                    row.original.transaction_status?.name?.toLowerCase() || "";
+
+                // Menentukan varian badge berdasarkan status
+                let badgeVariant:
+                    | "default"
+                    | "secondary"
+                    | "destructive"
+                    | "outline"
+                    | "success"
+                    | "warning"
+                    | "info"
+                    | "dark" = "secondary";
+
+                if (
+                    statusName.includes("selesai") ||
+                    statusName.includes("completed")
+                ) {
+                    badgeVariant = "success"; // Hijau
+                } else if (
+                    statusName.includes("proses") ||
+                    statusName.includes("progress")
+                ) {
+                    badgeVariant = "info"; // Biru / Sky
+                } else if (
+                    statusName.includes("pending") ||
+                    statusName.includes("tertunda")
+                ) {
+                    badgeVariant = "warning"; // Kuning / Amber
+                }
+
+                return (
+                    <Badge variant={badgeVariant}>
+                        {row.original.transaction_status?.name ?? "-"}
+                    </Badge>
+                );
             },
         },
         {
             accessorKey: "payment_status.name",
             header: "Status Pembayaran",
         },
-
         {
             accessorKey: "payment_method.name",
             header: "Metode Pembayaran",
-        },
-        {
-            accessorKey: "branch.name",
-            header: "Cabang",
         },
         {
             accessorKey: "user.name",
@@ -105,12 +146,25 @@ export default function Transaction({
         {
             header: "Aksi",
             cell: ({ row }) => {
-                // Gunakan fungsi canModify untuk pengecekan
+                const handlePrintPdf = (e: React.FormEvent) => {
+                    e.preventDefault();
+
+                    const url = new URL(
+                        printTransaction.url(row.original.id),
+                        window.location.origin,
+                    );
+
+                    window.open(url.toString(), "_blank");
+                };
+
                 if (!canModify(row.original)) {
-                    return null; // Jika tidak boleh edit, kembalikan null (kosong)
+                    return (
+                        <div className="flex items-center justify-center gap-1">
+                            <Button onClick={handlePrintPdf}>Print Nota</Button>
+                        </div>
+                    );
                 }
 
-                // Jika boleh edit, return komponennya
                 return (
                     <div className="flex items-center justify-center gap-1">
                         <UpdateTransactionDialog
@@ -120,6 +174,7 @@ export default function Transaction({
                             paymentStatuses={paymentStatuses}
                             transactionStatuses={transactionStatuses}
                         />
+                        <Button onClick={handlePrintPdf}>Print Nota</Button>
                     </div>
                 );
             },
@@ -137,11 +192,13 @@ export default function Transaction({
                 />
 
                 <div className="flex flex-col gap-4">
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-start gap-20">
                         <SortTransactionForm
                             branches={branchOptions}
+                            services={serviceOptions}
                             transactionStatuses={transactionStatuses}
                             paymentStatuses={paymentStatuses}
+                            paymentMethods={paymentMethods}
                             filters={filters}
                         />
                         <CreateTransactionDialog
@@ -153,7 +210,7 @@ export default function Transaction({
                         />
                     </div>
 
-                    <DataTable columns={columns} data={transactions.data} />
+                    <DataTable columns={columns} data={transactions} />
                 </div>
             </div>
         </>

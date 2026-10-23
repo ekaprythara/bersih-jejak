@@ -11,6 +11,7 @@ import { register } from "@/routes";
 import { store } from "@/routes/login";
 import { request } from "@/routes/password";
 import PasskeyVerify from "@/components/passkey-verify";
+import { useEffect, useRef, useState } from "react";
 
 type Props = {
     status?: string;
@@ -18,6 +19,32 @@ type Props = {
 };
 
 export default function Login({ status, canResetPassword }: Props) {
+    const [isChecked, setIsChecked] = useState(false);
+    const [username, setUsername] = useState("");
+    const passwordRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        const savedUsername = localStorage.getItem("username") ?? "";
+        const isRemembered = localStorage.getItem("isRemembered") === "true";
+
+        setUsername(savedUsername);
+        setIsChecked(isRemembered);
+
+        if (isRemembered && savedUsername) {
+            passwordRef.current?.focus();
+        }
+    }, []);
+
+    const handleFormSubmit = () => {
+        if (isChecked) {
+            localStorage.setItem("username", username);
+            localStorage.setItem("isRemembered", "true");
+        } else {
+            localStorage.removeItem("username");
+            localStorage.removeItem("isRemembered");
+        }
+    };
+
     return (
         <>
             <Head title="Log in" />
@@ -28,6 +55,16 @@ export default function Login({ status, canResetPassword }: Props) {
                 {...store.form()}
                 resetOnSuccess={["password"]}
                 className="flex flex-col gap-6"
+                onSubmit={handleFormSubmit}
+                onSuccess={() => {
+                    if (isChecked) {
+                        localStorage.setItem("username", username);
+                        localStorage.setItem("isRemembered", "true");
+                    } else {
+                        localStorage.removeItem("username");
+                        localStorage.removeItem("isRemembered");
+                    }
+                }}
             >
                 {({ processing, errors }) => (
                     <>
@@ -38,10 +75,14 @@ export default function Login({ status, canResetPassword }: Props) {
                                     id="username"
                                     name="username"
                                     required
-                                    autoFocus
                                     tabIndex={1}
+                                    autoFocus
                                     autoComplete="username"
                                     placeholder="Nama Pengguna"
+                                    value={username}
+                                    onChange={(e) =>
+                                        setUsername(e.target.value)
+                                    }
                                 />
                                 <InputError message={errors.username} />
                             </div>
@@ -60,6 +101,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                     )}
                                 </div>
                                 <PasswordInput
+                                    ref={passwordRef}
                                     id="password"
                                     name="password"
                                     required
@@ -74,7 +116,10 @@ export default function Login({ status, canResetPassword }: Props) {
                                 <Checkbox
                                     id="remember"
                                     name="remember"
-                                    tabIndex={3}
+                                    checked={isChecked}
+                                    onCheckedChange={(checked) =>
+                                        setIsChecked(checked === true)
+                                    }
                                 />
                                 <Label htmlFor="remember">Remember me</Label>
                             </div>

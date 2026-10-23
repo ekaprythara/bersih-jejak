@@ -44,7 +44,7 @@ class StoreExpenseRequest extends FormRequest
                 'required',
                 Rule::exists('branches', 'id')->where('status', true)
             ],
-            'image'               => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'image'               => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ];
     }
 
@@ -60,7 +60,6 @@ class StoreExpenseRequest extends FormRequest
             'amount.numeric'               => 'Jumlah nominal harus berupa angka.',
             'branch_id.required'           => 'Cabang wajib diisi.',
             'branch_id.exists'             => 'Cabang tidak ditemukan atau sudah tidak aktif.',
-            'image.required'              => 'Gambar wajib diisi.',
             'image.image'                  => 'Berkas yang diunggah harus berupa gambar.',
             'image.mimes'                  => 'Format gambar harus berjenis: jpeg, png, jpg, atau webp.',
             'image.max'                    => 'Ukuran gambar maksimal adalah 5 MB.',

@@ -31,6 +31,7 @@ import {
     ChevronsRight,
     ChevronUp,
     Search,
+    X,
 } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -66,17 +67,27 @@ const DataTable = <TData extends RowData>({
 
     return (
         <div className="flex flex-col gap-4">
-            {/* Input Pencarian */}
-            <div className="w-fit ms-auto relative">
-                <Search className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            {/* Input Pencarian dengan Tombol Clear (X) */}
+            <div className="w-fit ms-auto relative flex items-center">
+                <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                 <Input
                     value={table.state.globalFilter ?? ""}
                     onChange={(e) =>
                         table.setGlobalFilter(String(e.target.value))
                     }
                     placeholder="Cari..."
-                    className="pl-8 h-8"
+                    className="pl-8 pr-8 h-8"
                 />
+                {table.state.globalFilter && (
+                    <button
+                        type="button"
+                        onClick={() => table.setGlobalFilter("")}
+                        className="absolute right-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                        aria-label="Clear search"
+                    >
+                        <X className="h-3.5 w-3.5" />
+                    </button>
+                )}
             </div>
 
             {/* Tabel */}
@@ -135,7 +146,7 @@ const DataTable = <TData extends RowData>({
                                     {row.getAllCells().map((cell) => (
                                         <TableCell
                                             key={cell.id}
-                                            className="px-4 py-3 text-foreground/90"
+                                            className="px-4 text-sm py-3 text-foreground/90"
                                         >
                                             {flexRender(
                                                 cell.column.columnDef.cell,

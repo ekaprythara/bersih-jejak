@@ -4,7 +4,7 @@ import Heading from "@/components/heading";
 import { CreateCustomerDialog } from "@/components/partials/customer/create-customer-dialog";
 import { dashboard } from "@/routes";
 import { index } from "@/routes/expenses";
-import { updateStatus } from "@/routes/services";
+import services, { updateStatus } from "@/routes/services";
 import { Head, router, usePage } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
 import type {
@@ -17,6 +17,7 @@ import { UpdateServiceDialog } from "@/components/partials/service/update-servic
 import { CreateExpenseDialog } from "@/components/partials/expense/create-expense-dialog";
 import { UpdateExpenseDialog } from "@/components/partials/expense/update-expense-dialog";
 import SortExpenseForm from "@/components/partials/expense/sort-expense-form";
+import { formatRupiah } from "@/lib/utils";
 
 export default function Expense({
     expenses,
@@ -32,8 +33,7 @@ export default function Expense({
     branchOptions: BranchType[];
     filters: {
         branch_id: string;
-        transaction_status_id: string;
-        payment_status_id: string;
+        expense_category_id: string;
     };
     expenseCategories: ExpenseCategoryType[];
 }) {
@@ -53,14 +53,18 @@ export default function Expense({
         );
     };
 
+    console.log(expenses);
+
     const columns: ColumnDef<typeof features, ExpenseType>[] = [
         {
-            header: "Tanggal Pengeluaran",
+            header: "Tanggal",
             accessorKey: "expense_date",
         },
         {
-            header: "Keterangan",
-            accessorKey: "description",
+            header: "Cabang",
+            accessorFn: (row) => {
+                return row.branch ? `${row.branch.name}` : "-";
+            },
         },
         {
             header: "Kategori",
@@ -69,21 +73,26 @@ export default function Expense({
             },
         },
         {
-            header: "Jumlah Nominal",
-            accessorFn: (row) => {
-                return `Rp. ${row.amount}`;
+            header: "Keterangan",
+            accessorKey: "description",
+            cell: ({ row }) => {
+                return (
+                    <div className="max-w-125 text-wrap">
+                        {row.original.description}
+                    </div>
+                );
             },
         },
         {
-            header: "Dibuat Oleh",
+            header: "Pembuat",
             accessorFn: (row) => {
                 return row.user.name;
             },
         },
         {
-            header: "Cabang",
+            header: "Nominal",
             accessorFn: (row) => {
-                return row.branch ? `Cabang ${row.branch.name}` : "-";
+                return formatRupiah(row.amount);
             },
         },
         {
@@ -117,20 +126,19 @@ export default function Expense({
                 />
 
                 <div className="flex flex-col gap-4">
-                    <div className="flex justify-between items-center">
-                        {currentUser.is_owner && (
-                            <SortExpenseForm
-                                branches={allBranches}
-                                filters={filters}
-                            />
-                        )}
+                    <div className="flex justify-between items-start gap-20">
+                        <SortExpenseForm
+                            branches={allBranches}
+                            expenseCategories={expenseCategories}
+                            filters={filters}
+                        />
                         <CreateExpenseDialog
                             branches={branches}
                             expenseCategories={expenseCategories}
                         />
                     </div>
 
-                    <DataTable columns={columns} data={expenses.data} />
+                    <DataTable columns={columns} data={expenses} />
                 </div>
             </div>
         </>

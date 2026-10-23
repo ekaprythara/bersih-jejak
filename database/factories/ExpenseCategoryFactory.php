@@ -10,15 +10,13 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ExpenseCategoryFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = ExpenseCategory::class;
+
     public function definition(): array
     {
         return [
-            //
+            // Menggunakan unique word agar tidak pernah duplikat
+            'name' => ucfirst($this->faker->unique()->words(2, true)),
         ];
     }
 }

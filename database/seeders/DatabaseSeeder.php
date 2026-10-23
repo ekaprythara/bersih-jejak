@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Branch;
 use App\Models\Customer;
+use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\PaymentMethod;
 use App\Models\Role;
@@ -204,6 +205,17 @@ class DatabaseSeeder extends Seeder
         PaymentMethod::factory()->create(['name' => 'QRIS']);
         PaymentMethod::factory()->create(['name' => 'Cash']);
 
+        // 8. Expenses (50 Data dalam rentang sebulan penuh / 30 hari terakhir)
+        Expense::factory()->count(50)->sequence(function ($sequence) {
+            return [
+                'expense_category_id' => ExpenseCategory::inRandomOrder()->first()->id,
+                'user_id'             => User::inRandomOrder()->first()->id,
+                'branch_id'           => Branch::inRandomOrder()->first()->id,
+                'expense_date'        => Carbon::today()->subDays(rand(0, 30))->toDateString(), // 0 sampai 30 hari ke belakang
+                'image_url'           => null,
+                'image_public_id'     => null,
+            ];
+        })->create();
 
         Transaction::factory()->create([
             'customer_id' => 1, // Admin User
@@ -223,5 +235,7 @@ class DatabaseSeeder extends Seeder
             'after_image_url' => null,
             'after_image_public_id' => null,
         ]);
+
+        Transaction::factory()->count(10)->create();
     }
 }

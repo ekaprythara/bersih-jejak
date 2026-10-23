@@ -12,7 +12,7 @@ class ServiceController extends Controller
     public function index()
     {
         return inertia('service', [
-            'services' => Service::latest()->paginate(50),
+            'services' => Service::latest()->get(),
         ]);
     }
 
