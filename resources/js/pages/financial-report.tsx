@@ -12,7 +12,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { BranchType } from "@/types/data-types";
-import { index } from "@/routes/financial/report";
+import { index, printPdf } from "@/routes/financial/report";
 import { formatRupiah } from "@/lib/utils";
 import {
     CreditCard,
@@ -113,6 +113,19 @@ export default function FinancialReport({
         { id: 11, name: "November" },
         { id: 12, name: "Desember" },
     ];
+    const handlePrintPdf = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        const url = new URL(printPdf.url(), window.location.origin);
+
+        Object.entries(form.data).forEach(([key, value]) => {
+            if (value && value !== "all") {
+                url.searchParams.set(key, String(value));
+            }
+        });
+
+        window.open(url.toString(), "_blank");
+    };
 
     return (
         <>
@@ -125,7 +138,7 @@ export default function FinancialReport({
                 />
 
                 <div className="flex flex-col gap-4">
-                    <div className="flex gap-2">
+                    <form onSubmit={handlePrintPdf} className="flex gap-2">
                         <Select
                             value={String(form.data.month)}
                             onValueChange={(value) =>
@@ -197,7 +210,7 @@ export default function FinancialReport({
                             <Printer />
                             Cetak
                         </Button>
-                    </div>
+                    </form>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group">
                             <div className="flex items-start justify-between">

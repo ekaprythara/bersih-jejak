@@ -45,6 +45,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('branches/{branch}/edit', [BranchController::class, 'update'])->name('branches.update');
 
         Route::get('financial-report', [FinancialReportController::class, 'index'])->name("financial.report.index");
+        Route::get('financial-report/print', [FinancialReportController::class, 'printPdf'])->name("financial.report.printPdf");
     });
 
     Route::get('expenses', [ExpenseController::class, 'index'])->name("expenses.index");
