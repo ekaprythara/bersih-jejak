@@ -31,12 +31,27 @@ class TransactionFactory extends Factory
      */
     public function definition(): array
     {
+        // Daftar catatan/deskripsi transaksi sepatu dalam Bahasa Indonesia
+        $descriptions = [
+            'Sepatu putih agak kotor, minta extra cleaning di bagian midsole',
+            'Suede berdebu, pengerjaan harus hati-hati pakai treatment khusus',
+            'Treatment deep cleaning kilat untuk pemakaian mendesak',
+            'Kondisi sol agak menguning, perlu treatment unyellowing',
+            'Pencucian standar sepatu kanvas regular',
+            'Sepatu kena noda luntur, butuh penanganan khusus',
+            'Pembersihan tali dan bagian dalam sepatu secara menyeluruh',
+            'Cuci pasang sepatu olahraga/running, treatment wangi ekstra'
+        ];
+
         $transactionDate = $this->faker->dateTimeBetween('-1 month', 'now');
         $pickupDate = (clone $transactionDate);
         $pickupDate->modify('+' . rand(1, 4) . ' days');
 
-        $shoeCount = $this->faker->numberBetween(1, 3);
-        $pricePerShoe = $this->faker->randomElement([25000, 35000, 50000, 75000]);
+        // Jumlah sepatu wajar antara 1 sampai 5
+        $shoeCount = $this->faker->numberBetween(1, 5);
+
+        // Harga satuan per sepatu dengan nominal bersih/bulat (misal 25rb, 35rb, 50rb)
+        $pricePerShoe = $this->faker->randomElement([25000, 35000, 50000, 75000, 100000]);
 
         return [
             'customer_id'            => Customer::inRandomOrder()->first()?->id ?? 1,
@@ -49,12 +64,12 @@ class TransactionFactory extends Factory
             'transaction_status_id'  => TransactionStatus::inRandomOrder()->first()?->id ?? 1,
             'payment_status_id'      => PaymentStatus::inRandomOrder()->first()?->id ?? 1,
             'payment_method_id'      => PaymentMethod::inRandomOrder()->first()?->id ?? 3,
-            'description'            => $this->faker->sentence(), // Diubah agar tidak pernah bernilai null            'user_id'                => User::inRandomOrder()->first()?->id ?? 1,
+            'description'            => $this->faker->randomElement($descriptions),
+            'user_id'                => $this->faker->numberBetween(1, 3), // Acak dari ID 1 sampai 3
             'before_image_url'       => null,
             'before_image_public_id' => null,
             'after_image_url'        => null,
             'after_image_public_id'  => null,
-            "user_id"               => 1,
         ];
     }
 }

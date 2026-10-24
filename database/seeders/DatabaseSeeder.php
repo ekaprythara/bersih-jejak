@@ -29,7 +29,6 @@ class DatabaseSeeder extends Seeder
         Role::factory()->create([
             'name' => 'Owner',
         ]);
-
         Role::factory()->create([
             'name' => 'Admin',
         ]);
@@ -53,7 +52,6 @@ class DatabaseSeeder extends Seeder
             'email' => 'mahayana@example.com',
             'role_id' => 1 // Owner
         ]);
-
         User::factory()->create([
             'name' => 'Yudi',
             'username' => 'yudi',
@@ -63,23 +61,12 @@ class DatabaseSeeder extends Seeder
             'role_id' => 2, // Admin
             'branch_id' => 1, // Pandu
         ]);
-
         User::factory()->create([
             'name' => 'Chandra',
             'username' => 'chandra',
             'address' => 'Jalan Nangka',
             'phone_number' => '085877775557',
             'email' => 'chandra@example.com',
-            'role_id' => 2, // Admin
-            'branch_id' => 2, // Tukad Badung
-        ]);
-
-        User::factory()->create([
-            'name' => 'ari',
-            'username' => 'ari',
-            'address' => 'Jalan Kenanga',
-            'phone_number' => '085877775552',
-            'email' => 'ariani@example.com',
             'role_id' => 2, // Admin
             'branch_id' => 2, // Tukad Badung
         ]);
@@ -91,16 +78,25 @@ class DatabaseSeeder extends Seeder
             "name" => "Pemasaran"
         ]);
         ExpenseCategory::factory()->create([
-            "name" => "Internet & Telekomunikasi"
+            "name" => "Internet"
         ]);
         ExpenseCategory::factory()->create([
             "name" => "Pemeliharaan"
         ]);
         ExpenseCategory::factory()->create([
-            "name" => "Tranportasi & Pengiriman"
+            "name" => "Tranportasi"
         ]);
         ExpenseCategory::factory()->create([
-            "name" => "Pembelian Inventaris"
+            "name" => "Sewa Tempat"
+        ]);
+        ExpenseCategory::factory()->create([
+            "name" => "Administrasi"
+        ]);
+        ExpenseCategory::factory()->create([
+            "name" => "Gaji"
+        ]);
+        ExpenseCategory::factory()->create([
+            "name" => "Retribusi"
         ]);
         ExpenseCategory::factory()->create([
             "name" => "Lainnya"
@@ -122,7 +118,6 @@ class DatabaseSeeder extends Seeder
             'price' => 40000,
             'estimated_days' => 3
         ]);
-        Service::factory()->count(50)->create();
 
         Customer::factory()->create([
             'name' => 'Budi Santoso',
@@ -130,63 +125,54 @@ class DatabaseSeeder extends Seeder
             'email' => 'budi@example.com',
             'status' => true,
         ]);
-
         Customer::factory()->create([
             'name' => 'Siti Aminah',
             'phone_number' => '081234567891',
             'email' => 'siti@example.com',
             'status' => true,
         ]);
-
         Customer::factory()->create([
             'name' => 'Ahmad Fauzi',
             'phone_number' => '081234567892',
             'email' => 'ahmad@example.com',
             'status' => true,
         ]);
-
         Customer::factory()->create([
             'name' => 'Dewi Lestari',
             'phone_number' => '081234567893',
             'email' => 'dewi@example.com',
             'status' => true,
         ]);
-
         Customer::factory()->create([
             'name' => 'Kadek Arta',
             'phone_number' => '081234567894',
             'email' => 'kadek@example.com',
             'status' => false,
         ]);
-
         Customer::factory()->create([
             'name' => 'Rina Wijaya',
             'phone_number' => '081234567895',
             'email' => 'rina@example.com',
             'status' => true,
         ]);
-
         Customer::factory()->create([
             'name' => 'Eko Prasetyo',
             'phone_number' => '081234567896',
             'email' => 'eko@example.com',
             'status' => true,
         ]);
-
         Customer::factory()->create([
             'name' => 'Siska Melina',
             'phone_number' => '081234567897',
             'email' => 'siska@example.com',
             'status' => false,
         ]);
-
         Customer::factory()->create([
             'name' => 'Doni Setiawan',
             'phone_number' => '081234567898',
             'email' => 'doni@example.com',
             'status' => true,
         ]);
-
         Customer::factory()->create([
             'name' => 'Putri Utami',
             'phone_number' => '081234567899',
@@ -205,37 +191,8 @@ class DatabaseSeeder extends Seeder
         PaymentMethod::factory()->create(['name' => 'QRIS']);
         PaymentMethod::factory()->create(['name' => 'Cash']);
 
-        // 8. Expenses (50 Data dalam rentang sebulan penuh / 30 hari terakhir)
-        Expense::factory()->count(50)->sequence(function ($sequence) {
-            return [
-                'expense_category_id' => ExpenseCategory::inRandomOrder()->first()->id,
-                'user_id'             => User::inRandomOrder()->first()->id,
-                'branch_id'           => Branch::inRandomOrder()->first()->id,
-                'expense_date'        => Carbon::today()->subDays(rand(0, 30))->toDateString(), // 0 sampai 30 hari ke belakang
-                'image_url'           => null,
-                'image_public_id'     => null,
-            ];
-        })->create();
+        Expense::factory()->count(15)->create();
 
-        Transaction::factory()->create([
-            'customer_id' => 1, // Admin User
-            'transaction_date' => Carbon::now(),
-            'pickup_date' => Carbon::now()->addDays(3), // Tanggal ambil 3 hari kedepan
-            'service_id' => 1, // Cuci Reguler
-            'shoe_count' => 1,
-            'total_amount' => 10000,
-            'branch_id' => 1,
-            'transaction_status_id' => 1, // Pending
-            'payment_status_id' => 1, // Belum Lunas
-            'payment_method_id' => 3, // cash
-            'description' => "asdasdasas",
-            'user_id' => 1, // Mahayana
-            'before_image_url' => null,
-            'before_image_public_id' => null,
-            'after_image_url' => null,
-            'after_image_public_id' => null,
-        ]);
-
-        Transaction::factory()->count(10)->create();
+        Transaction::factory()->count(20)->create();
     }
 }

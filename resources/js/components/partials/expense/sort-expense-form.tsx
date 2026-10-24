@@ -155,7 +155,10 @@ const SortExpenseForm = ({
                             ) : (
                                 <span>Dari Tanggal</span>
                             )}
-                            <ChevronDownIcon className="ml-2 size-4" />
+                            <ChevronDownIcon
+                                className="ml-2 size-4"
+                                color="#B9B9B9"
+                            />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -184,7 +187,10 @@ const SortExpenseForm = ({
                             ) : (
                                 <span>Sampai Tanggal</span>
                             )}
-                            <ChevronDownIcon className="ml-2 size-4" />
+                            <ChevronDownIcon
+                                className="ml-2 size-4"
+                                color="#B9B9B9"
+                            />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">

@@ -40,7 +40,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, SquarePen } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { ChangeEvent } from "react";
@@ -139,7 +139,9 @@ export const UpdateTransactionDialog = ({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Edit</Button>
+                <Button size="icon" variant="warning">
+                    <SquarePen />
+                </Button>
             </DialogTrigger>
 
             <DialogContent className="overflow-y-scroll scrollbar-none scroll-smooth max-h-[95dvh]">

@@ -20,6 +20,7 @@ import { UpdateTransactionDialog } from "@/components/partials/transaction/updat
 import { Badge } from "@/components/ui/badge";
 import SortTransactionForm from "@/components/partials/transaction/sort-transaction-form";
 import { Button } from "@/components/ui/button";
+import { Printer } from "lucide-react";
 
 export default function Transaction({
     transactions,
@@ -159,9 +160,9 @@ export default function Transaction({
 
                 if (!canModify(row.original)) {
                     return (
-                        <div className="flex items-center justify-center gap-1">
-                            <Button onClick={handlePrintPdf}>Print Nota</Button>
-                        </div>
+                        <Button size="icon" onClick={handlePrintPdf}>
+                            <Printer />
+                        </Button>
                     );
                 }
 
@@ -174,7 +175,9 @@ export default function Transaction({
                             paymentStatuses={paymentStatuses}
                             transactionStatuses={transactionStatuses}
                         />
-                        <Button onClick={handlePrintPdf}>Print Nota</Button>
+                        <Button size="icon" onClick={handlePrintPdf}>
+                            <Printer />
+                        </Button>
                     </div>
                 );
             },

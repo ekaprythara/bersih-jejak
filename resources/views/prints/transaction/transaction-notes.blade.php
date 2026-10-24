@@ -3,22 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <title>Nota #{{ $transaction->id }}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
         @page {
             size: 80mm auto;
             margin: 0;
         }
         body {
-            font-family: "IBM Plex Mono", 'Courier New', monospace;
-            font-weight: 400;
+            font-family: 'Courier New', Courier, monospace;
             font-size: 11px;
+            font-weight: bold;
             color: #111;
             margin: 0;
-            padding: 6px 8px;
-            width: 72mm; /* Pas di dalam area cetak 80mm thermal */
+            padding: 4mm 6mm; /* Padding kertas sisi kiri-kanan disesuaikan */
+            width: 68mm; /* Lebar area efektif cetak thermal 80mm */
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
@@ -26,57 +23,71 @@
         
         .header {
             text-align: center;
-            margin-bottom: 8px;
-            border-bottom: 1px dashed #333;
-            padding-bottom: 6px;
+            margin-bottom: 6px;
+            border-bottom: 2px dashed #444;
+            padding-bottom: 5px;
         }
         .header h2 {
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 14px;
+            font-weight: bold;
             margin: 0 0 2px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .header p {
-            margin: 2px 0;
+            margin: 1px 0;
             font-size: 10px;
+            font-weight: bold;
+            color: #333;
         }
 
         .section {
-            margin-bottom: 8px;
-            border-bottom: 1px dashed #333;
-            padding-bottom: 6px;
+            margin-bottom: 6px;
+            border-bottom: 1px dashed #444;
+            padding-bottom: 5px;
         }
 
         .info-table, .item-table {
             width: 100%;
             border-collapse: collapse;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
         }
+        
+        /* Mengatur padding kiri dan kanan pada seluruh sel tabel */
         .info-table td {
-            padding: 2px 0;
+            padding: 1.5px 4px; 
             vertical-align: top;
-            font-size: 10.5px;
+            font-size: 10px;
+            font-weight: bold;
         }
         
         .item-table th, .item-table td {
-            padding: 4px 0;
-            font-size: 10.5px;
-        }
-        .item-table th {
-            border-bottom: 1px solid #333;
-            border-top: 1px solid #333;
+            padding: 4px 4px; /* Padding atas-bawah dan kiri-kanan lebih seimbang */
             font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .item-table th {
+            border-bottom: 1px solid #111;
+            border-top: 1px solid #111;
+            background-color: #dcdcdc;
+            font-size: 9.5px;
             text-transform: uppercase;
+            text-align: left;
         }
 
         .totals td {
-            padding: 3px 0;
-            font-size: 11px;
+            padding: 2px 4px; /* Padding kiri-kanan untuk baris total */
+            font-size: 10.5px;
+            font-weight: bold;
         }
 
         .footer {
             text-align: center;
-            margin-top: 10px;
+            margin-top: 6px;
             font-size: 9.5px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -85,7 +96,7 @@
     <!-- Header / Info Usaha -->
     <div class="header">
         <h2>Bersih Jejak</h2>
-        <p>{{ $transaction->branch->name ?? 'Pusat' }}</p>
+        <p>{{ "Cabang ". $transaction->branch->name ?? '' }}</p>
         <p>{{ $transaction->branch->address ?? 'Denpasar, Bali' }}</p>
     </div>
 
@@ -100,12 +111,12 @@
             <tr>
                 <td>Tanggal</td>
                 <td>:</td>
-                <td>{{ \Carbon\Carbon::parse($transaction->transaction_date)->format('d/m/Y') }}</td>
+                <td>{{ \Carbon\Carbon::parse($transaction->transaction_date)->format('Y-m-d') }}</td>
             </tr>
             <tr>
                 <td>Estimasi Ambil</td>
                 <td>:</td>
-                <td>{{ \Carbon\Carbon::parse($transaction->pickup_date)->format('d/m/Y') }}</td>
+                <td>{{ \Carbon\Carbon::parse($transaction->pickup_date)->format('Y-m-d') }}</td>
             </tr>
             <tr>
                 <td>Pelanggan</td>
@@ -113,7 +124,7 @@
                 <td>{{ $transaction->customer->name ?? 'Umum' }}</td>
             </tr>
             <tr>
-                <td>Kasir / Staff</td>
+                <td>Admin</td>
                 <td>:</td>
                 <td>{{ $transaction->user->name ?? '-' }}</td>
             </tr>
@@ -125,8 +136,8 @@
         <table class="item-table">
             <thead>
                 <tr>
-                    <th class="text-left" style="width: 50%;">Layanan</th>
-                    <th class="text-center" style="width: 20%;">Jml</th>
+                    <th style="width: 48%;">Layanan</th>
+                    <th class="text-center" style="width: 22%;">Jml</th>
                     <th class="text-right" style="width: 30%;">Subtotal</th>
                 </tr>
             </thead>
@@ -135,11 +146,11 @@
                     <td>
                         {{ $transaction->service->name ?? 'Layanan Cuci Sepatu' }}
                         @if($transaction->description)
-                            <br><span style="font-size: 8.5px; color: #333;">({{ $transaction->description }})</span>
+                            <br><span style="font-size: 8.5px; font-weight: bold; color: #333;">({{ $transaction->description }})</span>
                         @endif
                     </td>
                     <td class="text-center">{{ $transaction->shoe_count }} Psg</td>
-                    <td class="text-right">Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($transaction->total_amount, 0, '.', '.') }}</td>
                 </tr>
             </tbody>
         </table>
@@ -164,13 +175,13 @@
                 <td class="text-right">{{ $transaction->transactionStatus->name ?? '-' }}</td>
             </tr>
             <tr>
-                <td colspan="3" style="border-bottom: 1px dashed #333; padding-top: 3px;"></td>
+                <td colspan="3" style="border-bottom: 1px dashed #444; padding-top: 2px;"></td>
             </tr>
             <tr>
-                <td style="font-size: 12px; padding-top: 4px;"><strong>TOTAL</strong></td>
+                <td style="font-size: 11px; padding-top: 4px;"><strong>TOTAL (RP)</strong></td>
                 <td style="padding-top: 4px;">:</td>
-                <td class="text-right" style="font-size: 12px; padding-top: 4px;">
-                    <strong>Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</strong>
+                <td class="text-right" style="font-size: 11px; padding-top: 4px;">
+                    <strong>Rp. {{ number_format($transaction->total_amount, 0, '.', '.') }}</strong>
                 </td>
             </tr>
         </table>
@@ -178,8 +189,8 @@
 
     <!-- Footer Catatan / Terima Kasih -->
     <div class="footer">
-        <p>Terima kasih telah mempercayakan<br>perawatan sepatu Anda di Bersih Jejak!</p>
-        <p style="margin-top: 8px; font-size: 8.5px;">*Simpan nota ini sebagai bukti pengambilan barang.</p>
+        <p>TERIMA KASIH TELAH MEMPERCAYAKAN<br>PERAWATAN SEPATU ANDA DI BERSIH JEJAK!</p>
+        <p style="margin-top: 4px; font-size: 8.5px;">*Simpan nota ini sebagai bukti pengambilan barang.</p>
     </div>
 
 </body>
