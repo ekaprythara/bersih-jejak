@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Plus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { ExpenseCategoryType } from "@/types/data-types";
 import { useAuth } from "@/hooks/use-auth";
@@ -100,7 +100,10 @@ export const CreateExpenseDialog = ({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Tambah Pengeluaran</Button>
+                <Button>
+                    <Plus strokeWidth={2.75} />
+                    <span className="font-semibold">Tambah Pengeluaran</span>
+                </Button>
             </DialogTrigger>
 
             <DialogContent>

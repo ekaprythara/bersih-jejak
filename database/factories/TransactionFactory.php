@@ -53,23 +53,33 @@ class TransactionFactory extends Factory
         // Harga satuan per sepatu dengan nominal bersih/bulat (misal 25rb, 35rb, 50rb)
         $pricePerShoe = $this->faker->randomElement([25000, 35000, 50000, 75000, 100000]);
 
+        // 1. Pilih cabang terlebih dahulu secara acak
+        $branch = Branch::inRandomOrder()->first();
+        $branchId = $branch?->id ?? 1;
+
+        // 2. Pilih user (kasir/staff) yang bertugas di cabang yang sama
+        $user = User::where('branch_id', $branchId)->inRandomOrder()->first();
+
+        // Fallback jika tidak ada user khusus di cabang tersebut, ambil user random apa saja
+        $userId = $user?->id ?? (User::inRandomOrder()->first()?->id ?? 1);
+
         return [
-            'customer_id'            => Customer::inRandomOrder()->first()?->id ?? 1,
-            'transaction_date'       => $transactionDate,
-            'pickup_date'            => $pickupDate,
-            'service_id'             => Service::inRandomOrder()->first()?->id ?? 1,
-            'shoe_count'             => $shoeCount,
-            'total_amount'           => $shoeCount * $pricePerShoe,
-            'branch_id'              => Branch::inRandomOrder()->first()?->id ?? 1,
-            'transaction_status_id'  => TransactionStatus::inRandomOrder()->first()?->id ?? 1,
-            'payment_status_id'      => PaymentStatus::inRandomOrder()->first()?->id ?? 1,
-            'payment_method_id'      => PaymentMethod::inRandomOrder()->first()?->id ?? 3,
-            'description'            => $this->faker->randomElement($descriptions),
-            'user_id'                => $this->faker->numberBetween(1, 3), // Acak dari ID 1 sampai 3
-            'before_image_url'       => null,
+            'customer_id' => Customer::inRandomOrder()->first()?->id ?? 1,
+            'transaction_date' => $transactionDate,
+            'pickup_date' => $pickupDate,
+            'service_id' => Service::inRandomOrder()->first()?->id ?? 1,
+            'shoe_count' => $shoeCount,
+            'total_amount' => $shoeCount * $pricePerShoe,
+            'branch_id' => $branchId,
+            'transaction_status_id' => TransactionStatus::inRandomOrder()->first()?->id ?? 1,
+            'payment_status_id' => PaymentStatus::inRandomOrder()->first()?->id ?? 1,
+            'payment_method_id' => PaymentMethod::inRandomOrder()->first()?->id ?? 3,
+            'description' => $this->faker->randomElement($descriptions),
+            'user_id' => $userId, // Sesuai dengan cabang tempat transaksi dibuat
+            'before_image_url' => null,
             'before_image_public_id' => null,
-            'after_image_url'        => null,
-            'after_image_public_id'  => null,
+            'after_image_url' => null,
+            'after_image_public_id' => null,
         ];
     }
 }

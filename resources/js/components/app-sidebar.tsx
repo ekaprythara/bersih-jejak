@@ -129,15 +129,15 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <Separator className="px-4" />
+                <Separator className="px-6" />
                 <Link
-                    className="flex gap-2 cursor-pointer text-sm py-2 px-2"
+                    className="flex gap-2 cursor-pointer text-sm py-3 px-4 hover:bg-red-200 hover:rounded-lg"
                     href={logout()}
                     as="button"
                     onClick={handleLogout}
                     data-test="logout-button"
                 >
-                    <div className="flex items-center gap-3 overflow-hidden transition-all duration-300">
+                    <div className="flex items-center gap-3 overflow-hidden transition-all duration-300 text-red-500">
                         <LogOut size={18} className="shrink-0" />
 
                         <span

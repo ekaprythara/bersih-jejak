@@ -18,6 +18,7 @@ import { CreateExpenseDialog } from "@/components/partials/expense/create-expens
 import { UpdateExpenseDialog } from "@/components/partials/expense/update-expense-dialog";
 import SortExpenseForm from "@/components/partials/expense/sort-expense-form";
 import { formatRupiah } from "@/lib/utils";
+import { useState } from "react";
 
 export default function Expense({
     expenses,
@@ -39,6 +40,7 @@ export default function Expense({
 }) {
     const { auth } = usePage().props;
     const currentUser = auth.user;
+    const [globalFilter, setGlobalFilter] = useState("");
 
     const canModify = (expense: ExpenseType) => {
         if (currentUser.is_owner) {
@@ -120,10 +122,16 @@ export default function Expense({
             <Head title="Pengeluaran" />
 
             <div className="p-4">
-                <Heading
-                    title="Pengeluaran"
-                    description="Halaman untuk mengelola data pengeluaran."
-                />
+                <div className="flex flex-col md:flex-row items-start gap-4 md:items-center md:justify-between mb-8">
+                    <Heading
+                        title="Pengeluaran"
+                        description="Halaman untuk mengelola data pengeluaran."
+                    />
+                    <CreateExpenseDialog
+                        branches={branches}
+                        expenseCategories={expenseCategories}
+                    />
+                </div>
 
                 <div className="flex flex-col gap-4">
                     <div className="flex justify-between items-start gap-20">
@@ -131,14 +139,17 @@ export default function Expense({
                             branches={allBranches}
                             expenseCategories={expenseCategories}
                             filters={filters}
-                        />
-                        <CreateExpenseDialog
-                            branches={branches}
-                            expenseCategories={expenseCategories}
+                            globalFilter={globalFilter}
+                            setGlobalFilter={setGlobalFilter}
                         />
                     </div>
 
-                    <DataTable columns={columns} data={expenses} />
+                    <DataTable
+                        columns={columns}
+                        data={expenses}
+                        globalFilter={globalFilter}
+                        setGlobalFilter={setGlobalFilter}
+                    />
                 </div>
             </div>
         </>

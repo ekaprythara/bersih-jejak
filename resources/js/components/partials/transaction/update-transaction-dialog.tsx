@@ -181,7 +181,6 @@ export const UpdateTransactionDialog = ({
                             </Popover>
                             <InputError message={form.errors.pickup_date} />
                         </Field>
-
                         {isOwner && (
                             <Field>
                                 <Label htmlFor="branch_id">
@@ -221,7 +220,28 @@ export const UpdateTransactionDialog = ({
                                 <InputError message={form.errors.branch_id} />
                             </Field>
                         )}
-
+                        <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+                            <span className="text-sm font-medium text-neutral-600">
+                                Total Tagihan:
+                            </span>
+                            <span
+                                className={`text-lg font-bold font-mono ${
+                                    paymentStatuses.find(
+                                        (s) =>
+                                            s.id ===
+                                            Number(form.data.payment_status_id),
+                                    )?.name === "Lunas"
+                                        ? "text-emerald-600"
+                                        : "text-rose-600"
+                                }`}
+                            >
+                                {new Intl.NumberFormat("id-ID", {
+                                    style: "currency",
+                                    currency: "IDR",
+                                    maximumFractionDigits: 0,
+                                }).format(transaction.total_amount)}
+                            </span>
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <Field>
                                 <Label htmlFor="payment_method_id">
@@ -357,7 +377,6 @@ export const UpdateTransactionDialog = ({
                             />
                             <InputError message={form.errors.description} />
                         </Field>
-
                         <div className="grid grid-cols-2 gap-4">
                             {/* FOTO SEBELUM */}
                             <Field>

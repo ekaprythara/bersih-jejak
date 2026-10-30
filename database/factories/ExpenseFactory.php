@@ -51,13 +51,24 @@ class ExpenseFactory extends Factory
             $amount = 50000;
         }
 
+        // 1. Pilih cabang terlebih dahulu secara acak
+        $branch = Branch::inRandomOrder()->first();
+        $branchId = $branch?->id ?? 1;
+
+        // 2. Pilih user yang bertugas di cabang yang sama (asumsi tabel users punya kolom branch_id)
+        // Jika model User menggunakan relasi, bisa pakai: User::where('branch_id', $branchId)->inRandomOrder()->first()
+        $user = User::where('branch_id', $branchId)->inRandomOrder()->first();
+
+        // Fallback jika tidak ada user khusus di cabang tersebut, ambil user random apa saja
+        $userId = $user?->id ?? (User::inRandomOrder()->first()?->id ?? 1);
+
         return [
-            'expense_date'        => $this->faker->dateTimeBetween('-1 month', 'now'),
-            'description'         => $this->faker->randomElement($descriptions),
+            'expense_date' => $this->faker->dateTimeBetween('-1 month', 'now'),
+            'description' => $this->faker->randomElement($descriptions),
             'expense_category_id' => ExpenseCategory::inRandomOrder()->first()?->id ?? 1,
-            'amount'              => $amount,
-            'branch_id'           => Branch::inRandomOrder()->first()?->id ?? 1,
-            'user_id'             => User::inRandomOrder()->first()?->id ?? 1,
+            'amount' => $amount,
+            'branch_id' => $branchId,
+            'user_id' => $userId,
         ];
     }
 }

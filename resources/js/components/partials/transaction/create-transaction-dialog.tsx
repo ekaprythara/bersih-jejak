@@ -49,7 +49,7 @@ import {
     ComboboxItem,
     ComboboxList,
 } from "@/components/ui/combobox";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Plus } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 
 import { format } from "date-fns";
@@ -143,7 +143,10 @@ export const CreateTransactionDialog = ({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Tambah Transaksi</Button>
+                <Button>
+                    <Plus strokeWidth={2.75} />
+                    <span className="font-semibold">Tambah Transaksi</span>
+                </Button>
             </DialogTrigger>
 
             <DialogContent className="overflow-y-scroll scrollbar-none scroll-smooth max-h-[95dvh]">

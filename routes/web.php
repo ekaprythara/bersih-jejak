@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FinancialReportController;
 use App\Http\Controllers\ServiceController;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/', 'dashboard')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::post('admin/create', [UserController::class, 'store'])->name("admin.store");
     Route::patch('admin/{admin}/status', [UserController::class, 'updateStatus'])->name("admin.updateStatus");
@@ -25,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('transactions/{transaction}/edit', [TransactionController::class, 'update'])->name('transactions.update');
     Route::get('transactions/print', [TransactionController::class, 'printPdf'])->name('transactions.printPdf');
     Route::get('transactions/{transaction}/print-transaction', [TransactionController::class, 'printTransaction'])->name('transactions.printTransaction');
+    Route::get('transactions/export', [TransactionController::class, 'exportExcel'])->name('transactions.exportExcel');
 
 
     Route::get('customers', [CustomerController::class, 'index'])->name("customers.index");
@@ -46,6 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('financial-report', [FinancialReportController::class, 'index'])->name("financial.report.index");
         Route::get('financial-report/print', [FinancialReportController::class, 'printPdf'])->name("financial.report.printPdf");
+        Route::get('financial-report/export', [FinancialReportController::class, 'exportExcel'])->name('financial-report.exportExcel');
     });
 
     Route::get('expenses', [ExpenseController::class, 'index'])->name("expenses.index");
@@ -53,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('expenses/{expense}/status', [ExpenseController::class, 'updateStatus'])->name("expenses.updateStatus");
     Route::patch('expenses/{expense}/edit', [ExpenseController::class, 'update'])->name('expenses.update');
     Route::get('expenses/print', [ExpenseController::class, 'printPdf'])->name('expenses.printPdf');
+    Route::get('expenses/export', [ExpenseController::class, 'exportExcel'])->name('expenses.exportExcel');
 });
 
 require __DIR__ . '/settings.php';

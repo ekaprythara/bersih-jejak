@@ -23,6 +23,7 @@ import {
     Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { exportExcel } from "@/routes/financial-report";
 
 interface ExpenseSummary {
     id: number;
@@ -113,9 +114,20 @@ export default function FinancialReport({
         { id: 11, name: "November" },
         { id: 12, name: "Desember" },
     ];
-    const handlePrintPdf = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
 
+    const handleExportExcel = () => {
+        const url = new URL(exportExcel.url(), window.location.origin);
+
+        Object.entries(form.data).forEach(([key, value]) => {
+            if (value && value !== "all") {
+                url.searchParams.set(key, String(value));
+            }
+        });
+
+        window.location.href = url.toString();
+    };
+
+    const handlePrintPdf = () => {
         const url = new URL(printPdf.url(), window.location.origin);
 
         Object.entries(form.data).forEach(([key, value]) => {
@@ -138,7 +150,7 @@ export default function FinancialReport({
                 />
 
                 <div className="flex flex-col gap-4">
-                    <form onSubmit={handlePrintPdf} className="flex gap-2">
+                    <form className="flex gap-2">
                         <Select
                             value={String(form.data.month)}
                             onValueChange={(value) =>
@@ -202,12 +214,24 @@ export default function FinancialReport({
                                 Hapus Filter
                             </Button>
                         )}
-                        <Button type="submit" variant="success">
-                            <Sheet />
+
+                        {/* Tombol Ekspor Excel */}
+                        <Button
+                            type="button"
+                            variant="success"
+                            onClick={handleExportExcel}
+                        >
+                            <Sheet className="w-4 h-4 mr-1" />
                             Ekspor
                         </Button>
-                        <Button type="submit" variant="success">
-                            <Printer />
+
+                        {/* Tombol Cetak PDF */}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handlePrintPdf}
+                        >
+                            <Printer className="w-4 h-4 mr-1" />
                             Cetak
                         </Button>
                     </form>
@@ -219,7 +243,7 @@ export default function FinancialReport({
                                         Pendapatan Tunai
                                     </span>
                                     <span className="text-sm text-neutral-700 font-semibold">
-                                        Kasir Cash Fisik
+                                        Tunai
                                     </span>
                                 </div>
                                 <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
@@ -240,7 +264,7 @@ export default function FinancialReport({
                                     <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider">
                                         Pendapatan Digital
                                     </span>
-                                    <span className="text-sm font-medium text-neutral-700">
+                                    <span className="text-sm text-neutral-700 font-semibold">
                                         Transfer & QRIS
                                     </span>
                                 </div>
@@ -265,7 +289,7 @@ export default function FinancialReport({
                                     <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider">
                                         Total Beban Usaha
                                     </span>
-                                    <span className="text-sm font-medium text-neutral-700">
+                                    <span className="text-sm font-semibold text-neutral-700">
                                         Pengeluaran
                                     </span>
                                 </div>
@@ -285,9 +309,9 @@ export default function FinancialReport({
                             <div className="flex items-start justify-between">
                                 <div className="flex flex-col space-y-1">
                                     <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider">
-                                        Laba Bersih Outlet
+                                        Laba Bersih
                                     </span>
-                                    <span className="text-sm font-medium text-neutral-700">
+                                    <span className="text-sm font-semibold text-neutral-700">
                                         Pendapatan Bersih
                                     </span>
                                 </div>
@@ -353,8 +377,6 @@ export default function FinancialReport({
 
                         <Separator className="bg-neutral-100" />
 
-                        {/* Section 2: Beban / Pengeluaran (Dinamis dari Database) */}
-                        {/* Section 2: Beban / Pengeluaran (Dinamis dari Database) */}
                         <div className="space-y-3">
                             <span className="font-bold text-sm text-neutral-900 block">
                                 Pengeluaran
@@ -412,7 +434,7 @@ export default function FinancialReport({
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span>Total Beban / Pengeluaran</span>
+                                    <span>Total Pengeluaran</span>
                                     <span className="font-medium text-neutral-800 font-mono">
                                         {formatRupiah(summary.totalExpense)}
                                     </span>

@@ -23,4 +23,9 @@ class Service extends Model
     {
         $query->where("status", true);
     }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'service_id');
+    }
 }

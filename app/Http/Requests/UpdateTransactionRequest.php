@@ -5,6 +5,9 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Validator;
+use App\Models\TransactionStatus;
+use App\Models\PaymentStatus;
 
 class UpdateTransactionRequest extends FormRequest
 {
@@ -47,7 +50,7 @@ class UpdateTransactionRequest extends FormRequest
             'payment_status_id'       => ['required', 'exists:payment_statuses,id'],
             'transaction_status_id'   => ['required', 'exists:transaction_statuses,id'],
             'description'             => ['nullable', 'string'],
-            'branch_id'           => ['required', 'exists:branches,id'],
+            'branch_id'               => ['required', 'exists:branches,id'],
 
             // Validasi file gambar opsional saat update (karena bisa jadi user tidak mengganti foto)
             'beforeImage'             => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
@@ -55,32 +58,65 @@ class UpdateTransactionRequest extends FormRequest
         ];
     }
 
+    /**
+     * Konfigurasi tambahan untuk validasi lintas kolom/relasi database.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function ($validator) {
+            $targetTransactionStatusId = $this->input('transaction_status_id');
+            $targetPaymentStatusId = $this->input('payment_status_id');
+
+            // 1. Cek apakah status transaksi yang dipilih adalah "Selesai"
+            $isCompleted = TransactionStatus::where('id', $targetTransactionStatusId)
+                ->where('name', 'Selesai')
+                ->exists();
+
+            // Jika user ingin mengubah status menjadi "Selesai"
+            if ($isCompleted) {
+
+                // 2. Cek apakah status pembayaran adalah "Lunas"
+                $isPaid = PaymentStatus::where('id', $targetPaymentStatusId)
+                    ->where('name', 'Lunas')
+                    ->exists();
+
+                // Jika status transaksinya 'Selesai' tapi pembayarannya BUKAN 'Lunas', gagalkan!
+                if (!$isPaid) {
+                    $validator->errors()->add(
+                        'transaction_status_id',
+                        'Transaksi tidak dapat diselesaikan karena status pembayaran belum Lunas.'
+                    );
+                }
+            }
+        });
+    }
+
     public function messages(): array
     {
         return [
-            'pickup_date.required'          => 'Tanggal pengambilan wajib diisi.',
-            'pickup_date.date'              => 'Format tanggal pengambilan tidak valid.',
+            'pickup_date.required'           => 'Tanggal pengambilan wajib diisi.',
+            'pickup_date.date'               => 'Format tanggal pengambilan tidak valid.',
 
-            'payment_method_id.required'    => 'Metode pembayaran wajib dipilih.',
-            'payment_method_id.exists'      => 'Metode pembayaran tidak valid.',
-            'branch_id.required'           => 'Cabang wajib diisi.',
-            'branch_id.exists'             => 'Cabang tidak ditemukan.',
+            'payment_method_id.required'     => 'Metode pembayaran wajib dipilih.',
+            'payment_method_id.exists'       => 'Metode pembayaran tidak valid.',
+            'branch_id.required'             => 'Cabang wajib diisi.',
+            'branch_id.exists'               => 'Cabang tidak ditemukan.',
 
-            'payment_status_id.required'    => 'Status pembayaran wajib dipilih.',
-            'payment_status_id.exists'      => 'Status pembayaran tidak valid.',
+            'payment_status_id.required'     => 'Status pembayaran wajib dipilih.',
+            'payment_status_id.exists'       => 'Status pembayaran tidak valid.',
 
             'transaction_status_id.required' => 'Status transaksi wajib dipilih.',
-            'transaction_status_id.exists'  => 'Status transaksi tidak valid.',
+            'transaction_status_id.exists'   => 'Status transaksi tidak valid.',
 
-            'description.string'            => 'Catatan harus berupa teks.',
+            'description.string'             => 'Catatan harus berupa teks.',
 
-            'beforeImage.image'             => 'File foto sebelum harus berupa gambar.',
-            'beforeImage.mimes'             => 'Format foto sebelum harus: jpeg, png, jpg, webp.',
-            'beforeImage.max'               => 'Ukuran foto sebelum maksimal 5 MB.',
+            'beforeImage.image'              => 'File foto sebelum harus berupa gambar.',
+            'beforeImage.mimes'              => 'Format foto sebelum harus: jpeg, png, jpg, webp.',
+            'beforeImage.max'                => 'Ukuran foto sebelum maksimal 5 MB.',
 
-            'afterImage.image'              => 'File foto sesudah harus berupa gambar.',
-            'afterImage.mimes'              => 'Format foto sesudah harus: jpeg, png, jpg, webp.',
-            'afterImage.max'                => 'Ukuran foto sesudah maksimal 5 MB.',
+            'afterImage.image'               => 'File foto sesudah harus berupa gambar.',
+            'afterImage.mimes'               => 'Format foto sesudah harus: jpeg, png, jpg, webp.',
+            'afterImage.max'                 => 'Ukuran foto sesudah maksimal 5 MB.',
         ];
     }
 }

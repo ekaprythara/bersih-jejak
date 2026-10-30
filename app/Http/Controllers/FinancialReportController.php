@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\FinancialReportExport;
 use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
@@ -9,7 +10,7 @@ use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
+use Maatwebsite\Excel\Facades\Excel; // Pastikan menggunakan Facades\Excel
 class FinancialReportController extends Controller
 {
     public function index(Request $request)
@@ -190,5 +191,17 @@ class FinancialReportController extends Controller
         ))->setPaper('a4', 'portrait');
 
         return $pdf->stream('laporan-keuangan.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $authenticatedUserBranch = Auth::user()->branch_id;
+        $month = $request->input('month', date('m'));
+        $branchId = $request->input('branch_id', 'all');
+
+        // Beri nama file dinamis berdasarkan filter
+        $fileName = 'Laporan Keuangan Bulan' . $month . '.xlsx';
+
+        return Excel::download(new FinancialReportExport($month, $branchId, $authenticatedUserBranch), $fileName);
     }
 }

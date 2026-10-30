@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ExpenseExport;
 use App\Http\Requests\StoreExpenseRequest;
 use App\Http\Requests\UpdateExpenseRequest;
 use App\Models\Branch;
@@ -12,6 +13,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ExpenseController extends Controller
 {
@@ -162,5 +164,21 @@ class ExpenseController extends Controller
             ->setPaper('a4', 'landscape');
 
         return $pdf->stream('laporan-pengeluaran.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $authenticatedUserBranch = Auth::user()->branch_id;
+        $branchId = $request->query('branch_id', 'all');
+        $expenseCategoryId = $request->input('expense_category_id', "all");
+        $minDate = $request->input("min_date", "");
+        $maxDate = $request->input("max_date", "");
+
+        $fileName = 'laporan-pengeluaran-' . date('Y-m-d') . '.xlsx';
+
+        return Excel::download(
+            new ExpenseExport($branchId, $authenticatedUserBranch, $expenseCategoryId, $minDate, $maxDate),
+            $fileName
+        );
     }
 }

@@ -54,6 +54,8 @@ type DataTableProps<TData extends RowData> = {
 const DataTable = <TData extends RowData>({
     columns,
     data,
+    globalFilter,
+    setGlobalFilter,
 }: DataTableProps<TData>) => {
     const table = useTable(
         {
@@ -61,35 +63,16 @@ const DataTable = <TData extends RowData>({
             columns,
             data,
             globalFilterFn: "includesString",
+            state: {
+                globalFilter,
+            },
+            onGlobalFilterChange: setGlobalFilter,
         },
         (state) => state,
     );
 
     return (
         <div className="flex flex-col gap-4">
-            {/* Input Pencarian dengan Tombol Clear (X) */}
-            <div className="w-fit ms-auto relative flex items-center">
-                <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                <Input
-                    value={table.state.globalFilter ?? ""}
-                    onChange={(e) =>
-                        table.setGlobalFilter(String(e.target.value))
-                    }
-                    placeholder="Cari..."
-                    className="pl-8 pr-8 h-8"
-                />
-                {table.state.globalFilter && (
-                    <button
-                        type="button"
-                        onClick={() => table.setGlobalFilter("")}
-                        className="absolute right-2.5 text-muted-foreground hover:text-foreground transition-colors"
-                        aria-label="Clear search"
-                    >
-                        <X className="h-3.5 w-3.5" />
-                    </button>
-                )}
-            </div>
-
             {/* Tabel */}
             <div className="rounded-xl border border-sidebar-border/70 bg-card shadow-sm overflow-hidden">
                 <Table>

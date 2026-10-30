@@ -15,7 +15,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { router, useForm, usePage } from "@inertiajs/react";
-import { index, printPdf } from "@/routes/transactions";
+import { exportExcel, index, printPdf } from "@/routes/transactions";
 import {
     Popover,
     PopoverContent,
@@ -23,9 +23,18 @@ import {
 } from "@/components/ui/popover";
 import { useState } from "react";
 import { format, isValid, parseISO } from "date-fns";
-import { ChevronDownIcon } from "lucide-react";
+import {
+    ChevronDownIcon,
+    Download,
+    Printer,
+    Calendar as CalendarIcon,
+    X,
+    Search,
+} from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { id } from "date-fns/locale";
+import { DateRange } from "react-day-picker";
+import { Input } from "@/components/ui/input";
 
 type SortTransactionFormType = {
     branches: BranchType[];
@@ -42,13 +51,16 @@ type SortTransactionFormType = {
         payment_status_id?: string | number | null;
         payment_method_id?: string | number | null;
     };
+    globalFilter?: string;
+    setGlobalFilter?: (value: string) => void;
 };
+
 const toDate = (value?: string | null): Date | undefined => {
     if (!value) return undefined;
-
     const date = parseISO(value);
     return isValid(date) ? date : undefined;
 };
+
 const SortTransactionForm = ({
     branches,
     services,
@@ -56,17 +68,17 @@ const SortTransactionForm = ({
     paymentStatuses,
     paymentMethods,
     filters,
+    globalFilter,
+    setGlobalFilter,
 }: SortTransactionFormType) => {
     const { auth } = usePage().props;
     const currentUser = auth.user;
 
-    const [minDate, setMinDate] = useState<Date | undefined>(
-        toDate(filters.min_date),
-    );
-
-    const [maxDate, setMaxDate] = useState<Date | undefined>(
-        toDate(filters.max_date),
-    );
+    // State untuk Date Range picker
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: toDate(filters.min_date),
+        to: toDate(filters.max_date),
+    });
 
     const form = useForm({
         min_date: filters.min_date ?? "",
@@ -78,26 +90,21 @@ const SortTransactionForm = ({
         payment_method_id: filters?.payment_method_id || "all",
     });
 
-    const toDateString = (value?: Date): string => {
-        return value ? format(value, "yyyy-MM-dd") : "";
-    };
-
-    const handleFilterChange = (field: string, value: string) => {
-        form.setData(field, value);
-
-        const updatedData = {
+    const handleFilterChange = (updatedFields: Record<string, any>) => {
+        const newData = {
             ...form.data,
-            [field]: value,
+            ...updatedFields,
         };
 
-        router.get(index(), updatedData, {
+        form.setData(newData as any);
+
+        router.get(index(), newData, {
             preserveState: true,
             preserveScroll: true,
             replace: true,
         });
     };
 
-    // Perbaikan: Reset sekaligus dalam satu request router.get
     const handleReset = () => {
         form.setData({
             min_date: "",
@@ -109,8 +116,7 @@ const SortTransactionForm = ({
             payment_method_id: "all",
         });
 
-        setMinDate(undefined);
-        setMaxDate(undefined);
+        setDateRange(undefined);
 
         router.get(
             index(),
@@ -122,17 +128,19 @@ const SortTransactionForm = ({
             },
         );
     };
-    const handleMinDateChange = (date?: Date) => {
-        setMinDate(date);
-        handleFilterChange("min_date", toDateString(date));
+
+    const handleDateSelect = (range: DateRange | undefined) => {
+        setDateRange(range);
+
+        const fromStr = range?.from ? format(range.from, "yyyy-MM-dd") : "";
+        const toStr = range?.to ? format(range.to, "yyyy-MM-dd") : "";
+
+        handleFilterChange({
+            min_date: fromStr,
+            max_date: toStr,
+        });
     };
 
-    const handleMaxDateChange = (date?: Date) => {
-        setMaxDate(date);
-        handleFilterChange("max_date", toDateString(date));
-    };
-
-    // Cek apakah ada filter yang sedang aktif (tidak "all")
     const isFiltered =
         Boolean(form.data.min_date) ||
         Boolean(form.data.max_date) ||
@@ -142,104 +150,104 @@ const SortTransactionForm = ({
         form.data.payment_status_id !== "all" ||
         form.data.payment_method_id !== "all";
 
+    const handleExportExcel = () => {
+        const url = new URL(exportExcel.url(), window.location.origin);
+        Object.entries(form.data).forEach(([key, value]) => {
+            if (value && value !== "all") {
+                url.searchParams.set(key, String(value));
+            }
+        });
+        window.location.href = url.toString();
+    };
+
     const handlePrintPdf = (e: React.FormEvent) => {
         e.preventDefault();
-
         const url = new URL(printPdf.url(), window.location.origin);
-
-        // Secara otomatis mengambil semua field di form.data (branch_id, payment_status_id, dll)
         Object.entries(form.data).forEach(([key, value]) => {
             if (value && value !== "all") {
                 url.searchParams.append(key, String(value));
             }
         });
-
         window.open(url.toString(), "_blank");
     };
 
     return (
-        <div className="flex gap-2 items-center">
+        <div className="w-full flex flex-col gap-2">
             <form
-                onSubmit={handlePrintPdf}
-                className="flex items-center flex-wrap gap-2"
+                className={`grid gap-2 w-full grid-cols-1 ${
+                    currentUser.is_owner ? "md:grid-cols-6" : "md:grid-cols-5"
+                }`}
             >
+                {/* 1. Rentang Tanggal (Date Range Picker) */}
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button
                             variant="outline"
                             type="button"
-                            className="w-53 justify-between text-left font-normal"
+                            className="w-full justify-between text-left font-normal"
                         >
-                            {minDate ? (
-                                format(minDate, "yyyy-MM-dd", { locale: id })
-                            ) : (
-                                <span>Dari Tanggal</span>
-                            )}
-                            <ChevronDownIcon
-                                className="ml-2 size-4"
-                                color="#B9B9B9"
-                            />
+                            <span className="flex items-center truncate">
+                                <CalendarIcon className="mr-2 size-4 shrink-0 text-muted-foreground" />
+                                {dateRange?.from ? (
+                                    dateRange.to ? (
+                                        <>
+                                            {format(
+                                                dateRange.from,
+                                                "yyyy-MM-dd",
+                                                { locale: id },
+                                            )}{" "}
+                                            s/d{" "}
+                                            {format(
+                                                dateRange.to,
+                                                "yyyy-MM-dd",
+                                                { locale: id },
+                                            )}
+                                        </>
+                                    ) : (
+                                        format(dateRange.from, "yyyy-MM-dd", {
+                                            locale: id,
+                                        })
+                                    )
+                                ) : (
+                                    <span>Pilih Rentang Tanggal</span>
+                                )}
+                            </span>
+                            <ChevronDownIcon className="ml-2 size-4 shrink-0 text-muted-foreground" />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
-                            mode="single"
-                            selected={minDate}
-                            onSelect={handleMinDateChange}
-                            defaultMonth={maxDate}
-                            disabled={(date) =>
-                                maxDate ? date < maxDate : false
-                            }
+                            mode="range"
+                            defaultMonth={dateRange?.from}
+                            selected={dateRange}
+                            onSelect={handleDateSelect}
+                            numberOfMonths={2}
+                            locale={id}
                         />
                     </PopoverContent>
                 </Popover>
 
-                {/* Tanggal akhir */}
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                            variant="outline"
-                            type="button"
-                            className="w-53 justify-between text-left font-normal"
-                        >
-                            {maxDate ? (
-                                format(maxDate, "yyyy-MM-dd", { locale: id })
-                            ) : (
-                                <span>Sampai Tanggal</span>
-                            )}
-                            <ChevronDownIcon
-                                className="ml-2 size-4"
-                                color="#B9B9B9"
-                            />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={maxDate}
-                            onSelect={handleMaxDateChange}
-                            defaultMonth={maxDate}
-                            disabled={(date) =>
-                                minDate ? date < minDate : false
-                            }
-                        />
-                    </PopoverContent>
-                </Popover>
+                {/* 2. Cabang (Hanya tampil jika Owner) */}
                 {currentUser.is_owner && (
                     <Select
                         value={String(form.data.branch_id)}
                         onValueChange={(value) =>
-                            handleFilterChange("branch_id", value)
+                            handleFilterChange({ branch_id: value })
                         }
                     >
-                        <SelectTrigger id="branch_id" className="w-50">
-                            <SelectValue placeholder="Pilih Cabang..." />
+                        <SelectTrigger id="branch_id" className="w-full">
+                            {/* Tambahkan className text-muted-foreground di sini */}
+                            <SelectValue
+                                placeholder="Pilih Cabang"
+                                className="text-muted-foreground"
+                            />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectGroup>
                                 <SelectItem value="all">
                                     Semua Cabang
                                 </SelectItem>
+
                                 {branches.map((branch) => (
                                     <SelectItem
                                         key={branch.id}
@@ -253,13 +261,14 @@ const SortTransactionForm = ({
                     </Select>
                 )}
 
+                {/* 3. Layanan */}
                 <Select
                     value={String(form.data.service_id)}
                     onValueChange={(value) =>
-                        handleFilterChange("service_id", value)
+                        handleFilterChange({ service_id: value })
                     }
                 >
-                    <SelectTrigger id="service_id" className="w-50">
+                    <SelectTrigger id="service_id" className="w-full">
                         <SelectValue placeholder="Semua Layanan" />
                     </SelectTrigger>
                     <SelectContent>
@@ -277,14 +286,18 @@ const SortTransactionForm = ({
                     </SelectContent>
                 </Select>
 
+                {/* 4. Status Transaksi */}
                 <Select
                     value={String(form.data.transaction_status_id)}
                     onValueChange={(value) =>
-                        handleFilterChange("transaction_status_id", value)
+                        handleFilterChange({ transaction_status_id: value })
                     }
                 >
-                    <SelectTrigger id="transaction_status_id" className="w-50">
-                        <SelectValue placeholder="Status Transaksi..." />
+                    <SelectTrigger
+                        id="transaction_status_id"
+                        className="w-full"
+                    >
+                        <SelectValue placeholder="Status Transaksi" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectGroup>
@@ -303,14 +316,15 @@ const SortTransactionForm = ({
                     </SelectContent>
                 </Select>
 
+                {/* 5. Status Pembayaran */}
                 <Select
                     value={String(form.data.payment_status_id)}
                     onValueChange={(value) =>
-                        handleFilterChange("payment_status_id", value)
+                        handleFilterChange({ payment_status_id: value })
                     }
                 >
-                    <SelectTrigger id="payment_status_id" className="w-50">
-                        <SelectValue placeholder="Status Pembayaran..." />
+                    <SelectTrigger id="payment_status_id" className="w-full">
+                        <SelectValue placeholder="Status Pembayaran" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectGroup>
@@ -329,14 +343,15 @@ const SortTransactionForm = ({
                     </SelectContent>
                 </Select>
 
+                {/* 6. Metode Pembayaran */}
                 <Select
                     value={String(form.data.payment_method_id)}
                     onValueChange={(value) =>
-                        handleFilterChange("payment_method_id", value)
+                        handleFilterChange({ payment_method_id: value })
                     }
                 >
-                    <SelectTrigger id="payment_method_id" className="w-50">
-                        <SelectValue placeholder="Semua Metode Pembayaran" />
+                    <SelectTrigger id="payment_method_id" className="w-full">
+                        <SelectValue placeholder="Metode Pembayaran" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectGroup>
@@ -354,19 +369,61 @@ const SortTransactionForm = ({
                         </SelectGroup>
                     </SelectContent>
                 </Select>
+            </form>
 
-                {/* Perbaikan Kondisi Render & Pemanggilan onClick */}
+            <div className="flex items-center flex-col md:flex-row gap-2">
+                <div className="w-full relative flex items-center">
+                    <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                    <Input
+                        value={globalFilter ?? ""}
+                        onChange={(e) =>
+                            setGlobalFilter?.(String(e.target.value))
+                        }
+                        placeholder="Cari nomor invoice, nama pelanggan..."
+                        className="pl-8 pr-8 h-9 w-full bg-white"
+                    />
+                    {globalFilter && (
+                        <button
+                            type="button"
+                            onClick={() => setGlobalFilter?.("")}
+                            className="absolute right-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label="Clear search"
+                        >
+                            <X className="h-3.5 w-3.5" />
+                        </button>
+                    )}
+                </div>
                 {isFiltered && (
                     <Button
                         type="button"
+                        className="w-full md:w-fit"
                         variant="destructive"
                         onClick={handleReset}
                     >
-                        Hapus Sortir
+                        <X strokeWidth={2.5} />
+                        <span className="font-semibold">Hapus Filter</span>
                     </Button>
                 )}
-                <Button type="submit">Print</Button>
-            </form>
+                <Button
+                    type="button"
+                    className="w-full md:w-fit"
+                    variant="success"
+                    onClick={handleExportExcel}
+                >
+                    <Download className="w-4 h-4 mr-1" />
+                    Ekspor
+                </Button>
+
+                <Button
+                    type="button"
+                    className="w-full md:w-fit"
+                    variant="outline"
+                    onClick={handlePrintPdf}
+                >
+                    <Printer className="w-4 h-4 mr-1" />
+                    Cetak
+                </Button>
+            </div>
         </div>
     );
 };

@@ -10,6 +10,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
 import type { CustomerType } from "@/types/data-types";
 import { UpdateCustomerDialog } from "@/components/partials/customer/update-customer-dialog";
+import { Badge } from "@/components/ui/badge";
 
 const handleStatusChange = (id: number, newStatus: boolean) => {
     router.patch(
@@ -52,8 +53,11 @@ export default function Customer({ customers }: { customers: CustomerType[] }) {
         },
         {
             header: "Total Transaksi",
-            accessorFn: (row) => {
-                return row.transactions.length || "0";
+            accessorKey: "transactions", // Referensi ke data transactions
+            cell: ({ row }) => {
+                const transactionCount = row.original.transactions?.length ?? 0;
+
+                return <Badge>{`${transactionCount}x Transaksi`}</Badge>;
             },
         },
         {

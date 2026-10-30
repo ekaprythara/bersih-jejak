@@ -174,7 +174,7 @@ export default function Branch({
                         <div>
                             <DataTable
                                 columns={branchColumns}
-                                data={branches}
+                                data={branchOptionsUpdate}
                             />
                         </div>
                     </div>

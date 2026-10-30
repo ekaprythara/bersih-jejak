@@ -9,8 +9,16 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { router, useForm, usePage } from "@inertiajs/react";
-import { index, printPdf } from "@/routes/expenses";
-import { ChevronDownIcon, Printer } from "lucide-react";
+import { exportExcel, index, printPdf } from "@/routes/expenses";
+import {
+    CalendarIcon,
+    ChevronDownIcon,
+    Download,
+    Printer,
+    Search,
+    X,
+} from "lucide-react";
+import { DateRange } from "react-day-picker";
 import { Calendar } from "@/components/ui/calendar";
 import {
     Popover,
@@ -20,6 +28,7 @@ import {
 import { useState } from "react";
 import { format, parseISO, isValid } from "date-fns";
 import { id } from "date-fns/locale";
+import { Input } from "@/components/ui/input";
 
 type SortExpenseFormType = {
     branches: BranchType[];
@@ -28,43 +37,66 @@ type SortExpenseFormType = {
         min_date?: string | null;
         max_date?: string | null;
         branch_id?: string | number | null;
-        expense_category_id?: string | number | null; // Tambahkan ini agar sinkron
+        expense_category_id?: string | number | null;
     };
+    globalFilter?: string;
+    setGlobalFilter?: (value: string) => void;
 };
 
 const toDate = (value?: string | null): Date | undefined => {
     if (!value) return undefined;
-
     const date = parseISO(value);
     return isValid(date) ? date : undefined;
-};
-
-const toDateString = (value?: Date): string => {
-    return value ? format(value, "yyyy-MM-dd") : "";
 };
 
 const SortExpenseForm = ({
     branches,
     expenseCategories,
     filters,
+    globalFilter,
+    setGlobalFilter,
 }: SortExpenseFormType) => {
     const { auth } = usePage().props;
     const currentUser = auth.user;
 
-    const [minDate, setMinDate] = useState<Date | undefined>(
-        toDate(filters.min_date),
-    );
-
-    const [maxDate, setMaxDate] = useState<Date | undefined>(
-        toDate(filters.max_date),
-    );
+    const [dateRange, setDateRange] = useState<DateRange | undefined>({
+        from: toDate(filters.min_date),
+        to: toDate(filters.max_date),
+    });
 
     const form = useForm({
         min_date: filters.min_date ?? "",
         max_date: filters.max_date ?? "",
         branch_id: String(filters.branch_id ?? "all"),
-        expense_category_id: String(filters.expense_category_id ?? "all"), // Perbaikan: Ambil dari expense_category_id, bukan branch_id
+        expense_category_id: String(filters.expense_category_id ?? "all"),
     });
+
+    const handleFilterChange = (updatedFields: Record<string, any>) => {
+        const updatedData = {
+            ...form.data,
+            ...updatedFields,
+        };
+
+        form.setData(updatedData as any);
+
+        router.get(index(), updatedData, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    };
+
+    const handleDateSelect = (range: DateRange | undefined) => {
+        setDateRange(range);
+
+        const fromStr = range?.from ? format(range.from, "yyyy-MM-dd") : "";
+        const toStr = range?.to ? format(range.to, "yyyy-MM-dd") : "";
+
+        handleFilterChange({
+            min_date: fromStr,
+            max_date: toStr,
+        });
+    };
 
     const isFiltered =
         form.data.min_date !== "" ||
@@ -80,12 +112,11 @@ const SortExpenseForm = ({
             expense_category_id: "all",
         });
 
-        setMinDate(undefined);
-        setMaxDate(undefined);
+        setDateRange(undefined);
 
         router.get(
             index(),
-            {}, // Kosongkan objek di sini agar parameter URL ikut terhapus
+            {},
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -94,37 +125,19 @@ const SortExpenseForm = ({
         );
     };
 
-    const handleFilterChange = (
-        field: "branch_id" | "min_date" | "max_date" | "expense_category_id",
-        value: string,
-    ) => {
-        const updatedData = {
-            ...form.data,
-            [field]: value,
-        };
+    const handleExportExcel = () => {
+        const url = new URL(exportExcel.url(), window.location.origin);
 
-        form.setData(updatedData);
-
-        router.get(index(), updatedData, {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
+        Object.entries(form.data).forEach(([key, value]) => {
+            if (value && value !== "all") {
+                url.searchParams.set(key, String(value));
+            }
         });
+
+        window.location.href = url.toString();
     };
 
-    const handleMinDateChange = (date?: Date) => {
-        setMinDate(date);
-        handleFilterChange("min_date", toDateString(date));
-    };
-
-    const handleMaxDateChange = (date?: Date) => {
-        setMaxDate(date);
-        handleFilterChange("max_date", toDateString(date));
-    };
-
-    const handlePrintPdf = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
+    const handlePrintPdf = () => {
         const url = new URL(printPdf.url(), window.location.origin);
 
         Object.entries(form.data).forEach(([key, value]) => {
@@ -137,90 +150,77 @@ const SortExpenseForm = ({
     };
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="w-full flex flex-col gap-2">
+            {/* Grid Form Filter */}
             <form
-                onSubmit={handlePrintPdf}
-                className="flex flex-wrap items-center gap-2"
+                className={`grid gap-2 w-full grid-cols-1 ${
+                    currentUser.is_owner ? "md:grid-cols-3" : "md:grid-cols-2"
+                }`}
             >
-                {/* Tanggal awal */}
+                {/* 1. Rentang Tanggal */}
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button
                             variant="outline"
                             type="button"
-                            className="w-53 justify-between text-left font-normal"
+                            className="w-full justify-between text-left font-normal"
                         >
-                            {minDate ? (
-                                format(minDate, "yyyy-MM-dd", { locale: id })
-                            ) : (
-                                <span>Dari Tanggal</span>
-                            )}
-                            <ChevronDownIcon
-                                className="ml-2 size-4"
-                                color="#B9B9B9"
-                            />
+                            <span className="flex items-center truncate">
+                                <CalendarIcon className="mr-2 size-4 shrink-0 text-muted-foreground" />
+                                {dateRange?.from ? (
+                                    dateRange.to ? (
+                                        <>
+                                            {format(
+                                                dateRange.from,
+                                                "yyyy-MM-dd",
+                                                { locale: id },
+                                            )}{" "}
+                                            s/d{" "}
+                                            {format(
+                                                dateRange.to,
+                                                "yyyy-MM-dd",
+                                                { locale: id },
+                                            )}
+                                        </>
+                                    ) : (
+                                        format(dateRange.from, "yyyy-MM-dd", {
+                                            locale: id,
+                                        })
+                                    )
+                                ) : (
+                                    <span className="text-muted-foreground">
+                                        Pilih Rentang Tanggal
+                                    </span>
+                                )}
+                            </span>
+                            <ChevronDownIcon className="ml-2 size-4 shrink-0 text-muted-foreground" />
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
-                            mode="single"
-                            selected={minDate}
-                            onSelect={handleMinDateChange}
-                            defaultMonth={maxDate}
-                            disabled={(date) =>
-                                maxDate ? date < maxDate : false
-                            }
+                            mode="range"
+                            defaultMonth={dateRange?.from}
+                            selected={dateRange}
+                            onSelect={handleDateSelect}
+                            numberOfMonths={2}
+                            locale={id}
                         />
                     </PopoverContent>
                 </Popover>
 
-                {/* Tanggal akhir */}
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button
-                            variant="outline"
-                            type="button"
-                            className="w-53 justify-between text-left font-normal"
-                        >
-                            {maxDate ? (
-                                format(maxDate, "yyyy-MM-dd", { locale: id })
-                            ) : (
-                                <span>Sampai Tanggal</span>
-                            )}
-                            <ChevronDownIcon
-                                className="ml-2 size-4"
-                                color="#B9B9B9"
-                            />
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={maxDate}
-                            onSelect={handleMaxDateChange}
-                            defaultMonth={maxDate}
-                            disabled={(date) =>
-                                minDate ? date < minDate : false
-                            }
-                        />
-                    </PopoverContent>
-                </Popover>
-
-                {/* Pilihan Kategori Pengeluaran */}
+                {/* 2. Kategori Pengeluaran */}
                 <Select
                     value={form.data.expense_category_id}
                     onValueChange={(value) =>
-                        handleFilterChange("expense_category_id", value)
+                        handleFilterChange({ expense_category_id: value })
                     }
                 >
-                    <SelectTrigger id="expense_category_id" className="w-50">
+                    <SelectTrigger id="expense_category_id" className="w-full">
                         <SelectValue placeholder="Semua Kategori" />
                     </SelectTrigger>
-
                     <SelectContent>
                         <SelectGroup>
                             <SelectItem value="all">Semua Kategori</SelectItem>
-
                             {expenseCategories.map((expenseCategory) => (
                                 <SelectItem
                                     key={expenseCategory.id}
@@ -233,24 +233,22 @@ const SortExpenseForm = ({
                     </SelectContent>
                 </Select>
 
-                {/* Pilihan cabang */}
+                {/* 3. Cabang (Hanya jika Owner) */}
                 {currentUser.is_owner && (
                     <Select
                         value={form.data.branch_id}
                         onValueChange={(value) =>
-                            handleFilterChange("branch_id", value)
+                            handleFilterChange({ branch_id: value })
                         }
                     >
-                        <SelectTrigger id="branch_id" className="w-50">
+                        <SelectTrigger id="branch_id" className="w-full">
                             <SelectValue placeholder="Semua Cabang" />
                         </SelectTrigger>
-
                         <SelectContent>
                             <SelectGroup>
                                 <SelectItem value="all">
                                     Semua Cabang
                                 </SelectItem>
-
                                 {branches.map((branch) => (
                                     <SelectItem
                                         key={branch.id}
@@ -263,23 +261,61 @@ const SortExpenseForm = ({
                         </SelectContent>
                     </Select>
                 )}
+            </form>
 
+            <div className="flex items-center flex-col md:flex-row gap-2">
+                <div className="w-full relative flex items-center">
+                    <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                    <Input
+                        value={globalFilter ?? ""}
+                        onChange={(e) =>
+                            setGlobalFilter?.(String(e.target.value))
+                        }
+                        placeholder="Cari pengeluaran..."
+                        className="pl-8 pr-8 h-9 w-full bg-white"
+                    />
+                    {globalFilter && (
+                        <button
+                            type="button"
+                            onClick={() => setGlobalFilter?.("")}
+                            className="absolute right-2.5 text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label="Clear search"
+                        >
+                            <X className="h-3.5 w-3.5" />
+                        </button>
+                    )}
+                </div>
                 {isFiltered && (
                     <Button
                         type="button"
+                        className="w-full md:w-fit"
                         variant="destructive"
                         onClick={handleReset}
                     >
-                        Hapus Filter
+                        <X strokeWidth={2.5} />
+                        <span className="font-semibold">Hapus Filter</span>
                     </Button>
                 )}
+                <Button
+                    type="button"
+                    className="w-full md:w-fit"
+                    variant="success"
+                    onClick={handleExportExcel}
+                >
+                    <Download className="w-4 h-4 mr-1" />
+                    Ekspor
+                </Button>
 
-                {/* Cetak PDF */}
-                <Button type="submit" variant="success">
-                    <Printer />
+                <Button
+                    type="button"
+                    className="w-full md:w-fit"
+                    variant="outline"
+                    onClick={handlePrintPdf}
+                >
+                    <Printer className="w-4 h-4 mr-1" />
                     Cetak
                 </Button>
-            </form>
+            </div>
         </div>
     );
 };

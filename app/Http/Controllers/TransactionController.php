@@ -16,6 +16,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\TransactionExport;
+use Carbon\Carbon;
 
 class TransactionController extends Controller
 {
@@ -32,6 +35,8 @@ class TransactionController extends Controller
         $transactionStatusId = $request->input('transaction_status_id', 'all');
         $paymentStatusId = $request->input('payment_status_id', 'all');
         $paymentMethodId = $request->input('payment_method_id', 'all');
+
+        $today = Carbon::today()->toDateString();
 
         // Buat base query dengan relasi yang dibutuhkan
         $query = Transaction::with([
@@ -50,12 +55,27 @@ class TransactionController extends Controller
             $query->where("branch_id", $branchId);
         }
 
-        if ($minDate && $minDate !== "") {
-            $query->where('transaction_date', ">=", $minDate);
+        // --- PENERAPAN LOGIKA: HARI INI + STATUS PENDING (DEFAULT) ---
+        if (($minDate && $minDate !== "") || ($maxDate && $maxDate !== "")) {
+            // Jika user memilih filter tanggal secara manual
+            if ($minDate) {
+                $query->where('transaction_date', ">=", $minDate);
+            }
+            if ($maxDate) {
+                $query->where('transaction_date', "<=", $maxDate);
+            }
+        } else {
+            // Jika user tidak memfilter tanggal (Default):
+            // Tampilkan (Transaksi Hari Ini) OR (Status Pending dari kapan pun)
+            $query->where(function ($q) use ($today) {
+                $q->whereDate('transaction_date', $today) // Hari ini
+                    ->orWhereHas('transactionStatus', function ($subQ) {
+                        $subQ->where('name', 'like', '%pending%')
+                            ->orWhere('name', 'like', '%proses%');
+                    }); // ATAU status Pending/Proses dari kapan pun (bulan lalu, tahun lalu, dsb)
+            });
         }
-        if ($maxDate && $maxDate !== "") {
-            $query->where('transaction_date', "<=", $maxDate);
-        }
+        // -------------------------------------------------------------
 
         if ($serviceId && $serviceId !== 'all') {
             $query->where('service_id', $serviceId);
@@ -73,6 +93,42 @@ class TransactionController extends Controller
             $query->where('payment_method_id', $paymentMethodId);
         }
 
+        // Total Transaksi dari hasil query filter saat ini
+        $totalTransactions = (clone $query)->count();
+
+        // Sukses 
+        $successTransactions = (clone $query)->whereHas('transactionStatus', function ($q) {
+            $q->where('name', 'like', '%sukses%')
+                ->orWhere('name', 'like', '%completed%')
+                ->orWhere('name', 'like', '%selesai%');
+        })->count();
+
+        // Pending 
+        $pendingTransactions = (clone $query)->whereHas('transactionStatus', function ($q) {
+            $q->where('name', 'like', '%pending%')
+                ->orWhere('name', 'like', '%proses%')
+                ->orWhere('name', 'like', '%tertunda%');
+        })->count();
+
+        // Total Cash Hari Ini (Berdasarkan metode pembayaran 'Cash' dan tanggal hari ini)
+        $totalCashToday = (clone $query)
+            ->whereDate('transaction_date', $today)
+            ->whereHas('paymentMethod', function ($q) {
+                $q->where('name', 'like', '%cash%')
+                    ->orWhere('name', 'like', '%tunai%');
+            })
+            ->sum('total_amount');
+
+        // Total Transfer Hari Ini (Berdasarkan metode pembayaran 'Transfer' dan tanggal hari ini)
+        $totalTransferToday = (clone $query)
+            ->whereDate('transaction_date', $today)
+            ->whereHas('paymentMethod', function ($q) {
+                $q->where('name', 'like', '%transfer%')
+                    ->orWhere('name', 'like', '%bca%')
+                    ->orWhere('name', 'like', '%bank%');
+            })
+            ->sum('total_amount');
+
         return inertia("transaction", [
             // Eksekusi query dengan urutan latest dan pagination
             "transactions" => $query->latest('transaction_date')->get(),
@@ -84,6 +140,24 @@ class TransactionController extends Controller
             "branches" => Branch::active()->get(['id', 'name']),
             "serviceOptions" => Service::get(['id', 'name', 'status']),
             "branchOptions" => Branch::get(['id', 'name', 'status']),
+
+            // Opsi khusus untuk form Create yang kita bahas sebelumnya
+            "dropdownOptionCreate" => [
+                "customers" => Customer::active()->get(['id', 'name']),
+                "services" => Service::active()->get(['id', 'name', 'price']),
+                "branches" => Branch::active()->get(['id', 'name']),
+                "paymentMethods" => PaymentMethod::get(['id', 'name']),
+                "paymentStatuses" => PaymentStatus::get(['id', 'name']),
+            ],
+
+            "card" => [
+                "total_transactions" => $totalTransactions,
+                "success_transactions" => $successTransactions,
+                "pending_transactions" => $pendingTransactions,
+                "total_cash_today" => $totalCashToday,
+                "total_transfer_today" => $totalTransferToday,
+            ], // <-- Perbaikan: Ditambahkan koma di sini agar tidak syntax error
+
             "filters" => $request->only([
                 'min_date',
                 'max_date',
@@ -249,5 +323,34 @@ class TransactionController extends Controller
             ->setPaper($customPaper, 'portrait');
 
         return $pdf->stream('nota-transaksi-' . date('Y-m-d') . '.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $authenticatedUserBranch = Auth::user()->branch_id;
+
+        $minDate = $request->input("min_date", "");
+        $maxDate = $request->input("max_date", "");
+        $branchId = $request->input('branch_id', 'all');
+        $serviceId = $request->input('service_id', 'all');
+        $transactionStatusId = $request->input('transaction_status_id', 'all');
+        $paymentStatusId = $request->input('payment_status_id', 'all');
+        $paymentMethodId = $request->input('payment_method_id', 'all');
+
+        $fileName = 'Laporan Transaksi ' . date('Y-m-d') . '.xlsx';
+
+        return Excel::download(
+            new TransactionExport(
+                $branchId,
+                $authenticatedUserBranch,
+                $serviceId,
+                $transactionStatusId,
+                $paymentStatusId,
+                $paymentMethodId,
+                $minDate,
+                $maxDate
+            ),
+            $fileName
+        );
     }
 }
