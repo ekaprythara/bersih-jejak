@@ -70,6 +70,15 @@ class DatabaseSeeder extends Seeder
             'role_id' => 2, // Admin
             'branch_id' => 2, // Tukad Badung
         ]);
+        User::factory()->create([
+            'name' => 'Amanda',
+            'username' => 'Amanda',
+            'address' => 'Jalan Kepundung',
+            'phone_number' => '085877775578',
+            'email' => 'Amanda@example.com',
+            'role_id' => 2, // Admin
+            'branch_id' => 2, // Tukad Badung
+        ]);
 
         ExpenseCategory::factory()->create([
             "name" => "Air & Listrik"
@@ -122,61 +131,61 @@ class DatabaseSeeder extends Seeder
         Customer::factory()->create([
             'name' => 'Budi Santoso',
             'phone_number' => '081234567890',
-            'email' => 'budi@example.com',
+
             'status' => true,
         ]);
         Customer::factory()->create([
             'name' => 'Siti Aminah',
             'phone_number' => '081234567891',
-            'email' => 'siti@example.com',
+
             'status' => true,
         ]);
         Customer::factory()->create([
             'name' => 'Ahmad Fauzi',
             'phone_number' => '081234567892',
-            'email' => 'ahmad@example.com',
+
             'status' => true,
         ]);
         Customer::factory()->create([
             'name' => 'Dewi Lestari',
             'phone_number' => '081234567893',
-            'email' => 'dewi@example.com',
+
             'status' => true,
         ]);
         Customer::factory()->create([
             'name' => 'Kadek Arta',
             'phone_number' => '081234567894',
-            'email' => 'kadek@example.com',
+
             'status' => false,
         ]);
         Customer::factory()->create([
             'name' => 'Rina Wijaya',
             'phone_number' => '081234567895',
-            'email' => 'rina@example.com',
+
             'status' => true,
         ]);
         Customer::factory()->create([
             'name' => 'Eko Prasetyo',
             'phone_number' => '081234567896',
-            'email' => 'eko@example.com',
+
             'status' => true,
         ]);
         Customer::factory()->create([
             'name' => 'Siska Melina',
             'phone_number' => '081234567897',
-            'email' => 'siska@example.com',
+
             'status' => false,
         ]);
         Customer::factory()->create([
             'name' => 'Doni Setiawan',
             'phone_number' => '081234567898',
-            'email' => 'doni@example.com',
+
             'status' => true,
         ]);
         Customer::factory()->create([
             'name' => 'Putri Utami',
             'phone_number' => '081234567899',
-            'email' => 'putri@example.com',
+
             'status' => true,
         ]);
 

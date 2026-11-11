@@ -43,7 +43,10 @@ class TransactionFactory extends Factory
             'Cuci pasang sepatu olahraga/running, treatment wangi ekstra'
         ];
 
+        // Buat tanggal transaksi random dalam 1 bulan terakhir
         $transactionDate = $this->faker->dateTimeBetween('-1 month', 'now');
+        $formattedDate = $transactionDate->format('Y-m-d H:i:s');
+
         $pickupDate = (clone $transactionDate);
         $pickupDate->modify('+' . rand(1, 4) . ' days');
 
@@ -65,8 +68,8 @@ class TransactionFactory extends Factory
 
         return [
             'customer_id' => Customer::inRandomOrder()->first()?->id ?? 1,
-            'transaction_date' => $transactionDate,
-            'pickup_date' => $pickupDate,
+            'transaction_date' => $formattedDate,
+            'pickup_date' => $pickupDate->format('Y-m-d H:i:s'),
             'service_id' => Service::inRandomOrder()->first()?->id ?? 1,
             'shoe_count' => $shoeCount,
             'total_amount' => $shoeCount * $pricePerShoe,
@@ -75,11 +78,13 @@ class TransactionFactory extends Factory
             'payment_status_id' => PaymentStatus::inRandomOrder()->first()?->id ?? 1,
             'payment_method_id' => PaymentMethod::inRandomOrder()->first()?->id ?? 3,
             'description' => $this->faker->randomElement($descriptions),
-            'user_id' => $userId, // Sesuai dengan cabang tempat transaksi dibuat
+            'user_id' => $userId,
             'before_image_url' => null,
             'before_image_public_id' => null,
             'after_image_url' => null,
             'after_image_public_id' => null,
+            'created_at' => $formattedDate,
+            'updated_at' => $formattedDate,
         ];
     }
 }

@@ -23,7 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useForm } from "@inertiajs/react";
 import { toast } from "sonner";
-import { SubmitEventHandler, useState, ChangeEvent } from "react";
+import { SubmitEventHandler, useState, ChangeEvent, useEffect } from "react"; // <-- Tambahkan useEffect di sini
 import { store } from "@/routes/transactions";
 import InputError from "@/components/input-error";
 import {
@@ -40,7 +40,6 @@ import {
 } from "@/types/data-types";
 import { Textarea } from "@/components/ui/textarea";
 import { CreateCustomerDialog } from "../customer/create-customer-dialog";
-
 import {
     Combobox,
     ComboboxContent,
@@ -51,8 +50,7 @@ import {
 } from "@/components/ui/combobox";
 import { CalendarIcon, Plus } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
-
-import { format } from "date-fns";
+import { format, addDays } from "date-fns"; // <-- Tambahkan addDays dari date-fns
 import { useAuth } from "@/hooks/use-auth";
 
 export const CreateTransactionDialog = ({
@@ -92,9 +90,33 @@ export const CreateTransactionDialog = ({
         description: "",
         image: null as File | null,
     });
+
+    // --- TAMBAHKAN LOGIKA OTOMATIS TANGGAL AMBIL BERDASARKAN ESTIMASI LAYANAN ---
+    useEffect(() => {
+        if (form.data.service_id) {
+            const selectedService = services.find(
+                (service) => service.id.toString() === form.data.service_id,
+            );
+
+            if (selectedService && selectedService.estimated_days) {
+                // Tambahkan hari dari estimated_days ke tanggal hari ini
+                const calculatedPickupDate = addDays(
+                    today,
+                    Number(selectedService.estimated_days),
+                );
+
+                setPickupDate(calculatedPickupDate);
+                form.setData(
+                    "pickup_date",
+                    format(calculatedPickupDate, "yyyy-MM-dd"),
+                );
+            }
+        }
+    }, [form.data.service_id, services]);
+    // --------------------------------------------------------------------------
+
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-
         if (file) {
             form.setData("image", file);
             setPreviewImage(URL.createObjectURL(file));
@@ -104,7 +126,6 @@ export const CreateTransactionDialog = ({
     const handleDateSelect = (selectedDate: Date | undefined) => {
         setPickupDate(selectedDate);
         if (selectedDate) {
-            // Format ke YYYY-MM-DD agar sesuai dengan tipe date MySQL
             form.setData("pickup_date", format(selectedDate, "yyyy-MM-dd"));
         } else {
             form.setData("pickup_date", "");
@@ -114,30 +135,27 @@ export const CreateTransactionDialog = ({
     const setTotalAmount = () => {
         const serviceId = Number(form.data.service_id);
         const qty = Number(form.data.shoe_count);
-
         const selectedService = services.find(
             (service) => service.id === serviceId,
         );
         const price = selectedService ? Number(selectedService.price) : 0;
-
         return price * qty;
     };
 
     const handleSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
         e.preventDefault();
-
         form.post(store.url(), {
             onSuccess: () => {
-                toast.success("Admin berhasil ditambahkan.");
+                toast.success("Transaksi ditambahkan.");
                 form.reset();
+                setPickupDate(undefined); // Reset state tanggal ambil
                 setIsOpen(false);
             },
             onError: (errors) => {
                 console.log("Validation Errors:", errors);
-                toast.error("Gagal menyimpan data admin.");
+                toast.error("Gagal menyimpan data tr.");
             },
         });
-        // console.log(form.data);
     };
 
     return (
@@ -148,23 +166,20 @@ export const CreateTransactionDialog = ({
                     <span className="font-semibold">Tambah Transaksi</span>
                 </Button>
             </DialogTrigger>
-
             <DialogContent className="overflow-y-scroll scrollbar-none scroll-smooth max-h-[95dvh]">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <DialogHeader>
                         <DialogTitle>Tambah Transaksi</DialogTitle>
                         <DialogDescription>
-                            Menambahkan transaksi baru ke dalam sistem, dan
+                            Menambahkan transaksi baru kedalam sistem, dan
                             tentukan cabang operasionalnya.
                         </DialogDescription>
                     </DialogHeader>
-
                     <FieldGroup>
                         <Field>
                             <Label htmlFor="customer_id">
                                 Pilih Pelanggan...
                             </Label>
-
                             <Combobox
                                 items={customers}
                                 onValueChange={(
@@ -199,10 +214,8 @@ export const CreateTransactionDialog = ({
                                     </ComboboxList>
                                 </ComboboxContent>
                             </Combobox>
-
                             <InputError message={form.errors.customer_id} />
                         </Field>
-
                         <CreateCustomerDialog btnTitle="Tambah Pelanggan Baru" />
 
                         {isOwner && (
@@ -241,7 +254,6 @@ export const CreateTransactionDialog = ({
 
                         <Field>
                             <Label htmlFor="service_id">Pilih Layanan</Label>
-
                             <Select
                                 value={form.data.service_id}
                                 onValueChange={(value) =>
@@ -261,13 +273,13 @@ export const CreateTransactionDialog = ({
                                                 key={service.id}
                                                 value={service.id.toString()}
                                             >
-                                                {service.name}
+                                                {service.name} (
+                                                {service.estimated_days} Hari)
                                             </SelectItem>
                                         ))}
                                     </SelectGroup>
                                 </SelectContent>
                             </Select>
-
                             <InputError message={form.errors.service_id} />
                         </Field>
 
@@ -276,7 +288,6 @@ export const CreateTransactionDialog = ({
                                 <Label htmlFor="shoe_count">
                                     Jumlah Sepatu (Pasang)
                                 </Label>
-
                                 <Input
                                     id="shoe_count"
                                     type="number"
@@ -290,22 +301,18 @@ export const CreateTransactionDialog = ({
                                         )
                                     }
                                 />
-
                                 <InputError message={form.errors.shoe_count} />
                             </Field>
-
                             <Field>
                                 <Label htmlFor="total_amount">
                                     Harga Total
                                 </Label>
-
                                 <Input
                                     id="total_amount"
                                     type="number"
                                     disabled
                                     value={setTotalAmount()}
                                 />
-
                                 <InputError
                                     message={form.errors.total_amount}
                                 />
@@ -317,7 +324,6 @@ export const CreateTransactionDialog = ({
                                 <Label htmlFor="payment_method_id">
                                     Metode Pembayaran
                                 </Label>
-
                                 <Select
                                     value={form.data.payment_method_id}
                                     onValueChange={(value) =>
@@ -345,17 +351,14 @@ export const CreateTransactionDialog = ({
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
-
                                 <InputError
                                     message={form.errors.payment_method_id}
                                 />
                             </Field>
-
                             <Field>
                                 <Label htmlFor="payment_status">
                                     Status Pembayaran
                                 </Label>
-
                                 <Select
                                     value={form.data.payment_status_id}
                                     onValueChange={(value) =>
@@ -383,7 +386,6 @@ export const CreateTransactionDialog = ({
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
-
                                 <InputError
                                     message={form.errors.payment_status_id}
                                 />
@@ -421,7 +423,6 @@ export const CreateTransactionDialog = ({
                                     message={form.errors.transaction_date}
                                 />
                             </Field>
-
                             <Field>
                                 <Label htmlFor="pickup_date">
                                     Tanggal Diambil
@@ -458,7 +459,7 @@ export const CreateTransactionDialog = ({
                             <Label htmlFor="description">Deskripsi</Label>
                             <Textarea
                                 id="description"
-                                placeholder="SSS"
+                                placeholder="Catatan tambahan..."
                                 value={form.data.description}
                                 onChange={(e) =>
                                     form.setData("description", e.target.value)
@@ -497,16 +498,16 @@ export const CreateTransactionDialog = ({
                                             <div className="flex flex-col gap-1">
                                                 <p className="text-xs font-medium text-gray-600">
                                                     Pilih gambar atau
-                                                    drag-and-drop di sini.
+                                                    drag-and-drop disini.
                                                 </p>
                                                 <p className="text-xs text-gray-400">
-                                                    PNG, JPG, dan WEBP <br />
-                                                    Maks. 5 MB
+                                                    PNG, JPG, dan WEBP <br />{" "}
+                                                    Maks. 5MB
                                                 </p>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="relative w-full overflow-hidden rounded-xl border border-gray-100 bg-white p-2">
+                                        <div className="relative w-full overflow-hidden rounded-xl border border-gray-100bg-white p-2">
                                             <img
                                                 src={previewImage}
                                                 alt="Preview Bukti"
@@ -532,7 +533,6 @@ export const CreateTransactionDialog = ({
                             <InputError message={form.errors.image} />
                         </Field>
                     </FieldGroup>
-
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button variant="outline" type="button">

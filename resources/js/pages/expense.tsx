@@ -19,6 +19,16 @@ import { UpdateExpenseDialog } from "@/components/partials/expense/update-expens
 import SortExpenseForm from "@/components/partials/expense/sort-expense-form";
 import { formatRupiah } from "@/lib/utils";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+    Building2,
+    Calendar,
+    Download,
+    PieChart,
+    Printer,
+    Wallet,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function Expense({
     expenses,
@@ -27,11 +37,24 @@ export default function Expense({
     allBranches,
     expenseCategories,
     filters,
+    dashboardCard,
 }: {
     expenses: ExpenseType[];
     branches: BranchType[];
     allBranches: BranchType[];
     branchOptions: BranchType[];
+    dashboardCard: {
+        totalExpense: number;
+        monthlyExpense: number;
+        topCategory: {
+            name: string;
+            total: number;
+        };
+        topBranch: {
+            name: string;
+            total: number;
+        };
+    };
     filters: {
         branch_id: string;
         expense_category_id: string;
@@ -61,17 +84,26 @@ export default function Expense({
         {
             header: "Tanggal",
             accessorKey: "expense_date",
+            cell: ({ row }) => (
+                <span className="font-mono text-xs sm:text-sm">
+                    {row.original.expense_date}
+                </span>
+            ),
         },
         {
             header: "Cabang",
-            accessorFn: (row) => {
-                return row.branch ? `${row.branch.name}` : "-";
+            cell: ({ row }) => {
+                const branchName = row.original.branch
+                    ? row.original.branch.name
+                    : "-";
+                return <Badge variant="secondary">{branchName}</Badge>;
             },
         },
         {
             header: "Kategori",
-            accessorFn: (row) => {
-                return row.expense_category.name;
+            cell: ({ row }) => {
+                const categoryName = row.original.expense_category?.name ?? "-";
+                return <Badge variant="outline">{categoryName}</Badge>;
             },
         },
         {
@@ -79,7 +111,7 @@ export default function Expense({
             accessorKey: "description",
             cell: ({ row }) => {
                 return (
-                    <div className="max-w-125 text-wrap">
+                    <div className="max-w-[200px] sm:max-w-xs md:max-w-md text-xs text-neutral-600 text-wrap leading-relaxed">
                         {row.original.description}
                     </div>
                 );
@@ -87,14 +119,22 @@ export default function Expense({
         },
         {
             header: "Pembuat",
-            accessorFn: (row) => {
-                return row.user.name;
+            cell: ({ row }) => {
+                return (
+                    <span className="text-xs sm:text-sm">
+                        {row.original.user.name}
+                    </span>
+                );
             },
         },
         {
             header: "Nominal",
-            accessorFn: (row) => {
-                return formatRupiah(row.amount);
+            cell: ({ row }) => {
+                return (
+                    <span className="font-mono font-medium text-xs sm:text-sm">
+                        {formatRupiah(row.original.amount)}
+                    </span>
+                );
             },
         },
         {
@@ -127,10 +167,111 @@ export default function Expense({
                         title="Pengeluaran"
                         description="Halaman untuk mengelola data pengeluaran."
                     />
+
                     <CreateExpenseDialog
                         branches={branches}
                         expenseCategories={expenseCategories}
                     />
+                </div>
+
+                {/* Dashboard Mini untuk Card */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-6">
+                    {/* Card 1: Total Pengeluaran */}
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="flex flex-col space-y-1 overflow-hidden">
+                                <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
+                                    Total Keluar
+                                </span>
+                                <span className="text-sm text-neutral-700 font-semibold truncate">
+                                    Akumulasi Biaya
+                                </span>
+                            </div>
+                            <div className="p-2.5 bg-red-50 text-red-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                <Wallet className="w-5 h-5" />
+                            </div>
+                        </div>
+                        <div className="mt-4 pt-3">
+                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                                {formatRupiah(dashboardCard.totalExpense)}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Card 2: Pengeluaran Bulan Ini */}
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="flex flex-col space-y-1 overflow-hidden">
+                                <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
+                                    Bulan Ini
+                                </span>
+                                <span className="text-sm text-neutral-700 font-semibold truncate">
+                                    Periode Berjalan
+                                </span>
+                            </div>
+                            <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                <Calendar className="w-5 h-5" />
+                            </div>
+                        </div>
+                        <div className="mt-4 pt-3">
+                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                                {formatRupiah(dashboardCard.monthlyExpense)}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Card 3: Kategori Pengeluaran Terbesar */}
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="flex flex-col space-y-1 overflow-hidden">
+                                <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
+                                    Kategori Dominan
+                                </span>
+                                <span
+                                    className="text-sm text-neutral-700 font-semibold truncate"
+                                    title={dashboardCard.topCategory.name}
+                                >
+                                    {dashboardCard.topCategory.name}
+                                </span>
+                            </div>
+                            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                <PieChart className="w-5 h-5" />
+                            </div>
+                        </div>
+                        <div className="mt-4 pt-3">
+                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                                {formatRupiah(dashboardCard.topCategory.total)}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Card 4: Cabang Tertinggi */}
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                        <div className="flex items-start justify-between gap-2">
+                            <div className="flex flex-col space-y-1 overflow-hidden">
+                                <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
+                                    Cabang Terboros
+                                </span>
+                                <span
+                                    className="text-sm text-neutral-700 font-semibold truncate"
+                                    title={dashboardCard.topBranch.name}
+                                >
+                                    {dashboardCard.topBranch.name ===
+                                    "Semua Cabang"
+                                        ? "Semua Cabang"
+                                        : `Cabang ${dashboardCard.topBranch.name}`}
+                                </span>
+                            </div>
+                            <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                <Building2 className="w-5 h-5" />
+                            </div>
+                        </div>
+                        <div className="mt-4 pt-3">
+                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                                {formatRupiah(dashboardCard.topBranch.total)}
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="flex flex-col gap-4">

@@ -103,6 +103,7 @@
                 <th style="width: 14%;">Layanan</th>
                 <th style="width: 10%;">Status</th>
                 <th style="width: 10%;">Bayar</th>
+                <th style="width: 10%;">Dibuat Oleh</th>
                 <th style="width: 5%; text-align: center; border-right: none;"></th>
                 <th class="text-right" style="width: 12%; border-left: none;">Total (Rp)</th>
             </tr>
@@ -117,12 +118,13 @@
                     <td>{{ $trx->service->name ?? '-' }}</td>
                     <td>{{ $trx->transactionStatus->name ?? '-' }}</td>
                     <td>{{ $trx->paymentStatus->name ?? '-' }}</td>
+                    <td>{{ $trx->user->name ?? '-' }}</td>
                     <td style="text-align: center; border-right: none;">Rp.</td>
                     <td class="text-right" style="border-left: none;">{{ number_format($trx->total_amount ?? $trx->amount ?? 0, 0, '.', '.') }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center" style="padding: 15px; color: #333;">
+                    <td colspan="10" class="text-center" style="padding: 15px; color: #333;">
                         Tidak ada data transaksi.
                     </td>
                 </tr>
@@ -131,7 +133,7 @@
         @if(count($transactions) > 0)
             <tfoot>
                 <tr class="total-row">
-                    <td colspan="7" class="text-center">TOTAL</td>
+                    <td colspan="8" class="text-center">TOTAL</td>
                     <td style="text-align: center; border-right: none;">Rp.</td>
                     <td class="text-right" style="border-left: none;">
                         {{ number_format($transactions->sum(fn($t) => $t->total_amount ?? $t->amount ?? 0), 0, '.', '.') }}

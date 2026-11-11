@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useForm } from "@inertiajs/react";
 import { toast } from "sonner";
-import { SubmitEventHandler, useState } from "react";
+import { useState } from "react";
 import { store } from "@/routes/customers";
 import InputError from "@/components/input-error";
 
@@ -28,13 +28,11 @@ export const CreateCustomerDialog = ({
     const form = useForm({
         name: "",
         phone_number: "",
-        email: "",
     });
 
-    const handleSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
-        e.preventDefault();
-
+    const handleSubmit = () => {
         form.post(store.url(), {
+            preserveScroll: true,
             onSuccess: () => {
                 toast.success("Pelanggan berhasil ditambahkan.");
                 form.reset();
@@ -50,11 +48,18 @@ export const CreateCustomerDialog = ({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button className="border-dashed">{btnTitle}</Button>
+                {/* Gunakan type="button" agar tidak mentrigger form luar */}
+                <Button type="button" className="border-dashed">
+                    {btnTitle}
+                </Button>
             </DialogTrigger>
 
             <DialogContent>
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                {/* Cegah default submit dengan e.preventDefault() pada onsubmit */}
+                <form
+                    onSubmit={(e) => e.preventDefault()}
+                    className="flex flex-col gap-4"
+                >
                     <DialogHeader>
                         <DialogTitle>Tambah Pelanggan</DialogTitle>
                         <DialogDescription>
@@ -90,20 +95,6 @@ export const CreateCustomerDialog = ({
                             />
                             <InputError message={form.errors.phone_number} />
                         </Field>
-                        <Field>
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                name="email"
-                                type="email"
-                                placeholder="Contoh: budi@mail.com"
-                                value={form.data.email}
-                                onChange={(e) =>
-                                    form.setData("email", e.target.value)
-                                }
-                            />
-                            <InputError message={form.errors.email} />
-                        </Field>
                     </FieldGroup>
 
                     <DialogFooter>
@@ -112,7 +103,12 @@ export const CreateCustomerDialog = ({
                                 Cancel
                             </Button>
                         </DialogClose>
-                        <Button type="submit" disabled={form.processing}>
+                        {/* Panggil handleSubmit lewat onClick dan set type="button" */}
+                        <Button
+                            type="button"
+                            onClick={handleSubmit}
+                            disabled={form.processing}
+                        >
                             {form.processing ? "Menyimpan..." : "Tambah"}
                         </Button>
                     </DialogFooter>

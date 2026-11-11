@@ -1,15 +1,11 @@
 import { Form, Head } from "@inertiajs/react";
-import InputError from "@/components/input-error";
 import PasswordInput from "@/components/password-input";
-import TextLink from "@/components/text-link";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { register } from "@/routes";
 import { store } from "@/routes/login";
-import { request } from "@/routes/password";
 import PasskeyVerify from "@/components/passkey-verify";
 import { useEffect, useRef, useState } from "react";
 
@@ -47,7 +43,7 @@ export default function Login({ status, canResetPassword }: Props) {
 
     return (
         <>
-            <Head title="Log in" />
+            <Head title="Masuk" />
 
             <PasskeyVerify />
 
@@ -84,22 +80,9 @@ export default function Login({ status, canResetPassword }: Props) {
                                         setUsername(e.target.value)
                                     }
                                 />
-                                <InputError message={errors.username} />
                             </div>
 
                             <div className="grid gap-2">
-                                <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
-                                    {canResetPassword && (
-                                        <TextLink
-                                            href={request()}
-                                            className="ml-auto text-sm"
-                                            tabIndex={5}
-                                        >
-                                            Forgot your password?
-                                        </TextLink>
-                                    )}
-                                </div>
                                 <PasswordInput
                                     ref={passwordRef}
                                     id="password"
@@ -109,7 +92,6 @@ export default function Login({ status, canResetPassword }: Props) {
                                     autoComplete="current-password"
                                     placeholder="Password"
                                 />
-                                <InputError message={errors.password} />
                             </div>
 
                             <div className="flex items-center space-x-3">
@@ -123,6 +105,21 @@ export default function Login({ status, canResetPassword }: Props) {
                                 />
                                 <Label htmlFor="remember">Remember me</Label>
                             </div>
+
+                            {errors && Object.keys(errors).length > 0 && (
+                                <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-1">
+                                    {Object.values(errors).map(
+                                        (errorMsg, index) => (
+                                            <p
+                                                key={index}
+                                                className="text-xs font-medium text-red-600"
+                                            >
+                                                {errorMsg}
+                                            </p>
+                                        ),
+                                    )}
+                                </div>
+                            )}
 
                             <Button
                                 type="submit"
@@ -149,6 +146,6 @@ export default function Login({ status, canResetPassword }: Props) {
 }
 
 Login.layout = {
-    title: "Log in to your account",
-    description: "Enter your email and password below to log in",
+    title: "Bersih Jejak",
+    description: "e-Kasir Laundry Sepatu Premium",
 };

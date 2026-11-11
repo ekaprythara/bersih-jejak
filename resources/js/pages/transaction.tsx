@@ -68,19 +68,19 @@ export default function Transaction({
 }) {
     const { auth } = usePage().props;
     const currentUser = auth.user;
-    const [globalFilter, setGlobalFilter] = useState("");
-    const canModify = (transaction: TransactionType) => {
-        if (currentUser.is_owner) {
-            return transaction.user_id === currentUser.id;
-        }
 
-        // Jika user yang login adalah Admin (!currentUser.is_owner)
-        // Syarat: Cabang harus sama DAN yang membuat data BUKAN owner
-        return (
-            transaction.branch_id === currentUser.branch_id &&
-            !transaction.user?.is_owner
-        );
-    };
+    const [globalFilter, setGlobalFilter] = useState("");
+
+    // const canModify = (transaction: TransactionType) => {
+    //     if (currentUser.is_owner) {
+    //         return transaction.user_id === currentUser.id;
+    //     }
+
+    //     return (
+    //         transaction.branch_id === currentUser.branch_id &&
+    //          !transaction.user?.is_owner
+    //     );
+    // };
 
     const columns: ColumnDef<typeof features, TransactionType>[] = [
         {
@@ -88,8 +88,9 @@ export default function Transaction({
             header: "Tanggal Transaksi",
             cell: ({ row }) => {
                 const transactionDate = row.original.transaction_date;
-
-                return <span className="font-mono">{transactionDate}</span>;
+                return (
+                    <span className="font-mono text-xs">{transactionDate}</span>
+                );
             },
         },
         {
@@ -97,30 +98,45 @@ export default function Transaction({
             header: "Tanggal Ambil",
             cell: ({ row }) => {
                 const pickupDate = row.original.pickup_date;
-
-                return <span className="font-mono">{pickupDate}</span>;
+                return <span className="font-mono text-xs">{pickupDate}</span>;
             },
         },
         {
             accessorKey: "branch.name",
             header: "Cabang",
             cell: ({ row }) => {
-                const branchName = row.original.branch?.name;
-
-                return <Badge>{branchName}</Badge>;
+                const branchName = row.original.branch?.name ?? "-";
+                return <Badge variant="secondary">{branchName}</Badge>;
             },
         },
         {
             accessorKey: "customer.name",
             header: "Nama Pelanggan",
+            cell: ({ row }) => (
+                <span className="text-sm">
+                    {row.original.customer?.name ?? "-"}
+                </span>
+            ),
         },
         {
             accessorKey: "service.name",
             header: "Layanan",
+            cell: ({ row }) => (
+                <span className="text-sm">
+                    {row.original.service?.name ?? "-"}
+                </span>
+            ),
         },
         {
             accessorKey: "total_amount",
             header: "Bayar",
+            cell: ({ row }) => {
+                return (
+                    <span className="font-mono font-medium text-sm">
+                        {formatRupiah(row.original.total_amount)}
+                    </span>
+                );
+            },
         },
         {
             accessorKey: "transaction_status.name",
@@ -129,7 +145,6 @@ export default function Transaction({
                 const statusName =
                     row.original.transaction_status?.name?.toLowerCase() || "";
 
-                // Menentukan varian badge berdasarkan status
                 let badgeVariant:
                     | "default"
                     | "secondary"
@@ -140,27 +155,18 @@ export default function Transaction({
                     | "info"
                     | "dark" = "secondary";
 
-                if (
-                    statusName.includes("selesai") ||
-                    statusName.includes("completed")
-                ) {
+                if (statusName.includes("selesai")) {
                     badgeVariant = "success"; // Hijau
-                } else if (
-                    statusName.includes("proses") ||
-                    statusName.includes("progress")
-                ) {
+                } else if (statusName.includes("proses")) {
                     badgeVariant = "info"; // Biru / Sky
-                } else if (
-                    statusName.includes("pending") ||
-                    statusName.includes("tertunda")
-                ) {
+                } else if (statusName.includes("pending")) {
                     badgeVariant = "warning"; // Kuning / Amber
                 }
 
                 return (
                     <Badge
                         variant={badgeVariant}
-                        className="uppercase text-xs tracking-wide"
+                        className="uppercase text-[10px] tracking-wide"
                     >
                         {row.original.transaction_status?.name ?? "-"}
                     </Badge>
@@ -170,14 +176,38 @@ export default function Transaction({
         {
             accessorKey: "payment_status.name",
             header: "Status Pembayaran",
+            cell: ({ row }) => {
+                const payStatus =
+                    row.original.payment_status?.name?.toLowerCase() || "";
+                const isLunas = payStatus.includes("lunas");
+
+                return (
+                    <Badge
+                        variant={isLunas ? "success" : "outline"}
+                        className="uppercase text-[10px] tracking-wide"
+                    >
+                        {row.original.payment_status?.name ?? "-"}
+                    </Badge>
+                );
+            },
         },
         {
             accessorKey: "payment_method.name",
             header: "Metode Pembayaran",
+            cell: ({ row }) => (
+                <span className="text-sm">
+                    {row.original.payment_method?.name ?? "-"}
+                </span>
+            ),
         },
         {
             accessorKey: "user.name",
             header: "Dibuat Oleh",
+            cell: ({ row }) => (
+                <span className="text-sm">
+                    {row.original.user?.name ?? "-"}
+                </span>
+            ),
         },
         {
             header: "Aksi",
@@ -193,14 +223,6 @@ export default function Transaction({
                     window.open(url.toString(), "_blank");
                 };
 
-                if (!canModify(row.original)) {
-                    return (
-                        <Button size="icon" onClick={handlePrintPdf}>
-                            <Printer />
-                        </Button>
-                    );
-                }
-
                 return (
                     <div className="flex items-center justify-center gap-1">
                         <UpdateTransactionDialog
@@ -210,8 +232,12 @@ export default function Transaction({
                             paymentStatuses={paymentStatuses}
                             transactionStatuses={transactionStatuses}
                         />
-                        <Button size="icon" onClick={handlePrintPdf}>
-                            <Printer />
+                        <Button
+                            size="icon"
+                            variant="outline"
+                            onClick={handlePrintPdf}
+                        >
+                            <Printer className="w-4 h-4" />
                         </Button>
                     </div>
                 );
@@ -240,112 +266,112 @@ export default function Transaction({
 
                 <div className="flex flex-col gap-4">
                     {/* Ini adalah Section Card */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 w-full">
                         {/* 1. Total Transaksi */}
-                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group">
-                            <div className="flex items-start justify-between">
-                                <div className="flex flex-col space-y-1">
-                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider">
+                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex flex-col space-y-1 overflow-hidden">
+                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
                                         Total Transaksi
                                     </span>
-                                    <span className="text-sm text-neutral-700 font-semibold">
+                                    <span className="text-sm text-neutral-700 font-semibold truncate">
                                         Keseluruhan
                                     </span>
                                 </div>
-                                <div className="p-2.5 ml-4 bg-sky-50 text-sky-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
+                                <div className="p-2.5 bg-sky-50 text-sky-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
                                     <FileText className="w-5 h-5" />
                                 </div>
                             </div>
                             <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono">
+                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
                                     {card.total_transactions}
                                 </span>
                             </div>
                         </div>
 
                         {/* 2. Sukses */}
-                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group">
-                            <div className="flex items-start justify-between">
-                                <div className="flex flex-col space-y-1">
-                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider">
+                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex flex-col space-y-1 overflow-hidden">
+                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
                                         Sukses
                                     </span>
-                                    <span className="text-sm text-neutral-700 font-semibold">
+                                    <span className="text-sm text-neutral-700 font-semibold truncate">
                                         Transaksi Selesai
                                     </span>
                                 </div>
-                                <div className="p-2.5 ml-4 bg-emerald-50 text-emerald-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
+                                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
                                     <CheckCircle2 className="w-5 h-5" />
                                 </div>
                             </div>
                             <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono">
+                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
                                     {card.success_transactions}
                                 </span>
                             </div>
                         </div>
 
                         {/* 3. Pending */}
-                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group">
-                            <div className="flex items-start justify-between">
-                                <div className="flex flex-col space-y-1">
-                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider">
+                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex flex-col space-y-1 overflow-hidden">
+                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
                                         Pending
                                     </span>
-                                    <span className="text-sm font-semibold text-neutral-700">
+                                    <span className="text-sm font-semibold text-neutral-700 truncate">
                                         Transaksi Pending
                                     </span>
                                 </div>
-                                <div className="p-2.5 ml-4 bg-amber-50 text-amber-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
+                                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
                                     <Clock className="w-5 h-5" />
                                 </div>
                             </div>
                             <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono">
+                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
                                     {card.pending_transactions}
                                 </span>
                             </div>
                         </div>
 
                         {/* 4. Total Cash Hari Ini */}
-                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group">
-                            <div className="flex items-start justify-between">
-                                <div className="flex flex-col space-y-1">
-                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider">
+                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex flex-col space-y-1 overflow-hidden">
+                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
                                         Total Cash Hari Ini
                                     </span>
-                                    <span className="text-sm font-semibold text-neutral-700">
+                                    <span className="text-sm font-semibold text-neutral-700 truncate">
                                         Pembayaran Tunai
                                     </span>
                                 </div>
-                                <div className="p-2.5 ml-4 bg-emerald-50 text-emerald-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
+                                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
                                     <Banknote className="w-5 h-5" />
                                 </div>
                             </div>
                             <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono">
+                                <span className="text-lg font-bold text-neutral-900 tracking-tight font-mono block truncate">
                                     {formatRupiah(card.total_cash_today)}
                                 </span>
                             </div>
                         </div>
 
                         {/* 5. Total Transfer Hari Ini */}
-                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group">
-                            <div className="flex items-start justify-between">
-                                <div className="flex flex-col space-y-1">
-                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider">
+                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between sm:col-span-2 lg:col-span-1">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex flex-col space-y-1 overflow-hidden">
+                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
                                         Total Transfer Hari Ini
                                     </span>
-                                    <span className="text-sm font-semibold text-neutral-700">
+                                    <span className="text-sm font-semibold text-neutral-700 truncate">
                                         Pembayaran Digital
                                     </span>
                                 </div>
-                                <div className="p-2.5 ml-4 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform duration-300">
+                                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
                                     <CreditCard className="w-5 h-5" />
                                 </div>
                             </div>
                             <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono">
+                                <span className="text-lg font-bold text-neutral-900 tracking-tight font-mono block truncate">
                                     {formatRupiah(card.total_transfer_today)}
                                 </span>
                             </div>

@@ -11,8 +11,22 @@ class ServiceController extends Controller
 {
     public function index()
     {
+        $services = Service::latest()->get();
+
+        // Hitung statistik untuk Card
+        $totalServices = $services->count();
+        $activeServices = $services->where('status', true)->count();
+        $inactiveServices = $services->where('status', false)->count();
+        $avgPrice = $totalServices > 0 ? $services->avg('price') : 0;
+
         return inertia('service', [
-            'services' => Service::latest()->get(),
+            'services' => $services,
+            'card' => [
+                'total_services' => $totalServices,
+                'active_services' => $activeServices,
+                'inactive_services' => $inactiveServices,
+                'avg_price' => $avgPrice,
+            ],
         ]);
     }
 

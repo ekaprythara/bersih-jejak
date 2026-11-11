@@ -5,7 +5,6 @@ import { CreateAdminDialog } from "@/components/partials/branch/create-admin-dia
 import { CreateBranchDialog } from "@/components/partials/branch/create-branch-dialog";
 import { UpdateAdminDialog } from "@/components/partials/branch/update-admin-dialog";
 import { UpdateBranchDialog } from "@/components/partials/branch/update-branch-dialog";
-import { Button } from "@/components/ui/button";
 import { dashboard } from "@/routes";
 import { updateStatus as updateAdminStatus } from "@/routes/admin";
 import { updateStatus as updateBranchStatus } from "@/routes/branches";
@@ -14,6 +13,13 @@ import { BranchProps, BranchType, UserType } from "@/types/data-types";
 import { Head, router } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
+import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupInput,
+} from "@/components/ui/input-group";
+import { useState } from "react";
+import { Search, X } from "lucide-react";
 
 const handleAdminStatusChange = (id: number, newStatus: boolean) => {
     router.patch(
@@ -51,6 +57,10 @@ export default function Branch({
     branchOptionsUpdate,
     users,
 }: BranchProps) {
+    // Pisahkan state filter untuk masing-masing tabel
+    const [adminFilter, setAdminFilter] = useState("");
+    const [branchFilter, setBranchFilter] = useState("");
+
     const adminColumns: ColumnDef<typeof features, UserType>[] = [
         {
             header: "Nama",
@@ -137,6 +147,7 @@ export default function Branch({
             },
         },
     ];
+
     return (
         <>
             <Head title="Admin & Cabang" />
@@ -147,8 +158,9 @@ export default function Branch({
                     description="Halaman untuk mengelola data cabang dari pengguna."
                 />
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-                    <div className="rounded-lg border border-neutral-200 p-4 flex flex-col gap-4">
+                <div className="flex flex-col gap-4 mt-8">
+                    {/* Tabel Data Admin */}
+                    <div className="rounded-lg border border-neutral-200 p-4 flex flex-col gap-4 bg-white shadow-xs">
                         <div className="flex justify-between items-center">
                             <h2 className="font-bold text-neutral-800">
                                 Data Admin
@@ -156,13 +168,40 @@ export default function Branch({
 
                             <CreateAdminDialog branches={branchOptionsCreate} />
                         </div>
-
+                        <InputGroup className="max-w-xs">
+                            <InputGroupAddon>
+                                <Search className="h-4 w-4 text-muted-foreground" />
+                            </InputGroupAddon>
+                            <InputGroupInput
+                                placeholder="Cari admin..."
+                                value={adminFilter}
+                                onChange={(e) => setAdminFilter(e.target.value)}
+                            />
+                            {adminFilter && (
+                                <InputGroupAddon align="inline-end">
+                                    <button
+                                        type="button"
+                                        onClick={() => setAdminFilter("")}
+                                        className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                                        aria-label="Clear search"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                </InputGroupAddon>
+                            )}
+                        </InputGroup>
                         <div>
-                            <DataTable columns={adminColumns} data={users} />
+                            <DataTable
+                                columns={adminColumns}
+                                data={users}
+                                globalFilter={adminFilter}
+                                setGlobalFilter={setAdminFilter}
+                            />
                         </div>
                     </div>
 
-                    <div className="rounded-lg border border-neutral-200 p-4 flex flex-col gap-4">
+                    {/* Tabel Data Cabang */}
+                    <div className="rounded-lg border border-neutral-200 p-4 flex flex-col gap-4 bg-white shadow-xs">
                         <div className="flex justify-between items-center">
                             <h2 className="font-bold text-neutral-800">
                                 Data Cabang
@@ -170,11 +209,36 @@ export default function Branch({
 
                             <CreateBranchDialog />
                         </div>
-
+                        <InputGroup className="max-w-xs">
+                            <InputGroupAddon>
+                                <Search className="h-4 w-4 text-muted-foreground" />
+                            </InputGroupAddon>
+                            <InputGroupInput
+                                placeholder="Cari cabang..."
+                                value={branchFilter}
+                                onChange={(e) =>
+                                    setBranchFilter(e.target.value)
+                                }
+                            />
+                            {branchFilter && (
+                                <InputGroupAddon align="inline-end">
+                                    <button
+                                        type="button"
+                                        onClick={() => setBranchFilter("")}
+                                        className="text-muted-foreground hover:text-foreground transition-colors p-1"
+                                        aria-label="Clear search"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                </InputGroupAddon>
+                            )}
+                        </InputGroup>
                         <div>
                             <DataTable
                                 columns={branchColumns}
                                 data={branchOptionsUpdate}
+                                globalFilter={branchFilter}
+                                setGlobalFilter={setBranchFilter}
                             />
                         </div>
                     </div>

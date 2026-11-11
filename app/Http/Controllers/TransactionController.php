@@ -38,7 +38,7 @@ class TransactionController extends Controller
 
         $today = Carbon::today()->toDateString();
 
-        // Buat base query dengan relasi yang dibutuhkan
+        // Base query utama untuk tabel transaksi
         $query = Transaction::with([
             "customer",
             "service",
@@ -55,9 +55,8 @@ class TransactionController extends Controller
             $query->where("branch_id", $branchId);
         }
 
-        // --- PENERAPAN LOGIKA: HARI INI + STATUS PENDING (DEFAULT) ---
+        // --- LOGIKA UTAMA: HARI INI + PENDING/PROSES + UPDATED_AT HARI INI ---
         if (($minDate && $minDate !== "") || ($maxDate && $maxDate !== "")) {
-            // Jika user memilih filter tanggal secara manual
             if ($minDate) {
                 $query->where('transaction_date', ">=", $minDate);
             }
@@ -65,17 +64,15 @@ class TransactionController extends Controller
                 $query->where('transaction_date', "<=", $maxDate);
             }
         } else {
-            // Jika user tidak memfilter tanggal (Default):
-            // Tampilkan (Transaksi Hari Ini) OR (Status Pending dari kapan pun)
             $query->where(function ($q) use ($today) {
-                $q->whereDate('transaction_date', $today) // Hari ini
+                $q->whereDate('transaction_date', $today)
                     ->orWhereHas('transactionStatus', function ($subQ) {
                         $subQ->where('name', 'like', '%pending%')
                             ->orWhere('name', 'like', '%proses%');
-                    }); // ATAU status Pending/Proses dari kapan pun (bulan lalu, tahun lalu, dsb)
+                    })
+                    ->orWhereDate('updated_at', $today);
             });
         }
-        // -------------------------------------------------------------
 
         if ($serviceId && $serviceId !== 'all') {
             $query->where('service_id', $serviceId);
@@ -93,47 +90,47 @@ class TransactionController extends Controller
             $query->where('payment_method_id', $paymentMethodId);
         }
 
-        // Total Transaksi dari hasil query filter saat ini
+        // --- PERHITUNGAN CARD MENGGUNAKAN LOGIKA YANG DISAMAKAN ---
+
+        // --- PERHITUNGAN CARD MENGGUNAKAN LOGIKA YANG 100% SAMA DENGAN TABEL ---
+
+        // 1. Total Transaksi (Berdasarkan cakupan filter/default tabel)
         $totalTransactions = (clone $query)->count();
 
-        // Sukses 
+        // 2. Sukses (Berdasarkan status transaksi 'selesai')
         $successTransactions = (clone $query)->whereHas('transactionStatus', function ($q) {
-            $q->where('name', 'like', '%sukses%')
-                ->orWhere('name', 'like', '%completed%')
-                ->orWhere('name', 'like', '%selesai%');
+            $q->where('name', 'selesai');
         })->count();
 
-        // Pending 
+        // 3. Pending (Berdasarkan status transaksi 'pending' atau 'proses')
         $pendingTransactions = (clone $query)->whereHas('transactionStatus', function ($q) {
-            $q->where('name', 'like', '%pending%')
-                ->orWhere('name', 'like', '%proses%')
-                ->orWhere('name', 'like', '%tertunda%');
+            $q->whereIn('name', ['pending', 'proses']);
         })->count();
 
-        // Total Cash Hari Ini (Berdasarkan metode pembayaran 'Cash' dan tanggal hari ini)
+        // 4. Total Cash (Metode 'Cash' dan status pembayaran 'lunas' dari cakupan data saat ini)
         $totalCashToday = (clone $query)
-            ->whereDate('transaction_date', $today)
             ->whereHas('paymentMethod', function ($q) {
-                $q->where('name', 'like', '%cash%')
-                    ->orWhere('name', 'like', '%tunai%');
+                $q->where('name', 'Cash');
+            })
+            ->whereHas('paymentStatus', function ($q) {
+                $q->where('name', 'lunas');
             })
             ->sum('total_amount');
 
-        // Total Transfer Hari Ini (Berdasarkan metode pembayaran 'Transfer' dan tanggal hari ini)
+        // 5. Total Transfer / Digital (Metode 'Transfer Bank' atau 'QRIS' dan status pembayaran 'lunas' dari cakupan data saat ini)
         $totalTransferToday = (clone $query)
-            ->whereDate('transaction_date', $today)
             ->whereHas('paymentMethod', function ($q) {
-                $q->where('name', 'like', '%transfer%')
-                    ->orWhere('name', 'like', '%bca%')
-                    ->orWhere('name', 'like', '%bank%');
+                $q->whereIn('name', ['Transfer Bank', 'QRIS']);
+            })
+            ->whereHas('paymentStatus', function ($q) {
+                $q->where('name', 'lunas');
             })
             ->sum('total_amount');
 
         return inertia("transaction", [
-            // Eksekusi query dengan urutan latest dan pagination
-            "transactions" => $query->latest('transaction_date')->get(),
+            "transactions" => $query->latest('created_at')->get(),
             "customers" => Customer::active()->get(['id', 'name']),
-            "services" => Service::active()->get(['id', 'name', 'price']),
+            "services" => Service::active()->get(['id', 'name', 'price', 'estimated_days']),
             "paymentMethods" => PaymentMethod::get(['id', 'name']),
             "paymentStatuses" => PaymentStatus::get(['id', 'name']),
             "transactionStatuses" => TransactionStatus::get(['id', 'name']),
@@ -141,7 +138,6 @@ class TransactionController extends Controller
             "serviceOptions" => Service::get(['id', 'name', 'status']),
             "branchOptions" => Branch::get(['id', 'name', 'status']),
 
-            // Opsi khusus untuk form Create yang kita bahas sebelumnya
             "dropdownOptionCreate" => [
                 "customers" => Customer::active()->get(['id', 'name']),
                 "services" => Service::active()->get(['id', 'name', 'price']),
@@ -156,7 +152,7 @@ class TransactionController extends Controller
                 "pending_transactions" => $pendingTransactions,
                 "total_cash_today" => $totalCashToday,
                 "total_transfer_today" => $totalTransferToday,
-            ], // <-- Perbaikan: Ditambahkan koma di sini agar tidak syntax error
+            ],
 
             "filters" => $request->only([
                 'min_date',
@@ -209,7 +205,6 @@ class TransactionController extends Controller
 
     public function update(UpdateTransactionRequest $request, Transaction $transaction, CloudinaryService $cloudinaryService)
     {
-        $this->authorize('update', $transaction);
 
         $validatedData = $request->validated();
 

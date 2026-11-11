@@ -89,7 +89,7 @@ export default function Dashboard({
         );
     };
 
-    const isFiltered = form.data.branch_id !== "all";
+    const isFiltered = form.data.branch_id !== "all" && currentUser.is_owner;
 
     // Daftar warna otomatis untuk garis grafik cabang yang dinamis
     const branchColors = [
@@ -144,17 +144,11 @@ export default function Dashboard({
                             </Select>
                         )}
                         {isFiltered && (
-                            <Button
-                                type="button"
-                                className="w-full md:w-fit"
-                                variant="destructive"
-                                onClick={handleReset}
-                            >
-                                <X strokeWidth={2.5} />
-                                <span className="font-semibold">
+                            <button type="button" onClick={handleReset}>
+                                <span className="text-xs text-red-600 hover:cursor-pointer">
                                     Hapus Filter
                                 </span>
-                            </Button>
+                            </button>
                         )}
                     </div>
                 </div>

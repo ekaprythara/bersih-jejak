@@ -13,6 +13,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ExpenseController extends Controller
@@ -28,7 +29,6 @@ class ExpenseController extends Controller
         $expenseCategoryId = $request->input('expense_category_id', "all");
         $minDate = $request->input("min_date", "");
         $maxDate = $request->input("max_date", "");
-
 
         $query = Expense::with(["branch", "user", "expenseCategory"]);
 
@@ -49,14 +49,66 @@ class ExpenseController extends Controller
             $query->where('expense_category_id', $expenseCategoryId);
         }
 
-        $branchData = $query->latest('expense_date')->get();
+        $branchData = $query->latest('created_at')->get();
+
+        // ==========================================
+        // PERHITUNGAN DASHBOARD CARDS STATISTIK (Hanya Angka)
+        // ==========================================
+
+        $statsQuery = Expense::query();
+        if ($authenticatedUserBranch) {
+            $statsQuery->where("branch_id", $authenticatedUserBranch);
+        } else if ($branchId && $branchId !== "all") {
+            $statsQuery->where("branch_id", $branchId);
+        }
+
+        // 1. Total Pengeluaran
+        $totalExpenseAmount = (clone $statsQuery)->sum('amount');
+
+        // 2. Pengeluaran Bulan Ini
+        $monthlyExpenseAmount = (clone $statsQuery)
+            ->whereYear('expense_date', now()->year)
+            ->whereMonth('expense_date', now()->month)
+            ->sum('amount');
+
+        // 3. Kategori Pengeluaran Dominan
+        $topCategoryData = (clone $statsQuery)
+            ->select('expense_category_id', DB::raw('SUM(amount) as total'))
+            ->groupBy('expense_category_id')
+            ->orderByDesc('total')
+            ->with('expenseCategory')
+            ->first();
+
+        $topCategory = [
+            'name' => $topCategoryData?->expenseCategory?->name ?? 'Belum Ada Data',
+            'total' => $topCategoryData?->total ?? 0,
+        ];
+
+        // 4. Cabang Terboros
+        $topBranchData = (clone $statsQuery)
+            ->select('branch_id', DB::raw('SUM(amount) as total'))
+            ->groupBy('branch_id')
+            ->orderByDesc('total')
+            ->with('branch')
+            ->first();
+
+        $topBranch = [
+            'name' => $topBranchData?->branch?->name ?? 'Semua Cabang',
+            'total' => $topBranchData?->total ?? 0,
+        ];
 
         return inertia('expense', [
             "expenses" => $branchData,
             "allBranches" => Branch::get(['id', 'name']),
             "branches" => Branch::active()->get(),
-            "branchOptions" => Branch::get(['id', 'name', 'status']), // Spesific for branch dropdown on UpdateExpenseDialog
+            "branchOptions" => Branch::get(['id', 'name', 'status']),
             "expenseCategories" => ExpenseCategory::all(),
+            "dashboardCard" => [
+                "totalExpense" => $totalExpenseAmount,
+                "monthlyExpense" => $monthlyExpenseAmount,
+                "topCategory" => $topCategory,
+                "topBranch" => $topBranch,
+            ],
             "filters" => $request->only([
                 'min_date',
                 'max_date',
