@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Nota #{{ $transaction->id }}</title>
+    <title>Invoice #{{ $transaction->invoice_number }}</title>
     <style>
         @page {
             size: 80mm auto;
@@ -20,7 +20,6 @@
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .text-left { text-align: left; }
-        
         .header {
             text-align: center;
             margin-bottom: 6px;
@@ -40,34 +39,29 @@
             font-weight: bold;
             color: #333;
         }
-
         .section {
             margin-bottom: 6px;
             border-bottom: 1px dashed #444;
             padding-bottom: 5px;
         }
-
         .info-table, .item-table {
             width: 100%;
             border-collapse: collapse;
             font-family: 'Courier New', Courier, monospace;
             font-weight: bold;
         }
-        
         /* Mengatur padding kiri dan kanan pada seluruh sel tabel */
         .info-table td {
-            padding: 1.5px 4px; 
+            padding: 1.5px 4px;
             vertical-align: top;
             font-size: 10px;
             font-weight: bold;
         }
-        
         .item-table th, .item-table td {
             padding: 4px 4px; /* Padding atas-bawah dan kiri-kanan lebih seimbang */
             font-size: 10px;
             font-weight: bold;
         }
-        
         .item-table th {
             border-bottom: 1px solid #111;
             border-top: 1px solid #111;
@@ -76,47 +70,46 @@
             text-transform: uppercase;
             text-align: left;
         }
-
-        .totals td {
-            padding: 2px 4px; /* Padding kiri-kanan untuk baris total */
-            font-size: 10.5px;
-            font-weight: bold;
-        }
-
         .footer {
             text-align: center;
             margin-top: 6px;
             font-size: 9.5px;
             font-weight: bold;
         }
+        .print-time {
+            text-align: center;
+            font-size: 8.5px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 <body>
-
-    <!-- Header / Info Usaha -->
+    <!-- Header/Info Usaha -->
     <div class="header">
         <h2>Bersih Jejak</h2>
-        <p>{{ "Cabang ". $transaction->branch->name ?? '' }}</p>
+        <p>{{ "Cabang " . ($transaction->branch->name ?? '') }}</p>
         <p>{{ $transaction->branch->address ?? 'Denpasar, Bali' }}</p>
     </div>
 
-    <!-- Informasi Nota & Pelanggan -->
+    <!-- Informasi Invoice & Pelanggan -->
     <div class="section">
         <table class="info-table">
             <tr>
-                <td style="width: 36%;">No. Nota</td>
+                <td style="width: 36%;">No. Invoice</td>
                 <td style="width: 4%;">:</td>
-                <td><strong>#{{ str_pad($transaction->id, 5, '0', STR_PAD_LEFT) }}</strong></td>
+                <td><strong>{{ $transaction->invoice_number }}</strong></td>
             </tr>
             <tr>
                 <td>Tanggal</td>
                 <td>:</td>
-                <td>{{ \Carbon\Carbon::parse($transaction->transaction_date)->format('Y-m-d') }}</td>
+                <td>{{\Carbon\Carbon::parse($transaction->transaction_date)->format('Y-m-d')}}</td>
             </tr>
             <tr>
                 <td>Estimasi Ambil</td>
                 <td>:</td>
-                <td>{{ \Carbon\Carbon::parse($transaction->pickup_date)->format('Y-m-d') }}</td>
+                <td>{{\Carbon\Carbon::parse($transaction->pickup_date)->format('Y-m-d')}}</td>
             </tr>
             <tr>
                 <td>Pelanggan</td>
@@ -180,18 +173,20 @@
             <tr>
                 <td style="font-size: 11px; padding-top: 4px;"><strong>TOTAL (RP)</strong></td>
                 <td style="padding-top: 4px;">:</td>
-                <td class="text-right" style="font-size: 11px; padding-top: 4px;">
-                    <strong>Rp. {{ number_format($transaction->total_amount, 0, '.', '.') }}</strong>
-                </td>
+                <td class="text-right" style="font-size: 11px; padding-top: 4px;"><strong>Rp. {{ number_format($transaction->total_amount, 0, '.', '.') }}</strong></td>
             </tr>
         </table>
     </div>
 
-    <!-- Footer Catatan / Terima Kasih -->
+    <!-- Waktu Cetak Nota -->
+    <div class="print-time">
+        Dicetak: {{\Carbon\Carbon::now()->translatedFormat('d-m-Y H:i')}}
+    </div>
+
+    <!-- Footer Catatan/Terima Kasih -->
     <div class="footer">
         <p>TERIMA KASIH TELAH MEMPERCAYAKAN<br>PERAWATAN SEPATU ANDA DI BERSIH JEJAK!</p>
         <p style="margin-top: 4px; font-size: 8.5px;">*Simpan nota ini sebagai bukti pengambilan barang.</p>
     </div>
-
 </body>
 </html>

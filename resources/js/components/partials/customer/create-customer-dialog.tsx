@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { store } from "@/routes/customers";
 import InputError from "@/components/input-error";
+import { Textarea } from "@/components/ui/textarea";
 
 export const CreateCustomerDialog = ({
     btnTitle = "Tambah Pelanggan",
@@ -28,6 +29,7 @@ export const CreateCustomerDialog = ({
     const form = useForm({
         name: "",
         phone_number: "",
+        notes: "",
     });
 
     const handleSubmit = () => {
@@ -93,7 +95,19 @@ export const CreateCustomerDialog = ({
                                     form.setData("phone_number", e.target.value)
                                 }
                             />
-                            <InputError message={form.errors.phone_number} />
+                            <InputError message={form.errors.notes} />
+                        </Field>
+                        <Field>
+                            <Label htmlFor="notes">Catatan</Label>
+                            <Textarea
+                                id="notes"
+                                value={form.data.notes}
+                                onChange={(e) =>
+                                    form.setData("notes", e.target.value)
+                                }
+                                placeholder="Tambahkan catatan"
+                            />
+                            <InputError message={form.errors.notes} />
                         </Field>
                     </FieldGroup>
 

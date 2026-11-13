@@ -175,9 +175,11 @@ export default function Expense({
                 </div>
 
                 {/* Dashboard Mini untuk Card */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-6">
+                <div
+                    className={`grid grid-cols-1 sm:grid-cols-2 ${currentUser.is_owner ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-4 w-full mb-6`}
+                >
                     {/* Card 1: Total Pengeluaran */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex flex-col space-y-1 overflow-hidden">
                                 <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
@@ -199,7 +201,7 @@ export default function Expense({
                     </div>
 
                     {/* Card 2: Pengeluaran Bulan Ini */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex flex-col space-y-1 overflow-hidden">
                                 <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
@@ -221,7 +223,7 @@ export default function Expense({
                     </div>
 
                     {/* Card 3: Kategori Pengeluaran Terbesar */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex flex-col space-y-1 overflow-hidden">
                                 <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
@@ -246,32 +248,36 @@ export default function Expense({
                     </div>
 
                     {/* Card 4: Cabang Tertinggi */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
-                        <div className="flex items-start justify-between gap-2">
-                            <div className="flex flex-col space-y-1 overflow-hidden">
-                                <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
-                                    Cabang Terboros
-                                </span>
-                                <span
-                                    className="text-sm text-neutral-700 font-semibold truncate"
-                                    title={dashboardCard.topBranch.name}
-                                >
-                                    {dashboardCard.topBranch.name ===
-                                    "Semua Cabang"
-                                        ? "Semua Cabang"
-                                        : `Cabang ${dashboardCard.topBranch.name}`}
+                    {currentUser.is_owner && (
+                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex flex-col space-y-1 overflow-hidden">
+                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
+                                        Cabang Terboros
+                                    </span>
+                                    <span
+                                        className="text-sm text-neutral-700 font-semibold truncate"
+                                        title={dashboardCard.topBranch.name}
+                                    >
+                                        {dashboardCard.topBranch.name ===
+                                        "Semua Cabang"
+                                            ? "Semua Cabang"
+                                            : `Cabang ${dashboardCard.topBranch.name}`}
+                                    </span>
+                                </div>
+                                <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                    <Building2 className="w-5 h-5" />
+                                </div>
+                            </div>
+                            <div className="mt-4 pt-3">
+                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                                    {formatRupiah(
+                                        dashboardCard.topBranch.total,
+                                    )}
                                 </span>
                             </div>
-                            <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                <Building2 className="w-5 h-5" />
-                            </div>
                         </div>
-                        <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
-                                {formatRupiah(dashboardCard.topBranch.total)}
-                            </span>
-                        </div>
-                    </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col gap-4">

@@ -35,7 +35,7 @@ export type CustomerType = {
     id: number;
     name: string;
     phone_number: string;
-    email: string;
+    notes: string;
     status: boolean;
     transactions: TransactionType[];
     created_at: string;
@@ -82,6 +82,7 @@ export type PaymentStatusType = {
 
 export type TransactionType = {
     id: number;
+    invoice_number: string;
     customer_id: number;
     transaction_date: string; // Bisa menggunakan string (YYYY-MM-DD) atau Date
     pickup_date: string;

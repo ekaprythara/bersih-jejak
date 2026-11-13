@@ -26,6 +26,7 @@ import { update } from "@/routes/customers";
 import InputError from "@/components/input-error";
 import { CustomerType } from "@/types/data-types";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export const UpdateCustomerDialog = ({
     customer,
@@ -37,7 +38,7 @@ export const UpdateCustomerDialog = ({
     const form = useForm({
         name: customer.name,
         phone_number: customer.phone_number,
-        email: customer.email,
+        notes: customer.notes,
     });
 
     const handleSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
@@ -100,18 +101,16 @@ export const UpdateCustomerDialog = ({
                             <InputError message={form.errors.phone_number} />
                         </Field>
                         <Field>
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                name="email"
-                                type="email"
-                                placeholder="Contoh: budi@mail.com"
-                                value={form.data.email}
+                            <Label htmlFor="notes">Catatan</Label>
+                            <Textarea
+                                id="notes"
+                                value={form.data.notes}
                                 onChange={(e) =>
-                                    form.setData("email", e.target.value)
+                                    form.setData("notes", e.target.value)
                                 }
+                                placeholder="Edit atau tambahkan catatan"
                             />
-                            <InputError message={form.errors.email} />
+                            <InputError message={form.errors.notes} />
                         </Field>
                     </FieldGroup>
 

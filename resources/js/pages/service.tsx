@@ -106,7 +106,7 @@ export default function Service({
         <>
             <Head title="Layanan" />
             <div className="p-4">
-                <div className="flex flex-col md:flex-row items-start gap-4 md:items-center md:justify-between mb-6">
+                <div className="flex flex-col md:flex-row items-start gap-4 md:items-center md:justify-between mb-8">
                     <Heading
                         title="Layanan"
                         description="Halaman untuk mengelola data layanan cuci sepatu."
@@ -117,7 +117,7 @@ export default function Service({
                 {/* --- CARD STATISTIK LAYANAN --- */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-6">
                     {/* Card 1: Total Layanan */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex flex-col space-y-1 overflow-hidden">
                                 <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
@@ -139,7 +139,7 @@ export default function Service({
                     </div>
 
                     {/* Card 2: Layanan Aktif */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex flex-col space-y-1 overflow-hidden">
                                 <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
@@ -161,7 +161,7 @@ export default function Service({
                     </div>
 
                     {/* Card 3: Layanan Nonaktif */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex flex-col space-y-1 overflow-hidden">
                                 <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
@@ -183,7 +183,7 @@ export default function Service({
                     </div>
 
                     {/* Card 4: Rata-rata Harga */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex flex-col space-y-1 overflow-hidden">
                                 <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">

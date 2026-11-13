@@ -144,11 +144,13 @@ export default function FinancialReport({
             <Head title="Laporan Keuangan" />
 
             <div className="p-4">
-                <Heading
-                    title="Laporan Keuangan"
-                    description="Halaman untuk melihat laporan keuangan per outlet."
-                />
-
+                {" "}
+                <div className="flex flex-col md:flex-row items-start gap-4 md:items-center md:justify-between mb-8">
+                    <Heading
+                        title="Laporan Keuangan"
+                        description="Halaman untuk melihat laporan keuangan per outlet."
+                    />
+                </div>
                 <div className="flex flex-col gap-4">
                     <form className="flex gap-2">
                         <Select

@@ -25,6 +25,7 @@ class StoreCustomerRequest extends FormRequest
         return [
             'name'         => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:20', 'unique:customers,phone_number'],
+            'notes'        => ['nullable', 'string', 'max:1000'],
             'status'       => ['nullable', 'boolean'],
         ];
     }
@@ -33,11 +34,18 @@ class StoreCustomerRequest extends FormRequest
     {
         return [
             'name.required'         => 'Nama pelanggan wajib diisi.',
+            'name.string'           => 'Nama pelanggan harus berupa teks.',
+            'name.max'              => 'Nama pelanggan maksimal :max karakter.',
+
             'phone_number.required' => 'Nomor telepon wajib diisi.',
+            'phone_number.string'   => 'Nomor telepon harus berupa teks.',
+            'phone_number.max'      => 'Nomor telepon maksimal :max karakter.',
             'phone_number.unique'   => 'Nomor telepon ini sudah terdaftar.',
-            'email.required'        => 'Email wajib diisi.',
-            'email.email'           => 'Format email tidak valid.',
-            'email.unique'          => 'Email ini sudah terdaftar.',
+
+            'notes.string'          => 'Catatan harus berupa teks.',
+            'notes.max'             => 'Catatan maksimal :max karakter.',
+
+            'status.boolean'        => 'Format status tidak valid.',
         ];
     }
 }

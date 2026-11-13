@@ -1,28 +1,28 @@
-import { Link } from '@inertiajs/react';
-import type { PropsWithChildren } from 'react';
-import Heading from '@/components/heading';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { useCurrentUrl } from '@/hooks/use-current-url';
-import { cn, toUrl } from '@/lib/utils';
-import { edit as editAppearance } from '@/routes/appearance';
-import { edit } from '@/routes/profile';
-import { edit as editSecurity } from '@/routes/security';
-import type { NavItem } from '@/types';
+import { Link } from "@inertiajs/react";
+import type { PropsWithChildren } from "react";
+import Heading from "@/components/heading";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { useCurrentUrl } from "@/hooks/use-current-url";
+import { cn, toUrl } from "@/lib/utils";
+import { edit as editAppearance } from "@/routes/appearance";
+import { edit } from "@/routes/profile";
+import { edit as editSecurity } from "@/routes/security";
+import type { NavItem } from "@/types";
 
 const sidebarNavItems: NavItem[] = [
     {
-        title: 'Profile',
+        title: "Profile",
         href: edit(),
         icon: null,
     },
     {
-        title: 'Security',
+        title: "Security",
         href: editSecurity(),
         icon: null,
     },
     {
-        title: 'Appearance',
+        title: "Appearance",
         href: editAppearance(),
         icon: null,
     },
@@ -32,12 +32,13 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
 
     return (
-        <div className="px-4 py-6">
-            <Heading
-                title="Settings"
-                description="Manage your profile and account settings"
-            />
-
+        <div className="p-4">
+            <div className="flex flex-col md:flex-row items-start gap-4 md:items-center md:justify-between mb-8">
+                <Heading
+                    title="Pengaturan"
+                    description="Manage your profile and account settings"
+                />
+            </div>
             <div className="flex flex-col lg:flex-row lg:space-x-12">
                 <aside className="w-full max-w-xl lg:w-48">
                     <nav
@@ -50,8 +51,8 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                 size="sm"
                                 variant="ghost"
                                 asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted': isCurrentOrParentUrl(item.href),
+                                className={cn("w-full justify-start", {
+                                    "bg-muted": isCurrentOrParentUrl(item.href),
                                 })}
                             >
                                 <Link href={item.href}>

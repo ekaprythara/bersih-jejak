@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+            $table->string("invoice_number")->unique();
             $table->foreignId("customer_id")->constrained("customers");
             $table->date("transaction_date");
             $table->date("pickup_date");

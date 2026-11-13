@@ -105,7 +105,7 @@ export default function Dashboard({
         <>
             <Head title="Dashboard" />
 
-            <div className="flex h-full flex-1 flex-col gap-6 overflow-x-auto rounded-xl p-4">
+            <div className="flex h-full flex-1 flex-col gap-8 overflow-x-auto rounded-xl p-4">
                 <div className="flex flex-col md:flex-row items-start gap-4 md:items-center md:justify-between">
                     <Heading
                         title="Dashboard"

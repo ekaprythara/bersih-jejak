@@ -168,38 +168,41 @@ class TransactionController extends Controller
 
     public function store(StoreTransactionRequest $request, CloudinaryService $cloudinaryService)
     {
-        // 1. Ambil data layanan untuk mendapatkan harga (price)
+        // 1. Generate unique invoice_number dengan awalan TRX (Contoh: TRX-202611138492)
+        $datePart = date('Ymd');
+        do {
+            $invoiceNumber = 'TRX-' . $datePart . mt_rand(1000, 9999);
+        } while (Transaction::where('invoice_number', $invoiceNumber)->exists());
+
+        // 2. Ambil data layanan untuk mendapatkan harga (price)
         $service = Service::findOrFail($request->service_id);
 
-        // 2. Hitung total amount otomatis (Harga Layanan * Jumlah Sepatu)
+        // 3. Hitung total amount otomatis (Harga Layanan * Jumlah Sepatu)
         $totalAmount = $service->price * $request->shoe_count;
 
-        // 3. Tentukan status transaksi awal secara otomatis (Contoh: ID 1 untuk Pending/Proses)
+        // 4. Tentukan status transaksi awal secara otomatis (Contoh: ID 1 untuk Pending/Proses)
         $defaultTransactionStatusId = 1;
 
-        // 4. Handle upload gambar jika ada
+        // 5. Handle upload gambar jika ada
         $imageUrl = null;
         $imagePublicId = null;
         if ($request->hasFile('image')) {
             $uploadedFile = $cloudinaryService->upload($request->file('image'), 'transactions');
-
             $imageUrl = $uploadedFile['secure_url'] ?? null;
             $imagePublicId = $uploadedFile['public_id'] ?? null;
         }
 
-        // 5. Simpan data ke database dalam satu kali eksekusi
-        Transaction::create(array_merge(
-            $request->validated(),
-            [
-                'user_id'                 => Auth::id(),
-                'total_amount'            => $totalAmount,
-                'transaction_status_id'   => $defaultTransactionStatusId,
-                'before_image_url'        => $imageUrl,
-                'before_image_public_id'  => $imagePublicId,
-            ]
-        ));
+        // 6. Simpan data ke database dengan menyertakan invoice_number
+        Transaction::create(array_merge($request->validated(), [
+            'invoice_number'          => $invoiceNumber,
+            'user_id'                 => Auth::id(),
+            'total_amount'            => $totalAmount,
+            'transaction_status_id'   => $defaultTransactionStatusId,
+            'before_image_url'        => $imageUrl,
+            'before_image_public_id'  => $imagePublicId,
+        ]));
 
-        // 6. Redirect dengan pesan sukses
+        // 7. Redirect dengan pesan sukses
         return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil ditambahkan!');
     }
 

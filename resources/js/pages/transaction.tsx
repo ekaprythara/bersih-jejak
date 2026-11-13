@@ -84,6 +84,17 @@ export default function Transaction({
 
     const columns: ColumnDef<typeof features, TransactionType>[] = [
         {
+            accessorKey: "invoice_number",
+            header: "No. Invoice",
+            cell: ({ row }) => {
+                return (
+                    <span className="font-mono font-medium text-xs">
+                        {row.original.invoice_number}
+                    </span>
+                );
+            },
+        },
+        {
             accessorKey: "transaction_date",
             header: "Tanggal Transaksi",
             cell: ({ row }) => {
@@ -216,7 +227,7 @@ export default function Transaction({
                     e.preventDefault();
 
                     const url = new URL(
-                        printTransaction.url(row.original.id),
+                        printTransaction.url(row.original.invoice_number),
                         window.location.origin,
                     );
 

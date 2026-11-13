@@ -155,14 +155,15 @@ export default function Customer({
                     <Heading
                         title="Pelanggan"
                         description="Halaman untuk mengelola data pelanggan."
-                    />{" "}
+                    />
+
                     <CreateCustomerDialog />
                 </div>
 
                 {/* Card */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full mb-6">
                     {/* 1. Total Anggota */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex flex-col space-y-1 overflow-hidden">
                                 <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
@@ -184,7 +185,7 @@ export default function Customer({
                     </div>
 
                     {/* 2. Anggota Baru */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex flex-col space-y-1 overflow-hidden">
                                 <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
@@ -206,14 +207,14 @@ export default function Customer({
                     </div>
 
                     {/* 3. Loyalitas / Pelanggan Setia */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex flex-col space-y-1 overflow-hidden">
                                 <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
                                     Loyalitas
                                 </span>
                                 <span className="text-sm font-semibold text-neutral-700 truncate">
-                                    Pelanggan Setia (&ge;2 Trx)
+                                    Pelanggan Setia
                                 </span>
                             </div>
                             <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
@@ -228,14 +229,14 @@ export default function Customer({
                     </div>
 
                     {/* 4. Rata-rata Transaksi */}
-                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-2xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                    <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex flex-col space-y-1 overflow-hidden">
                                 <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
                                     Transaksi
                                 </span>
                                 <span className="text-sm font-semibold text-neutral-700 truncate">
-                                    Rata-rata / Org
+                                    Rata-rata per orang
                                 </span>
                             </div>
                             <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">

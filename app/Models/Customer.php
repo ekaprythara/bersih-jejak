@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 #[Fillable([
     'name',
-    'email',
     'phone_number',
+    'notes',
 ])]
 
 class Customer extends Model

@@ -129,64 +129,64 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Customer::factory()->create([
-            'name' => 'Budi Santoso',
+            'name'         => 'Budi Santoso',
             'phone_number' => '081234567890',
-
-            'status' => true,
+            'notes'        => 'Pelanggan langganan ramah, selalu bayar lunas di awal dan tidak pernah ribet.',
+            'status'       => true,
         ]);
         Customer::factory()->create([
-            'name' => 'Siti Aminah',
+            'name'         => 'Siti Aminah',
             'phone_number' => '081234567891',
-
-            'status' => true,
+            'notes'        => null,
+            'status'       => true,
         ]);
         Customer::factory()->create([
-            'name' => 'Ahmad Fauzi',
+            'name'         => 'Ahmad Fauzi',
             'phone_number' => '081234567892',
-
-            'status' => true,
+            'notes'        => 'Cukup perfeksionis, pastikan mid-sole benar-benar bersih sebelum diserahkan.',
+            'status'       => true,
         ]);
         Customer::factory()->create([
-            'name' => 'Dewi Lestari',
+            'name'         => 'Dewi Lestari',
             'phone_number' => '081234567893',
-
-            'status' => true,
+            'notes'        => null,
+            'status'       => true,
         ]);
         Customer::factory()->create([
-            'name' => 'Kadek Arta',
+            'name'         => 'Kadek Arta',
             'phone_number' => '081234567894',
-
-            'status' => false,
+            'notes'        => 'Blacklist: Pernah komplain kasar dan menuduh toko merusak lem sepatu padahal sudah lapuk dari awal.',
+            'status'       => false,
         ]);
         Customer::factory()->create([
-            'name' => 'Rina Wijaya',
+            'name'         => 'Rina Wijaya',
             'phone_number' => '081234567895',
-
-            'status' => true,
+            'notes'        => 'Pelanggan baik, sering bawa 3-4 pasang sepatu sekaligus tiap bulan.',
+            'status'       => true,
         ]);
         Customer::factory()->create([
-            'name' => 'Eko Prasetyo',
+            'name'         => 'Eko Prasetyo',
             'phone_number' => '081234567896',
-
-            'status' => true,
+            'notes'        => null,
+            'status'       => true,
         ]);
         Customer::factory()->create([
-            'name' => 'Siska Melina',
+            'name'         => 'Siska Melina',
             'phone_number' => '081234567897',
-
-            'status' => false,
+            'notes'        => 'Sering komplain masalah waktu pengerjaan, selalu minta didahulukan meski ambil paket reguler.',
+            'status'       => false,
         ]);
         Customer::factory()->create([
-            'name' => 'Doni Setiawan',
+            'name'         => 'Doni Setiawan',
             'phone_number' => '081234567898',
-
-            'status' => true,
+            'notes'        => null,
+            'status'       => true,
         ]);
         Customer::factory()->create([
-            'name' => 'Putri Utami',
+            'name'         => 'Putri Utami',
             'phone_number' => '081234567899',
-
-            'status' => true,
+            'notes'        => 'Pernah komplain warna suede agak pudar, wajib konfirmasi risiko bahan sebelum cuci.',
+            'status'       => true,
         ]);
 
         TransactionStatus::factory()->create(['name' => 'Pending']);

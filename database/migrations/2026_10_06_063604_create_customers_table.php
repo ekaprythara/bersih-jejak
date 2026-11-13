@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('phone_number')->unique();
+            $table->string('notes')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamps();
         });

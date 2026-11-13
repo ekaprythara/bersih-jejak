@@ -47,6 +47,10 @@ class TransactionFactory extends Factory
         $transactionDate = $this->faker->dateTimeBetween('-1 month', 'now');
         $formattedDate = $transactionDate->format('Y-m-d H:i:s');
 
+        // Generate invoice_number unik (contoh: TRX-202611134821)
+        $datePart = $transactionDate->format('Ymd');
+        $invoiceNumber = 'TRX-' . $datePart . $this->faker->unique()->numberBetween(1000, 9999);
+
         $pickupDate = (clone $transactionDate);
         $pickupDate->modify('+' . rand(1, 4) . ' days');
 
@@ -67,24 +71,25 @@ class TransactionFactory extends Factory
         $userId = $user?->id ?? (User::inRandomOrder()->first()?->id ?? 1);
 
         return [
-            'customer_id' => Customer::inRandomOrder()->first()?->id ?? 1,
-            'transaction_date' => $formattedDate,
-            'pickup_date' => $pickupDate->format('Y-m-d H:i:s'),
-            'service_id' => Service::inRandomOrder()->first()?->id ?? 1,
-            'shoe_count' => $shoeCount,
-            'total_amount' => $shoeCount * $pricePerShoe,
-            'branch_id' => $branchId,
-            'transaction_status_id' => TransactionStatus::inRandomOrder()->first()?->id ?? 1,
-            'payment_status_id' => PaymentStatus::inRandomOrder()->first()?->id ?? 1,
-            'payment_method_id' => PaymentMethod::inRandomOrder()->first()?->id ?? 3,
-            'description' => $this->faker->randomElement($descriptions),
-            'user_id' => $userId,
-            'before_image_url' => null,
-            'before_image_public_id' => null,
-            'after_image_url' => null,
-            'after_image_public_id' => null,
-            'created_at' => $formattedDate,
-            'updated_at' => $formattedDate,
+            'invoice_number'          => $invoiceNumber, // <-- DITAMBAHKAN DI SINI
+            'customer_id'             => Customer::inRandomOrder()->first()?->id ?? 1,
+            'transaction_date'        => $formattedDate,
+            'pickup_date'             => $pickupDate->format('Y-m-d H:i:s'),
+            'service_id'              => Service::inRandomOrder()->first()?->id ?? 1,
+            'shoe_count'              => $shoeCount,
+            'total_amount'            => $shoeCount * $pricePerShoe,
+            'branch_id'               => $branchId,
+            'transaction_status_id'   => TransactionStatus::inRandomOrder()->first()?->id ?? 1,
+            'payment_status_id'       => PaymentStatus::inRandomOrder()->first()?->id ?? 1,
+            'payment_method_id'       => PaymentMethod::inRandomOrder()->first()?->id ?? 3,
+            'description'             => $this->faker->randomElement($descriptions),
+            'user_id'                 => $userId,
+            'before_image_url'        => null,
+            'before_image_public_id'  => null,
+            'after_image_url'         => null,
+            'after_image_public_id'   => null,
+            'created_at'              => $formattedDate,
+            'updated_at'              => $formattedDate,
         ];
     }
 }

@@ -53,8 +53,12 @@
             font-size: 11px;
             text-transform: uppercase;
         }
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
         .total-row {
             font-weight: bold;
             background-color: #eaeaea;
@@ -82,10 +86,9 @@
     </style>
 </head>
 <body>
-
     <div class="header">
         <h1>Laporan Transaksi Operasional</h1>
-        <p>Dicetak pada: {{ \Carbon\Carbon::now()->translatedFormat('Y-m-d H:i') }}</p>
+        <p>Dicetak pada: {{\Carbon\Carbon::now()->translatedFormat('Y-m-d H:i')}}</p>
     </div>
 
     <div class="meta">
@@ -97,51 +100,50 @@
         <thead>
             <tr>
                 <th class="text-center" style="width: 4%;">No</th>
-                <th style="width: 11%;">Tanggal</th>
-                <th style="width: 13%;">Cabang</th>
-                <th style="width: 14%;">Pelanggan</th>
-                <th style="width: 14%;">Layanan</th>
-                <th style="width: 10%;">Status</th>
-                <th style="width: 10%;">Bayar</th>
-                <th style="width: 10%;">Dibuat Oleh</th>
-                <th style="width: 5%; text-align: center; border-right: none;"></th>
-                <th class="text-right" style="width: 12%; border-left: none;">Total (Rp)</th>
+                <th style="width: 12%;">No. Invoice</th> <!-- Kolom Invoice Ditambahkan -->
+                <th style="width: 10%;">Tanggal</th>
+                <th style="width: 11%;">Cabang</th>
+                <th style="width: 12%;">Pelanggan</th>
+                <th style="width: 12%;">Layanan</th>
+                <th style="width: 9%;">Status</th>
+                <th style="width: 9%;">Bayar</th>
+                <th style="width: 9%;">Kasir</th>
+                <th style="text-align: center; border-right: none; width: 4%;"></th>
+                <th class="text-right" style="width: 11%; border-left: none;">Total (Rp)</th>
             </tr>
         </thead>
         <tbody>
-            @forelse ($transactions as $index => $trx)
-                <tr>
-                    <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ \Carbon\Carbon::parse($trx->transaction_date ?? $trx->created_at)->format('Y-m-d') }}</td>
-                    <td>{{ $trx->branch->name ?? '-' }}</td>
-                    <td>{{ $trx->customer->name ?? '-' }}</td>
-                    <td>{{ $trx->service->name ?? '-' }}</td>
-                    <td>{{ $trx->transactionStatus->name ?? '-' }}</td>
-                    <td>{{ $trx->paymentStatus->name ?? '-' }}</td>
-                    <td>{{ $trx->user->name ?? '-' }}</td>
-                    <td style="text-align: center; border-right: none;">Rp.</td>
-                    <td class="text-right" style="border-left: none;">{{ number_format($trx->total_amount ?? $trx->amount ?? 0, 0, '.', '.') }}</td>
-                </tr>
+            @forelse($transactions as $index => $trx)
+            <tr>
+                <td class="text-center">{{ $index + 1 }}</td>
+                <td>{{ $trx->invoice_number }}</td> <!-- Data Invoice -->
+                <td>{{\Carbon\Carbon::parse($trx->transaction_date ?? $trx->created_at)->format('Y-m-d')}}</td>
+                <td>{{ $trx->branch->name ?? '-' }}</td>
+                <td>{{ $trx->customer->name ?? '-' }}</td>
+                <td>{{ $trx->service->name ?? '-' }}</td>
+                <td>{{ $trx->transactionStatus->name ?? '-' }}</td>
+                <td>{{ $trx->paymentStatus->name ?? '-' }}</td>
+                <td>{{ $trx->user->name ?? '-' }}</td>
+                <td style="text-align: center; border-right: none;">Rp.</td>
+                <td class="text-right" style="border-left: none;">{{ number_format($trx->total_amount ?? $trx->amount ?? 0, 0, '.', '.') }}</td>
+            </tr>
             @empty
-                <tr>
-                    <td colspan="10" class="text-center" style="padding: 15px; color: #333;">
-                        Tidak ada data transaksi.
-                    </td>
-                </tr>
+            <tr>
+                <td colspan="11" class="text-center" style="padding: 15px; color: #333;">Tidak ada data transaksi.</td>
+            </tr>
             @endforelse
         </tbody>
         @if(count($transactions) > 0)
-            <tfoot>
-                <tr class="total-row">
-                    <td colspan="8" class="text-center">TOTAL</td>
-                    <td style="text-align: center; border-right: none;">Rp.</td>
-                    <td class="text-right" style="border-left: none;">
-                        {{ number_format($transactions->sum(fn($t) => $t->total_amount ?? $t->amount ?? 0), 0, '.', '.') }}
-                    </td>
-                </tr>
-            </tfoot>
+        <tfoot>
+            <tr class="total-row">
+                <td colspan="9" class="text-center">TOTAL</td>
+                <td style="text-align: center; border-right: none;">Rp.</td>
+                <td class="text-right" style="border-left: none;">
+                    {{ number_format($transactions->sum(fn($t) => $t->total_amount ?? $t->amount ?? 0), 0, '.', '.') }}
+                </td>
+            </tr>
+        </tfoot>
         @endif
     </table>
-
 </body>
 </html>

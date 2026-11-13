@@ -23,7 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('transactions', [TransactionController::class, 'index'])->name("transactions.index");
     Route::post('transactions/create', [TransactionController::class, 'store'])->name("transactions.store");
-    Route::patch('transactions/{transaction}/edit', [TransactionController::class, 'update'])->name('transactions.update');
+    Route::patch('transactions/{invoice}/edit', [TransactionController::class, 'update'])->name('transactions.update');
     Route::get('transactions/print', [TransactionController::class, 'printPdf'])->name('transactions.printPdf');
     Route::get('transactions/{transaction}/print-transaction', [TransactionController::class, 'printTransaction'])->name('transactions.printTransaction');
     Route::get('transactions/export', [TransactionController::class, 'exportExcel'])->name('transactions.exportExcel');

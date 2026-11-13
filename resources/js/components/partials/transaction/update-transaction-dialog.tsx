@@ -63,12 +63,10 @@ export const UpdateTransactionDialog = ({
     const [isOpen, setIsOpen] = useState(false);
     const { isOwner } = useAuth();
 
-    // Parse tanggal string dari database ke objek Date untuk kalender
     const [pickupDate, setPickupDate] = useState<Date | undefined>(
         transaction.pickup_date ? parseISO(transaction.pickup_date) : undefined,
     );
 
-    // State preview gambar (mengambil URL lama dari database jika ada)
     const [previewImage, setPreviewImage] = useState({
         before: transaction.before_image_url || "",
         after: transaction.after_image_url || "",
@@ -97,7 +95,7 @@ export const UpdateTransactionDialog = ({
     const handleSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
         e.preventDefault();
 
-        form.patch(update.url(transaction.id), {
+        form.patch(update.url(transaction.invoice_number), {
             // Gunakan post dengan _method: 'PATCH' jika mengirim file via Inertia.js,
             // atau pastikan backend mendukung patch dengan file.
             forceFormData: true,
@@ -154,6 +152,14 @@ export const UpdateTransactionDialog = ({
                     </DialogHeader>
 
                     <FieldGroup>
+                        <Field>
+                            <Label htmlFor="invoice_number">No. Invoice</Label>
+                            <Input
+                                id="invoice_number"
+                                value={transaction.invoice_number}
+                                disabled
+                            />
+                        </Field>
                         <Field>
                             <Label htmlFor="pickup_date">Tanggal Diambil</Label>
                             <Popover>

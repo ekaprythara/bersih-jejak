@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
+    "invoice_number",
     "customer_id",
     "transaction_date",
     "pickup_date",
@@ -29,6 +30,13 @@ class Transaction extends Model
 {
     /** @use HasFactory<\Database\Factories\TransactionFactory> */
     use HasFactory;
+
+
+    public function getRouteKeyName()
+    {
+        return 'invoice_number';
+    }
+
 
     /**
      * Relasi ke User (Admin yang mencatat transaksi)

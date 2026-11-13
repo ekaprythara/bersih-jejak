@@ -35,14 +35,7 @@ class UpdateCustomerRequest extends FormRequest
                 'max:20',
                 Rule::unique('customers', 'phone_number')->ignore($customerId),
             ],
-            // Mengabaikan pengecekan unique untuk email milik customer yang sedang diedit
-            'email'        => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('customers', 'email')->ignore($customerId),
-            ],
+            'notes'        => ['nullable', 'string', 'max:1000'],
             'status'       => ['nullable', 'boolean'],
         ];
     }
@@ -51,11 +44,18 @@ class UpdateCustomerRequest extends FormRequest
     {
         return [
             'name.required'         => 'Nama pelanggan wajib diisi.',
+            'name.string'           => 'Nama pelanggan harus berupa teks.',
+            'name.max'              => 'Nama pelanggan maksimal :max karakter.',
+
             'phone_number.required' => 'Nomor telepon wajib diisi.',
+            'phone_number.string'   => 'Nomor telepon harus berupa teks.',
+            'phone_number.max'      => 'Nomor telepon maksimal :max karakter.',
             'phone_number.unique'   => 'Nomor telepon ini sudah digunakan oleh pelanggan lain.',
-            'email.required'        => 'Email wajib diisi.',
-            'email.email'           => 'Format email tidak valid.',
-            'email.unique'          => 'Email ini sudah digunakan oleh pelanggan lain.',
+
+            'notes.string'          => 'Catatan harus berupa teks.',
+            'notes.max'             => 'Catatan maksimal :max karakter.',
+
+            'status.boolean'        => 'Format status tidak valid.',
         ];
     }
 }
