@@ -5,9 +5,6 @@ namespace App\Exports;
 use App\Models\Branch;
 use App\Models\Service;
 use App\Models\Transaction;
-use App\Models\TransactionStatus;
-use App\Models\PaymentStatus;
-use App\Models\PaymentMethod;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -34,8 +31,16 @@ class TransactionExport implements FromCollection, ShouldAutoSize, WithMapping, 
     protected string $minDate;
     protected string $maxDate;
 
-    public function __construct($branchId, $authenticatedUserBranch, $serviceId, $transactionStatusId, $paymentStatusId, $paymentMethodId, $minDate, $maxDate)
-    {
+    public function __construct(
+        $branchId,
+        $authenticatedUserBranch,
+        $serviceId,
+        $transactionStatusId,
+        $paymentStatusId,
+        $paymentMethodId,
+        $minDate,
+        $maxDate
+    ) {
         $this->branchId = $branchId;
         $this->authenticatedUserBranch = $authenticatedUserBranch;
         $this->serviceId = $serviceId;
@@ -48,7 +53,15 @@ class TransactionExport implements FromCollection, ShouldAutoSize, WithMapping, 
 
     public function collection(): Collection
     {
-        $query = Transaction::with(["customer", "service", "branch", "user", "transactionStatus", "paymentStatus", "paymentMethod"]);
+        $query = Transaction::with([
+            "customer",
+            "service",
+            "branch",
+            "user",
+            "transactionStatus",
+            "paymentStatus",
+            "paymentMethod"
+        ]);
 
         if ($this->authenticatedUserBranch) {
             $query->where("branch_id", $this->authenticatedUserBranch);
@@ -91,28 +104,37 @@ class TransactionExport implements FromCollection, ShouldAutoSize, WithMapping, 
     public function headings(): array
     {
         return [
-            'No. Invoice',      // Kolom A
-            'Tanggal',          // Kolom B
-            'Pelanggan',        // Kolom C
-            'Layanan',          // Kolom D
-            'Jumlah Sepatu',    // Kolom E
-            'Total Harga',      // Kolom F
-            'Cabang',           // Kolom G
-            'Status Transaksi', // Kolom H
-            'Status Pembayaran', // Kolom I
-            'Metode Pembayaran', // Kolom J
-            'Pembuat',          // Kolom K
+            'No. Invoice',       // Kolom A
+            'Tanggal',           // Kolom B
+            'Pelanggan',         // Kolom C
+            'Layanan',           // Kolom D
+            'Jumlah Sepatu',     // Kolom E
+            'Subtotal',          // Kolom F
+            'Diskon',            // Kolom G
+            'Total Harga',       // Kolom H
+            'Cabang',            // Kolom I
+            'Status Transaksi',  // Kolom J
+            'Status Pembayaran', // Kolom K
+            'Metode Pembayaran', // Kolom L
+            'Pembuat',           // Kolom M
         ];
     }
 
     public function map($transaction): array
     {
+        $servicePrice = (float) ($transaction->service->price ?? 0);
+        $shoeCount = (int) ($transaction->shoe_count ?? 1);
+        $subtotal = $servicePrice * $shoeCount;
+        $discount = (float) ($transaction->discount ?? 0);
+
         return [
             $transaction->invoice_number ?? '-',
             $transaction->transaction_date,
             $transaction->customer->name ?? '-',
             $transaction->service->name ?? '-',
-            (int) $transaction->shoe_count,
+            $shoeCount,
+            $subtotal,
+            $discount,
             (float) $transaction->total_amount,
             $transaction->branch->name ?? '-',
             $transaction->transactionStatus->name ?? '-',
@@ -128,18 +150,19 @@ class TransactionExport implements FromCollection, ShouldAutoSize, WithMapping, 
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
                 $lastRow = $sheet->getHighestRow();
-                $lastColumn = $sheet->getHighestColumn(); // Otomatis menjadi kolom K
+                $lastColumn = $sheet->getHighestColumn(); // Otomatis menjadi kolom M
 
-                // 1. Header Judul Utama di Baris 1 (Merge A sampai K)
-                $sheet->mergeCells("A1:{$lastColumn}1")
-                    ->setCellValue('A1', 'LAPORAN TRANSAKSI')
-                    ->getStyle('A1')->applyFromArray([
-                        'font' => ['bold' => true, 'size' => 14],
-                        'alignment' => [
-                            'horizontal' => Alignment::HORIZONTAL_CENTER,
-                            'vertical' => Alignment::VERTICAL_CENTER,
-                        ],
-                    ]);
+                // 1. Header Judul Utama di Baris 1 (Merge A sampai M)
+                $sheet->mergeCells("A1:{$lastColumn}1")->setCellValue('A1', 'LAPORAN TRANSAKSI')->getStyle('A1')->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'size' => 14,
+                    ],
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                    ],
+                ]);
 
                 // 2. Info Cabang (Baris 2)
                 $selectedBranchName = 'Semua Cabang';
@@ -149,13 +172,10 @@ class TransactionExport implements FromCollection, ShouldAutoSize, WithMapping, 
                     $selectedBranchName = Branch::find($this->branchId)?->name ?? 'Semua Cabang';
                 }
                 $branchText = ($selectedBranchName === 'Semua Cabang') ? 'Semua Cabang' : 'Cabang ' . $selectedBranchName;
-
-                $sheet->mergeCells("A2:{$lastColumn}2")
-                    ->setCellValue('A2', $branchText)
-                    ->getStyle('A2')->applyFromArray([
-                        'font' => ['bold' => true],
-                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
-                    ]);
+                $sheet->mergeCells("A2:{$lastColumn}2")->setCellValue('A2', $branchText)->getStyle('A2')->applyFromArray([
+                    'font' => ['bold' => true],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
 
                 // 3. Info Layanan (Baris 3)
                 $selectedServiceName = 'Semua Layanan';
@@ -163,13 +183,10 @@ class TransactionExport implements FromCollection, ShouldAutoSize, WithMapping, 
                     $selectedServiceName = Service::find($this->serviceId)?->name ?? 'Semua Layanan';
                 }
                 $serviceText = ($selectedServiceName === 'Semua Layanan') ? 'Semua Layanan' : 'Layanan ' . $selectedServiceName;
-
-                $sheet->mergeCells("A3:{$lastColumn}3")
-                    ->setCellValue('A3', $serviceText)
-                    ->getStyle('A3')->applyFromArray([
-                        'font' => ['bold' => true],
-                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
-                    ]);
+                $sheet->mergeCells("A3:{$lastColumn}3")->setCellValue('A3', $serviceText)->getStyle('A3')->applyFromArray([
+                    'font' => ['bold' => true],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
 
                 // 4. Info Periode (Baris 4)
                 $periodeText = 'Semua Periode';
@@ -184,13 +201,10 @@ class TransactionExport implements FromCollection, ShouldAutoSize, WithMapping, 
                 } elseif ($this->maxDate) {
                     $periodeText = 'Sampai ' . $this->maxDate;
                 }
-
-                $sheet->mergeCells("A4:{$lastColumn}4")
-                    ->setCellValue('A4', $periodeText)
-                    ->getStyle('A4')->applyFromArray([
-                        'font' => ['bold' => true],
-                        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER]
-                    ]);
+                $sheet->mergeCells("A4:{$lastColumn}4")->setCellValue('A4', $periodeText)->getStyle('A4')->applyFromArray([
+                    'font' => ['bold' => true],
+                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                ]);
 
                 // 5. Styling Header Tabel (Baris 6) -> Polos, tebal, rata tengah
                 $sheet->getStyle("A6:{$lastColumn}6")->applyFromArray([
@@ -201,10 +215,18 @@ class TransactionExport implements FromCollection, ShouldAutoSize, WithMapping, 
                     ],
                 ]);
 
-                // 6. Format Angka Tanpa Titik (Jumlah Sepatu di Kolom E & Total Harga di Kolom F)
-                $sheet->getStyle("E7:F{$lastRow}")->getNumberFormat()->setFormatCode('0');
+                // 6. Format Angka Tanpa Titik (Jumlah Sepatu di Kolom E, Subtotal di F, Diskon di G, Total Harga di H)
+                if ($lastRow >= 7) {
+                    $sheet->getStyle("E7:H{$lastRow}")->getNumberFormat()->setFormatCode('0');
 
-                // 7. Border untuk seluruh tabel data
+                    // 7. Alignment khusus
+                    $sheet->getStyle("A7:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // No. Invoice
+                    $sheet->getStyle("B7:B{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Tanggal
+                    $sheet->getStyle("E7:E{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Jumlah Sepatu
+                    $sheet->getStyle("F7:H{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);  // Subtotal, Diskon, Total Harga
+                }
+
+                // 8. Border untuk seluruh tabel data
                 $sheet->getStyle("A6:{$lastColumn}{$lastRow}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [
@@ -213,12 +235,6 @@ class TransactionExport implements FromCollection, ShouldAutoSize, WithMapping, 
                         ],
                     ],
                 ]);
-
-                // 8. Alignment khusus
-                $sheet->getStyle("A7:A{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // No. Invoice
-                $sheet->getStyle("B7:B{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Tanggal
-                $sheet->getStyle("E7:E{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); // Jumlah Sepatu
-                $sheet->getStyle("F7:F{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);  // Total Harga
             },
         ];
     }

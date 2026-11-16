@@ -124,7 +124,7 @@ export default function Transaction({
             accessorKey: "customer.name",
             header: "Nama Pelanggan",
             cell: ({ row }) => (
-                <span className="text-sm">
+                <span className="text-sm font-medium">
                     {row.original.customer?.name ?? "-"}
                 </span>
             ),
@@ -139,19 +139,47 @@ export default function Transaction({
             ),
         },
         {
+            id: "subtotal",
+            header: "Subtotal",
+            cell: ({ row }) => {
+                const servicePrice = Number(row.original.service?.price ?? 0);
+                const shoeCount = Number(row.original.shoe_count ?? 1);
+                const subtotal = servicePrice * shoeCount;
+                return (
+                    <span className="font-mono text-xs text-muted-foreground">
+                        {subtotal > 0 ? formatRupiah(subtotal) : "-"}
+                    </span>
+                );
+            },
+        },
+        {
+            accessorKey: "discount",
+            header: "Diskon",
+            cell: ({ row }) => {
+                const discount = row.original.discount;
+                return (
+                    <span className="font-mono text-xs text-muted-foreground">
+                        {discount && Number(discount) > 0
+                            ? formatRupiah(Number(discount))
+                            : "-"}
+                    </span>
+                );
+            },
+        },
+        {
             accessorKey: "total_amount",
             header: "Bayar",
             cell: ({ row }) => {
                 return (
-                    <span className="font-mono font-medium text-sm">
-                        {formatRupiah(row.original.total_amount)}
+                    <span className="font-mono font-semibold text-sm text-foreground">
+                        {formatRupiah(Number(row.original.total_amount))}
                     </span>
                 );
             },
         },
         {
             accessorKey: "transaction_status.name",
-            header: "Status Transaksi",
+            header: "Status Pengerjaan",
             cell: ({ row }) => {
                 const statusName =
                     row.original.transaction_status?.name?.toLowerCase() || "";
@@ -190,37 +218,30 @@ export default function Transaction({
             cell: ({ row }) => {
                 const payStatus =
                     row.original.payment_status?.name?.toLowerCase() || "";
-                const isLunas = payStatus.includes("lunas");
+                const isLunas =
+                    payStatus.includes("lunas") || payStatus.includes("paid");
 
                 return (
                     <Badge
                         variant={isLunas ? "success" : "outline"}
                         className="uppercase text-[10px] tracking-wide"
                     >
-                        {row.original.payment_status?.name ?? "-"}
+                        {row.original.payment_status?.name ?? "Belum Lunas"}
                     </Badge>
                 );
             },
         },
         {
-            accessorKey: "payment_method.name",
-            header: "Metode Pembayaran",
-            cell: ({ row }) => (
-                <span className="text-sm">
-                    {row.original.payment_method?.name ?? "-"}
-                </span>
-            ),
-        },
-        {
             accessorKey: "user.name",
             header: "Dibuat Oleh",
             cell: ({ row }) => (
-                <span className="text-sm">
+                <span className="text-xs text-muted-foreground">
                     {row.original.user?.name ?? "-"}
                 </span>
             ),
         },
         {
+            id: "actions",
             header: "Aksi",
             cell: ({ row }) => {
                 const handlePrintPdf = (e: React.FormEvent) => {
@@ -239,6 +260,7 @@ export default function Transaction({
                         <UpdateTransactionDialog
                             transaction={row.original}
                             branches={branchOptions}
+                            services={services}
                             paymentMethods={paymentMethods}
                             paymentStatuses={paymentStatuses}
                             transactionStatuses={transactionStatuses}

@@ -191,6 +191,7 @@ class DatabaseSeeder extends Seeder
 
         TransactionStatus::factory()->create(['name' => 'Pending']);
         TransactionStatus::factory()->create(['name' => 'Proses']);
+        TransactionStatus::factory()->create(['name' => 'Siap']);
         TransactionStatus::factory()->create(['name' => 'Selesai']);
 
         PaymentStatus::factory()->create(['name' => 'Belum Lunas']);
@@ -202,6 +203,6 @@ class DatabaseSeeder extends Seeder
 
         Expense::factory()->count(15)->create();
 
-        Transaction::factory()->count(20)->create();
+        // Transaction::factory()->count(20)->create();
     }
 }

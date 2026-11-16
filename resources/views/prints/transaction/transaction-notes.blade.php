@@ -2,20 +2,17 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Invoice #{{ $transaction->invoice_number }}</title>
+    <title>Invoice #{{$transaction->invoice_number}}</title>
     <style>
-        @page {
-            size: 80mm auto;
-            margin: 0;
-        }
+        @page { size: 80mm auto; margin: 0; }
         body {
             font-family: 'Courier New', Courier, monospace;
             font-size: 11px;
             font-weight: bold;
             color: #111;
             margin: 0;
-            padding: 4mm 6mm; /* Padding kertas sisi kiri-kanan disesuaikan */
-            width: 68mm; /* Lebar area efektif cetak thermal 80mm */
+            padding: 4mm 6mm;
+            width: 68mm;
         }
         .text-center { text-align: center; }
         .text-right { text-align: right; }
@@ -33,12 +30,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .header p {
-            margin: 1px 0;
-            font-size: 10px;
-            font-weight: bold;
-            color: #333;
-        }
+        .header p { margin: 1px 0; font-size: 10px; font-weight: bold; color: #333; }
         .section {
             margin-bottom: 6px;
             border-bottom: 1px dashed #444;
@@ -50,7 +42,6 @@
             font-family: 'Courier New', Courier, monospace;
             font-weight: bold;
         }
-        /* Mengatur padding kiri dan kanan pada seluruh sel tabel */
         .info-table td {
             padding: 1.5px 4px;
             vertical-align: top;
@@ -58,7 +49,7 @@
             font-weight: bold;
         }
         .item-table th, .item-table td {
-            padding: 4px 4px; /* Padding atas-bawah dan kiri-kanan lebih seimbang */
+            padding: 4px 4px;
             font-size: 10px;
             font-weight: bold;
         }
@@ -86,7 +77,7 @@
     </style>
 </head>
 <body>
-    <!-- Header/Info Usaha -->
+    <!-- Header / Info Usaha -->
     <div class="header">
         <h2>Bersih Jejak</h2>
         <p>{{ "Cabang " . ($transaction->branch->name ?? '') }}</p>
@@ -104,12 +95,12 @@
             <tr>
                 <td>Tanggal</td>
                 <td>:</td>
-                <td>{{\Carbon\Carbon::parse($transaction->transaction_date)->format('Y-m-d')}}</td>
+                <td>{{ \Carbon\Carbon::parse($transaction->transaction_date)->format('Y-m-d') }}</td>
             </tr>
             <tr>
                 <td>Estimasi Ambil</td>
                 <td>:</td>
-                <td>{{\Carbon\Carbon::parse($transaction->pickup_date)->format('Y-m-d')}}</td>
+                <td>{{ \Carbon\Carbon::parse($transaction->pickup_date)->format('Y-m-d') }}</td>
             </tr>
             <tr>
                 <td>Pelanggan</td>
@@ -143,19 +134,22 @@
                         @endif
                     </td>
                     <td class="text-center">{{ $transaction->shoe_count }} Psg</td>
-                    <td class="text-right">{{ number_format($transaction->total_amount, 0, '.', '.') }}</td>
+                    <!-- Menghitung harga kotor (sebelum diskon) jika relasi harga layanan tersedia -->
+                    <td class="text-right">
+                        {{ number_format(($transaction->service->price ?? 0) * $transaction->shoe_count, 0, '.', '.') }}
+                    </td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <!-- Rincian Pembayaran -->
+    <!-- Rincian Pembayaran & Diskon -->
     <div class="section">
         <table class="info-table totals">
             <tr>
                 <td>Metode Bayar</td>
                 <td>:</td>
-                <td class="text-right">{{ $transaction->paymentMethod->name ?? 'Tunai' }}</td>
+                <td class="text-right">{{ $transaction->paymentMethod->name ?? 'Belum Lunas' }}</td>
             </tr>
             <tr>
                 <td>Status Bayar</td>
@@ -167,9 +161,24 @@
                 <td>:</td>
                 <td class="text-right">{{ $transaction->transactionStatus->name ?? '-' }}</td>
             </tr>
+
+            <!-- Baris Subtotal, Diskon, & Total Akhir -->
+            <tr><td colspan="3" style="border-bottom: 1px dashed #ddd; padding-top: 2px;"></td></tr>
             <tr>
-                <td colspan="3" style="border-bottom: 1px dashed #444; padding-top: 2px;"></td>
+                <td style="padding-top: 3px;">Subtotal</td>
+                <td style="padding-top: 3px;">:</td>
+                <td class="text-right" style="padding-top: 3px;">
+                    Rp. {{ number_format(($transaction->service->price ?? 0) * $transaction->shoe_count, 0, '.', '.') }}
+                </td>
             </tr>
+            @if(isset($transaction->discount) && $transaction->discount > 0)
+            <tr>
+                <td>Diskon</td>
+                <td>:</td>
+                <td class="text-right">- Rp. {{ number_format($transaction->discount, 0, '.', '.') }}</td>
+            </tr>
+            @endif
+            <tr><td colspan="3" style="border-bottom: 1px dashed #444; padding-top: 2px;"></td></tr>
             <tr>
                 <td style="font-size: 11px; padding-top: 4px;"><strong>TOTAL (RP)</strong></td>
                 <td style="padding-top: 4px;">:</td>
@@ -179,11 +188,9 @@
     </div>
 
     <!-- Waktu Cetak Nota -->
-    <div class="print-time">
-        Dicetak: {{\Carbon\Carbon::now()->translatedFormat('d-m-Y H:i')}}
-    </div>
+    <div class="print-time">Dicetak: {{ \Carbon\Carbon::now()->translatedFormat('d-m-Y H:i') }}</div>
 
-    <!-- Footer Catatan/Terima Kasih -->
+    <!-- Footer Catatan / Terima Kasih -->
     <div class="footer">
         <p>TERIMA KASIH TELAH MEMPERCAYAKAN<br>PERAWATAN SEPATU ANDA DI BERSIH JEJAK!</p>
         <p style="margin-top: 4px; font-size: 8.5px;">*Simpan nota ini sebagai bukti pengambilan barang.</p>

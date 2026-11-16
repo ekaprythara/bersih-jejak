@@ -83,6 +83,7 @@ export type PaymentStatusType = {
 export type TransactionType = {
     id: number;
     invoice_number: string;
+    total_amount: number;
     customer_id: number;
     transaction_date: string; // Bisa menggunakan string (YYYY-MM-DD) atau Date
     pickup_date: string;

@@ -2,44 +2,47 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
-#[Fillable([
-    "invoice_number",
-    "customer_id",
-    "transaction_date",
-    "pickup_date",
-    "service_id",
-    "transaction_status_id",
-    'shoe_count',
-    'total_amount',
-    "branch_id",
-    "user_id",
-    "payment_status_id",
-    "payment_method_id",
-    "description",
-    "before_image_url",
-    "before_image_public_id",
-    "after_image_url",
-    "after_image_public_id",
-])]
 
 class Transaction extends Model
 {
     /** @use HasFactory<\Database\Factories\TransactionFactory> */
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        "invoice_number",
+        "customer_id",
+        "transaction_date",
+        "pickup_date",
+        "service_id",
+        "discount",
+        "transaction_status_id",
+        'shoe_count',
+        'total_amount',
+        "branch_id",
+        "user_id",
+        "payment_status_id",
+        "payment_method_id",
+        "description",
+        "before_image_url",
+        "before_image_public_id",
+        "after_image_url",
+        "after_image_public_id",
+    ];
 
     public function getRouteKeyName()
     {
         return 'invoice_number';
     }
 
-
     /**
-     * Relasi ke User (Admin yang mencatat transaksi)
+     * Relasi ke Customer
      */
     public function customer()
     {

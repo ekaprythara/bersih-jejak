@@ -13,11 +13,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useForm } from "@inertiajs/react";
 import { toast } from "sonner";
-import { SubmitEventHandler, useState } from "react";
+import { SubmitEventHandler, useState, ChangeEvent } from "react";
 import InputError from "@/components/input-error";
 import {
     BranchType,
-    CustomerType,
     PaymentMethodType,
     PaymentStatusType,
     ServiceType,
@@ -40,33 +39,35 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, SquarePen } from "lucide-react";
+import { CalendarIcon, SquarePen, ImagePlus } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { ChangeEvent } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Badge } from "@/components/ui/badge";
 
 export const UpdateTransactionDialog = ({
     transaction,
-    paymentMethods,
     branches,
+    paymentMethods,
     paymentStatuses,
     transactionStatuses,
+    services,
 }: {
-    transaction: TransactionType;
+    transaction: TransactionType & {
+        discount?: number;
+        shoe_count?: number;
+        service_id?: number;
+    };
     branches: BranchType[];
     paymentMethods: PaymentMethodType[];
     paymentStatuses: PaymentStatusType[];
     transactionStatuses: TransactionStatusType[];
+    services?: ServiceType[];
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const { isOwner } = useAuth();
-
     const [pickupDate, setPickupDate] = useState<Date | undefined>(
         transaction.pickup_date ? parseISO(transaction.pickup_date) : undefined,
     );
-
     const [previewImage, setPreviewImage] = useState({
         before: transaction.before_image_url || "",
         after: transaction.after_image_url || "",
@@ -77,11 +78,21 @@ export const UpdateTransactionDialog = ({
         payment_method_id: transaction.payment_method_id,
         payment_status_id: transaction.payment_status_id,
         transaction_status_id: transaction.transaction_status_id,
+        discount: transaction.discount ?? 0,
+        shoe_count: transaction.shoe_count ?? 1,
+        service_id: transaction.service_id ?? "",
         description: transaction.description || "",
         branch_id: transaction.branch_id || "",
         beforeImage: null as File | null,
         afterImage: null as File | null,
     });
+
+    const selectedPaymentStatus = paymentStatuses.find(
+        (s) => s.id === Number(form.data.payment_status_id),
+    );
+    const isPaidOff =
+        selectedPaymentStatus?.name?.toLowerCase() === "lunas" ||
+        Number(form.data.payment_status_id) === 2;
 
     const handleDateSelect = (selectedDate: Date | undefined) => {
         setPickupDate(selectedDate);
@@ -94,10 +105,7 @@ export const UpdateTransactionDialog = ({
 
     const handleSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
         e.preventDefault();
-
         form.patch(update.url(transaction.invoice_number), {
-            // Gunakan post dengan _method: 'PATCH' jika mengirim file via Inertia.js,
-            // atau pastikan backend mendukung patch dengan file.
             forceFormData: true,
             onSuccess: () => {
                 toast.success(`Transaksi berhasil diperbarui.`);
@@ -110,7 +118,6 @@ export const UpdateTransactionDialog = ({
         });
     };
 
-    // Handler untuk Foto Before
     const handleImageBeforeChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -122,7 +129,6 @@ export const UpdateTransactionDialog = ({
         }
     };
 
-    // Handler untuk Foto After
     const handleImageAfterChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -142,8 +148,9 @@ export const UpdateTransactionDialog = ({
                 </Button>
             </DialogTrigger>
 
-            <DialogContent className="overflow-y-scroll scrollbar-none scroll-smooth max-h-[95dvh]">
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <DialogContent className="overflow-y-auto scrollbar-none scroll-smooth max-h-[92dvh] sm:max-w-2xl">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+                    {/* Header */}
                     <DialogHeader>
                         <DialogTitle>Edit Transaksi</DialogTitle>
                         <DialogDescription>
@@ -151,56 +158,51 @@ export const UpdateTransactionDialog = ({
                         </DialogDescription>
                     </DialogHeader>
 
-                    <FieldGroup>
-                        <Field>
-                            <Label htmlFor="invoice_number">No. Invoice</Label>
-                            <Input
-                                id="invoice_number"
-                                value={transaction.invoice_number}
-                                disabled
-                            />
-                        </Field>
-                        <Field>
-                            <Label htmlFor="pickup_date">Tanggal Diambil</Label>
-                            <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        data-empty={!pickupDate}
-                                        className="justify-start text-left font-normal data-[empty=true]:text-muted-foreground w-full"
-                                    >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {pickupDate ? (
-                                            format(pickupDate, "dd-MM-yyyy")
-                                        ) : (
-                                            <span>Pilih Tanggal</span>
-                                        )}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0">
-                                    <Calendar
-                                        mode="single"
-                                        selected={pickupDate}
-                                        onSelect={handleDateSelect}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                            <InputError message={form.errors.pickup_date} />
-                        </Field>
-                        {isOwner && (
+                    <FieldGroup className="flex flex-col gap-6">
+                        {/* Bagian 1: Ringkasan Invoice & Total Tagihan */}
+                        <div className="rounded-xl border bg-muted/30 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="space-y-0.5">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                    No. Invoice
+                                </p>
+                                <p className="text-sm font-bold font-mono text-foreground">
+                                    {transaction.invoice_number}
+                                </p>
+                            </div>
+                            <div className="sm:text-right space-y-0.5 border-t sm:border-t-0 pt-2 sm:pt-0">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                    Total Tagihan
+                                </p>
+                                <p
+                                    className={`text-lg font-bold font-mono ${
+                                        isPaidOff
+                                            ? "text-emerald-600"
+                                            : "text-rose-600"
+                                    }`}
+                                >
+                                    {new Intl.NumberFormat("id-ID", {
+                                        style: "currency",
+                                        currency: "IDR",
+                                        maximumFractionDigits: 0,
+                                    }).format(transaction.total_amount)}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Bagian 2: Cabang & Tanggal Pengambilan */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <Field>
-                                <Label htmlFor="branch_id">
-                                    Pilih Cabang...
-                                </Label>
+                                <Label htmlFor="branch_id">Cabang</Label>
                                 <Select
                                     value={String(form.data.branch_id)}
                                     onValueChange={(value) =>
                                         form.setData("branch_id", value)
                                     }
+                                    disabled={true || isPaidOff}
                                 >
                                     <SelectTrigger
                                         id="branch_id"
-                                        className="w-full"
+                                        className="w-full bg-muted/40"
                                     >
                                         <SelectValue placeholder="Pilih Cabang..." />
                                     </SelectTrigger>
@@ -212,12 +214,6 @@ export const UpdateTransactionDialog = ({
                                                     value={String(branch.id)}
                                                 >
                                                     {branch.name}
-
-                                                    {!branch.status && (
-                                                        <Badge className="bg-red-50 text-xs text-red-700 dark:bg-red-950 dark:text-red-300">
-                                                            Nonaktif
-                                                        </Badge>
-                                                    )}
                                                 </SelectItem>
                                             ))}
                                         </SelectGroup>
@@ -225,157 +221,280 @@ export const UpdateTransactionDialog = ({
                                 </Select>
                                 <InputError message={form.errors.branch_id} />
                             </Field>
-                        )}
-                        <div className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg border border-neutral-200">
-                            <span className="text-sm font-medium text-neutral-600">
-                                Total Tagihan:
-                            </span>
-                            <span
-                                className={`text-lg font-bold font-mono ${
-                                    paymentStatuses.find(
-                                        (s) =>
-                                            s.id ===
-                                            Number(form.data.payment_status_id),
-                                    )?.name === "Lunas"
-                                        ? "text-emerald-600"
-                                        : "text-rose-600"
-                                }`}
-                            >
-                                {new Intl.NumberFormat("id-ID", {
-                                    style: "currency",
-                                    currency: "IDR",
-                                    maximumFractionDigits: 0,
-                                }).format(transaction.total_amount)}
-                            </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Field>
-                                <Label htmlFor="payment_method_id">
-                                    Metode Pembayaran
-                                </Label>
 
+                            <Field>
+                                <Label htmlFor="pickup_date">
+                                    Tanggal Diambil
+                                </Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            data-empty={!pickupDate}
+                                            className="justify-start text-left font-normal data-[empty=true]:text-muted-foreground w-full"
+                                        >
+                                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                            {pickupDate ? (
+                                                format(pickupDate, "dd-MM-yyyy")
+                                            ) : (
+                                                <span>Pilih Tanggal</span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={pickupDate}
+                                            onSelect={handleDateSelect}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                <InputError message={form.errors.pickup_date} />
+                            </Field>
+                        </div>
+
+                        {/* Bagian 3: Layanan, Jumlah Sepatu & Diskon */}
+                        <div className="rounded-xl border bg-muted/30 p-4 space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {services && (
+                                    <Field>
+                                        <Label
+                                            htmlFor="service_id"
+                                            className="text-xs font-medium text-muted-foreground"
+                                        >
+                                            Layanan
+                                        </Label>
+                                        <Select
+                                            value={String(form.data.service_id)}
+                                            onValueChange={(value) =>
+                                                form.setData(
+                                                    "service_id",
+                                                    Number(value),
+                                                )
+                                            }
+                                            disabled={isPaidOff}
+                                        >
+                                            <SelectTrigger
+                                                id="service_id"
+                                                className="w-full bg-background"
+                                            >
+                                                <SelectValue placeholder="Pilih Layanan" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {services.map((service) => (
+                                                        <SelectItem
+                                                            key={service.id}
+                                                            value={service.id.toString()}
+                                                        >
+                                                            {service.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                        <InputError
+                                            message={form.errors.service_id}
+                                        />
+                                    </Field>
+                                )}
+
+                                <Field
+                                    className={!services ? "sm:col-span-2" : ""}
+                                >
+                                    <Label
+                                        htmlFor="shoe_count"
+                                        className="text-xs font-medium text-muted-foreground"
+                                    >
+                                        Jumlah Sepatu (Pasang)
+                                    </Label>
+                                    <Input
+                                        id="shoe_count"
+                                        type="number"
+                                        min={1}
+                                        className="bg-background"
+                                        value={form.data.shoe_count}
+                                        onChange={(e) =>
+                                            form.setData(
+                                                "shoe_count",
+                                                Number(e.target.value),
+                                            )
+                                        }
+                                        disabled={isPaidOff}
+                                    />
+                                    <InputError
+                                        message={form.errors.shoe_count}
+                                    />
+                                </Field>
+                            </div>
+
+                            <Field>
+                                <Label
+                                    htmlFor="discount"
+                                    className="text-xs font-medium text-muted-foreground"
+                                >
+                                    Diskon (Rp.)
+                                </Label>
+                                <Input
+                                    id="discount"
+                                    type="number"
+                                    step={500}
+                                    className="bg-background"
+                                    value={form.data.discount}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            "discount",
+                                            Number(e.target.value),
+                                        )
+                                    }
+                                    disabled={isPaidOff}
+                                />
+                                <InputError message={form.errors.discount} />
+                            </Field>
+                        </div>
+
+                        {/* Bagian 4: Status Pengerjaan & Pembayaran */}
+                        <div className="space-y-4">
+                            <Field>
+                                <Label htmlFor="transaction_status_id">
+                                    Status Pengerjaan
+                                </Label>
                                 <Select
-                                    value={String(form.data.payment_method_id)}
+                                    value={String(
+                                        form.data.transaction_status_id,
+                                    )}
                                     onValueChange={(value) =>
                                         form.setData(
-                                            "payment_method_id",
+                                            "transaction_status_id",
                                             Number(value),
                                         )
                                     }
                                 >
                                     <SelectTrigger
-                                        id="payment_method_id"
+                                        id="transaction_status_id"
                                         className="w-full"
                                     >
-                                        <SelectValue placeholder="Metode Pembayaran" />
+                                        <SelectValue placeholder="Status Pengerjaan" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectGroup>
-                                            {paymentMethods.map(
-                                                (paymentMethod) => (
+                                            {transactionStatuses.map(
+                                                (transactionStatus) => (
                                                     <SelectItem
-                                                        key={paymentMethod.id}
-                                                        value={paymentMethod.id.toString()}
+                                                        key={
+                                                            transactionStatus.id
+                                                        }
+                                                        value={transactionStatus.id.toString()}
                                                     >
-                                                        {paymentMethod.name}
+                                                        {transactionStatus.name}
                                                     </SelectItem>
                                                 ),
                                             )}
                                         </SelectGroup>
                                     </SelectContent>
                                 </Select>
-
                                 <InputError
-                                    message={form.errors.payment_method_id}
+                                    message={form.errors.transaction_status_id}
                                 />
                             </Field>
 
-                            <Field>
-                                <Label htmlFor="payment_status">
-                                    Status Pembayaran
-                                </Label>
-
-                                <Select
-                                    value={String(form.data.payment_status_id)}
-                                    onValueChange={(value) =>
-                                        form.setData(
-                                            "payment_status_id",
-                                            Number(value),
-                                        )
-                                    }
-                                >
-                                    <SelectTrigger
-                                        id="payment_status"
-                                        className="w-full"
-                                    >
-                                        <SelectValue placeholder="Status Pembayaran" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {paymentStatuses.map(
-                                                (paymentStatus) => (
-                                                    <SelectItem
-                                                        key={paymentStatus.id}
-                                                        value={paymentStatus.id.toString()}
-                                                    >
-                                                        {paymentStatus.name}
-                                                    </SelectItem>
-                                                ),
-                                            )}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-
-                                <InputError
-                                    message={form.errors.payment_status_id}
-                                />
-                            </Field>
-                        </div>
-                        <Field>
-                            <Label htmlFor="transaction_status_id">
-                                Status Transaksi
-                            </Label>
-
-                            <Select
-                                value={String(form.data.transaction_status_id)}
-                                onValueChange={(value) =>
-                                    form.setData(
-                                        "transaction_status_id",
-                                        Number(value),
-                                    )
-                                }
-                            >
-                                <SelectTrigger
-                                    id="transaction_status_id"
-                                    className="w-full"
-                                >
-                                    <SelectValue placeholder="Status Transaksi" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        {transactionStatuses.map(
-                                            (transactionStatus) => (
-                                                <SelectItem
-                                                    key={transactionStatus.id}
-                                                    value={transactionStatus.id.toString()}
-                                                >
-                                                    {transactionStatus.name}
-                                                </SelectItem>
-                                            ),
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <Field>
+                                    <Label htmlFor="payment_status">
+                                        Status Pembayaran
+                                    </Label>
+                                    <Select
+                                        value={String(
+                                            form.data.payment_status_id,
                                         )}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                                        onValueChange={(value) =>
+                                            form.setData(
+                                                "payment_status_id",
+                                                Number(value),
+                                            )
+                                        }
+                                        disabled={isPaidOff}
+                                    >
+                                        <SelectTrigger
+                                            id="payment_status"
+                                            className="w-full"
+                                        >
+                                            <SelectValue placeholder="Status Pembayaran" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                {paymentStatuses.map(
+                                                    (paymentStatus) => (
+                                                        <SelectItem
+                                                            key={
+                                                                paymentStatus.id
+                                                            }
+                                                            value={paymentStatus.id.toString()}
+                                                        >
+                                                            {paymentStatus.name}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        message={form.errors.payment_status_id}
+                                    />
+                                </Field>
 
-                            <InputError
-                                message={form.errors.transaction_status_id}
-                            />
-                        </Field>
+                                <Field>
+                                    <Label htmlFor="payment_method_id">
+                                        Metode Pembayaran
+                                    </Label>
+                                    <Select
+                                        value={String(
+                                            form.data.payment_method_id,
+                                        )}
+                                        onValueChange={(value) =>
+                                            form.setData(
+                                                "payment_method_id",
+                                                Number(value),
+                                            )
+                                        }
+                                    >
+                                        <SelectTrigger
+                                            id="payment_method_id"
+                                            className="w-full"
+                                        >
+                                            <SelectValue placeholder="Metode Pembayaran" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                {paymentMethods.map(
+                                                    (paymentMethod) => (
+                                                        <SelectItem
+                                                            key={
+                                                                paymentMethod.id
+                                                            }
+                                                            value={paymentMethod.id.toString()}
+                                                        >
+                                                            {paymentMethod.name}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError
+                                        message={form.errors.payment_method_id}
+                                    />
+                                </Field>
+                            </div>
+                        </div>
+
+                        {/* Bagian 5: Deskripsi */}
                         <Field>
                             <Label htmlFor="description">Deskripsi</Label>
                             <Textarea
                                 id="description"
                                 placeholder="Catatan tambahan..."
+                                className="min-h-24 resize-none"
                                 value={form.data.description}
                                 onChange={(e) =>
                                     form.setData("description", e.target.value)
@@ -383,144 +502,117 @@ export const UpdateTransactionDialog = ({
                             />
                             <InputError message={form.errors.description} />
                         </Field>
-                        <div className="grid grid-cols-2 gap-4">
-                            {/* FOTO SEBELUM */}
+
+                        {/* Bagian 6: Foto Sebelum & Sesudah */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {/* Foto Sebelum */}
                             <Field>
                                 <Label htmlFor="before_image">
                                     Foto Sepatu (Sebelum)
                                 </Label>
-                                <div className="mt-2 w-full">
-                                    <label
-                                        htmlFor="before_image"
-                                        className="group relative flex min-h-40 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-2 text-center transition-all hover:border-gray-400 hover:bg-gray-50"
-                                    >
-                                        {!previewImage.before ? (
-                                            <div className="flex flex-col items-center gap-4">
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-white shadow-xs transition-colors group-hover:border-gray-400">
-                                                    <svg
-                                                        className="h-6 w-6 text-gray-400 transition-colors group-hover:text-gray-600"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        strokeWidth="1.5"
-                                                        viewBox="0 0 24 24"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <p className="text-xs font-medium text-gray-600">
-                                                        Pilih gambar atau
-                                                        drag-and-drop di sini.
-                                                    </p>
-                                                    <p className="text-xs text-gray-400">
-                                                        PNG, JPG, dan WEBP{" "}
-                                                        <br />
-                                                        Maks. 5 MB
-                                                    </p>
-                                                </div>
+                                <label
+                                    htmlFor="before_image"
+                                    className="group relative flex min-h-36 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/20 p-3 text-center transition-all hover:border-primary/50 hover:bg-muted/40"
+                                >
+                                    {!previewImage.before ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background shadow-xs border">
+                                                <ImagePlus className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                                             </div>
-                                        ) : (
-                                            <div className="relative w-full overflow-hidden rounded-xl border border-gray-100 bg-white p-2">
-                                                <img
-                                                    src={previewImage.before}
-                                                    alt="Preview Bukti"
-                                                    className="h-44 w-full object-contain"
-                                                />
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                                                    <span className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm">
-                                                        Klik untuk mengganti
-                                                    </span>
-                                                </div>
+                                            <div className="space-y-0.5">
+                                                <p className="text-xs font-medium text-foreground">
+                                                    Pilih gambar atau
+                                                    drag-and-drop disini.
+                                                </p>
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    PNG, JPG, dan WEBP
+                                                    <br />
+                                                    Maks. 5MB
+                                                </p>
                                             </div>
-                                        )}
-                                        <input
-                                            id="before_image"
-                                            type="file"
-                                            name="before_image"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={handleImageBeforeChange}
-                                        />
-                                    </label>
-                                </div>
+                                        </div>
+                                    ) : (
+                                        <div className="relative w-full overflow-hidden rounded-lg">
+                                            <img
+                                                src={previewImage.before}
+                                                alt="Preview Before"
+                                                className="h-32 w-full object-contain rounded-md"
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 rounded-md">
+                                                <span className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-gray-800 shadow">
+                                                    Klik untuk mengganti
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <input
+                                        id="before_image"
+                                        type="file"
+                                        name="before_image"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleImageBeforeChange}
+                                    />
+                                </label>
                                 <InputError message={form.errors.beforeImage} />
                             </Field>
 
-                            {/* FOTO SESUDAH */}
+                            {/* Foto Sesudah */}
                             <Field>
                                 <Label htmlFor="after_image">
                                     Foto Sepatu (After)
                                 </Label>
-                                <div className="mt-2 w-full">
-                                    <label
-                                        htmlFor="after_image"
-                                        className="group relative flex min-h-40 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-2 text-center transition-all hover:border-gray-400 hover:bg-gray-50"
-                                    >
-                                        {!previewImage.after ? (
-                                            <div className="flex flex-col items-center gap-4">
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-white shadow-xs transition-colors group-hover:border-gray-400">
-                                                    <svg
-                                                        className="h-6 w-6 text-gray-400 transition-colors group-hover:text-gray-600"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        strokeWidth="1.5"
-                                                        viewBox="0 0 24 24"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                    >
-                                                        <path
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
-                                                        />
-                                                    </svg>
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <p className="text-xs font-medium text-gray-600">
-                                                        Pilih gambar atau
-                                                        drag-and-drop di sini.
-                                                    </p>
-                                                    <p className="text-xs text-gray-400">
-                                                        PNG, JPG, dan WEBP{" "}
-                                                        <br />
-                                                        Maks. 5 MB
-                                                    </p>
-                                                </div>
+                                <label
+                                    htmlFor="after_image"
+                                    className="group relative flex min-h-36 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/20 p-3 text-center transition-all hover:border-primary/50 hover:bg-muted/40"
+                                >
+                                    {!previewImage.after ? (
+                                        <div className="flex flex-col items-center gap-2">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background shadow-xs border">
+                                                <ImagePlus className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                                             </div>
-                                        ) : (
-                                            <div className="relative w-full overflow-hidden rounded-xl border border-gray-100 bg-white p-2">
-                                                <img
-                                                    src={previewImage.after}
-                                                    alt="Preview Bukti"
-                                                    className="h-44 w-full object-contain"
-                                                />
-                                                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                                                    <span className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm">
-                                                        Klik untuk mengganti
-                                                    </span>
-                                                </div>
+                                            <div className="space-y-0.5">
+                                                <p className="text-xs font-medium text-foreground">
+                                                    Pilih gambar atau
+                                                    drag-and-drop disini.
+                                                </p>
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    PNG, JPG, dan WEBP
+                                                    <br />
+                                                    Maks. 5MB
+                                                </p>
                                             </div>
-                                        )}
-                                        <input
-                                            id="after_image"
-                                            type="file"
-                                            name="after_image"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={handleImageAfterChange}
-                                        />
-                                    </label>
-                                </div>
+                                        </div>
+                                    ) : (
+                                        <div className="relative w-full overflow-hidden rounded-lg">
+                                            <img
+                                                src={previewImage.after}
+                                                alt="Preview After"
+                                                className="h-32 w-full object-contain rounded-md"
+                                            />
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 rounded-md">
+                                                <span className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-gray-800 shadow">
+                                                    Klik untuk mengganti
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <input
+                                        id="after_image"
+                                        type="file"
+                                        name="after_image"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleImageAfterChange}
+                                    />
+                                </label>
                                 <InputError message={form.errors.afterImage} />
                             </Field>
                         </div>
                     </FieldGroup>
 
-                    <DialogFooter>
+                    {/* Footer */}
+                    <DialogFooter className="gap-2 sm:gap-0">
                         <DialogClose asChild>
                             <Button variant="outline" type="button">
                                 Cancel

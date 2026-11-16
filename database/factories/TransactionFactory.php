@@ -60,6 +60,21 @@ class TransactionFactory extends Factory
         // Harga satuan per sepatu dengan nominal bersih/bulat (misal 25rb, 35rb, 50rb)
         $pricePerShoe = $this->faker->randomElement([25000, 35000, 50000, 75000, 100000]);
 
+        // Hitung subtotal kotor
+        $subtotal = $shoeCount * $pricePerShoe;
+
+        // Tentukan diskon nominal secara random (misal: 0, 5000, 10000, atau 15000), pastikan tidak melebihi subtotal
+        $possibleDiscounts = [0, 0, 5000, 10000, 15000, 20000];
+        $discount = $this->faker->randomElement($possibleDiscounts);
+
+        // Pastikan diskon tidak melebihi subtotal
+        if ($discount > $subtotal) {
+            $discount = 0;
+        }
+
+        // Hitung total amount setelah diskon
+        $totalAmount = $subtotal - $discount;
+
         // 1. Pilih cabang terlebih dahulu secara acak
         $branch = Branch::inRandomOrder()->first();
         $branchId = $branch?->id ?? 1;
@@ -71,13 +86,14 @@ class TransactionFactory extends Factory
         $userId = $user?->id ?? (User::inRandomOrder()->first()?->id ?? 1);
 
         return [
-            'invoice_number'          => $invoiceNumber, // <-- DITAMBAHKAN DI SINI
+            'invoice_number'          => $invoiceNumber,
             'customer_id'             => Customer::inRandomOrder()->first()?->id ?? 1,
             'transaction_date'        => $formattedDate,
             'pickup_date'             => $pickupDate->format('Y-m-d H:i:s'),
             'service_id'              => Service::inRandomOrder()->first()?->id ?? 1,
             'shoe_count'              => $shoeCount,
-            'total_amount'            => $shoeCount * $pricePerShoe,
+            'discount'                => $discount,              // <-- DITAMBAHKAN DI SINI
+            'total_amount'            => $totalAmount,           // <-- SUDAH DIKURANGI DISKON
             'branch_id'               => $branchId,
             'transaction_status_id'   => TransactionStatus::inRandomOrder()->first()?->id ?? 1,
             'payment_status_id'       => PaymentStatus::inRandomOrder()->first()?->id ?? 1,

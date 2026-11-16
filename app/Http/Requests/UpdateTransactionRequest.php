@@ -2,46 +2,19 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Validator;
+use App\Models\Transaction;
 use App\Models\TransactionStatus;
 use App\Models\PaymentStatus;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class UpdateTransactionRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        $user = Auth::user();
-        $transaction = $this->route('transaction');
-
-        if ($user->is_owner) {
-            return true;
-        }
-
-        return $transaction && $transaction->branch_id === $user->branch_id;
+        return true;
     }
 
-    protected function prepareForValidation(): void
-    {
-        $user = Auth::user();
-
-        if (!$user->is_owner) {
-            $this->merge([
-                'branch_id' => $user->branch_id,
-            ]);
-        }
-    }
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -49,6 +22,23 @@ class UpdateTransactionRequest extends FormRequest
             'payment_method_id'       => ['required', 'exists:payment_methods,id'],
             'payment_status_id'       => ['required', 'exists:payment_statuses,id'],
             'transaction_status_id'   => ['required', 'exists:transaction_statuses,id'],
+            'discount'                => [
+                'nullable',
+                'numeric',
+                'min:0',
+                // Validasi agar diskon tidak melebihi harga total layanan
+                function ($attribute, $value, $fail) {
+                    $invoiceNumber = $this->route('transaction');
+                    $transaction = Transaction::with('service')->where('invoice_number', $invoiceNumber)->first();
+
+                    if ($transaction && $transaction->service) {
+                        $maxSubtotal = $transaction->service->price * $transaction->shoe_count;
+                        if ($value > $maxSubtotal) {
+                            $fail('Diskon tidak boleh melebihi harga total layanan (' . number_format($maxSubtotal, 0, ',', '.') . ').');
+                        }
+                    }
+                },
+            ],
             'description'             => ['nullable', 'string'],
             'branch_id'               => ['required', 'exists:branches,id'],
 
@@ -107,6 +97,9 @@ class UpdateTransactionRequest extends FormRequest
 
             'transaction_status_id.required' => 'Status transaksi wajib dipilih.',
             'transaction_status_id.exists'   => 'Status transaksi tidak valid.',
+
+            'discount.numeric'               => 'Diskon harus berupa angka.',
+            'discount.min'                   => 'Diskon minimal adalah 0.',
 
             'description.string'             => 'Catatan harus berupa teks.',
 

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTransactionRequest;
-use App\Http\Requests\UpdateTransactionRequest;
 use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\PaymentMethod;
@@ -18,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TransactionExport;
+use App\Http\Requests\UpdateTransactionRequest;
 use Carbon\Carbon;
 
 class TransactionController extends Controller
@@ -168,7 +168,7 @@ class TransactionController extends Controller
 
     public function store(StoreTransactionRequest $request, CloudinaryService $cloudinaryService)
     {
-        // 1. Generate unique invoice_number dengan awalan TRX (Contoh: TRX-202611138492)
+        // 1. Generate unique invoice_number dengan awalan TRX
         $datePart = date('Ymd');
         do {
             $invoiceNumber = 'TRX-' . $datePart . mt_rand(1000, 9999);
@@ -177,38 +177,54 @@ class TransactionController extends Controller
         // 2. Ambil data layanan untuk mendapatkan harga (price)
         $service = Service::findOrFail($request->service_id);
 
-        // 3. Hitung total amount otomatis (Harga Layanan * Jumlah Sepatu)
-        $totalAmount = $service->price * $request->shoe_count;
+        // 3. Hitung subtotal (Harga Layanan * Jumlah Sepatu)
+        $subtotal = $service->price * $request->shoe_count;
 
-        // 4. Tentukan status transaksi awal secara otomatis (Contoh: ID 1 untuk Pending/Proses)
+        // 4. Ambil nilai diskon, pastikan tidak melebihi subtotal
+        $discount = min($subtotal, $request->input('discount', 0));
+
+        // 5. Hitung total amount akhir
+        $totalAmount = $subtotal - $discount;
+
+        // 6. Tentukan status transaksi awal secara otomatis (misal: ID 1 untuk Status Baru/Proses)
         $defaultTransactionStatusId = 1;
 
-        // 5. Handle upload gambar jika ada
-        $imageUrl = null;
-        $imagePublicId = null;
-        if ($request->hasFile('image')) {
-            $uploadedFile = $cloudinaryService->upload($request->file('image'), 'transactions');
-            $imageUrl = $uploadedFile['secure_url'] ?? null;
-            $imagePublicId = $uploadedFile['public_id'] ?? null;
+        // 7. Ambil status pembayaran (default 1 jika kosong)
+        $paymentStatusId = $request->input('payment_status_id', 1);
+
+        // 8. Jika status pembayaran masih Belum Lunas (ID 1), paksa payment_method_id menjadi null
+        $paymentMethodId = ($paymentStatusId == 1) ? null : $request->input('payment_method_id');
+
+        // 9. Handle upload foto "Before"
+        $beforeImageUrl = null;
+        $beforeImagePublicId = null;
+        if ($request->hasFile('before_image')) {
+            $uploadedBefore = $cloudinaryService->upload($request->file('before_image'), 'transactions/before');
+            $beforeImageUrl = $uploadedBefore['secure_url'] ?? null;
+            $beforeImagePublicId = $uploadedBefore['public_id'] ?? null;
         }
 
-        // 6. Simpan data ke database dengan menyertakan invoice_number
+        // 10. Simpan data ke database
         Transaction::create(array_merge($request->validated(), [
             'invoice_number'          => $invoiceNumber,
             'user_id'                 => Auth::id(),
             'total_amount'            => $totalAmount,
+            'discount'                => $discount,
+            'payment_status_id'       => $paymentStatusId,
+            'payment_method_id'       => $paymentMethodId,
             'transaction_status_id'   => $defaultTransactionStatusId,
-            'before_image_url'        => $imageUrl,
-            'before_image_public_id'  => $imagePublicId,
+            'before_image_url'        => $beforeImageUrl,
+            'before_image_public_id'  => $beforeImagePublicId,
+            'after_image_url'         => null,
+            'after_image_public_id'   => null,
         ]));
 
-        // 7. Redirect dengan pesan sukses
+        // 11. Redirect dengan pesan sukses
         return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil ditambahkan!');
     }
 
     public function update(UpdateTransactionRequest $request, Transaction $transaction, CloudinaryService $cloudinaryService)
     {
-
         $validatedData = $request->validated();
 
         // 1. Hitung ulang total_amount jika service_id atau shoe_count ikut diperbarui
@@ -219,6 +235,22 @@ class TransactionController extends Controller
             $service = Service::findOrFail($serviceId);
             $validatedData['total_amount'] = $service->price * $shoeCount;
         }
+
+        // --- TAMBAHAN PERHITUNGAN DISKON & PENYESUAIAN TOTAL AMOUNT ---
+        // Ambil harga subtotal (bisa dari total_amount yang baru dihitung atau dari data transaksi lama)
+        $currentTotal = $validatedData['total_amount'] ?? $transaction->total_amount + ($transaction->discount ?? 0);
+
+        // Ambil nilai diskon dari request, atau gunakan diskon lama jika tidak dikirim (misal saat form diskon disembunyikan)
+        $discount = $request->has('discount') ? ($request->input('discount') ?? 0) : ($transaction->discount ?? 0);
+
+        // Pastikan diskon tidak melebihi subtotal kotor
+        $subtotalKotor = $currentTotal;
+        $discount = min($subtotalKotor, $discount);
+
+        // Masukkan ke validatedData
+        $validatedData['discount'] = $discount;
+        $validatedData['total_amount'] = max(0, $subtotalKotor - $discount);
+        // -----------------------------------------------------------
 
         // 2. Handle update Foto Before (jika ada file baru yang diunggah)
         if ($request->hasFile('beforeImage')) {
