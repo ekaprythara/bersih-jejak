@@ -1,3 +1,4 @@
+import React from "react";
 import {
     Dialog,
     DialogClose,
@@ -147,10 +148,9 @@ export const UpdateTransactionDialog = ({
                     <SquarePen />
                 </Button>
             </DialogTrigger>
-
             <DialogContent className="overflow-y-auto scrollbar-none scroll-smooth max-h-[92dvh] sm:max-w-2xl">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                    {/* Header */}
+                    {/* Header (Dikembalikan sesuai aslinya) */}
                     <DialogHeader>
                         <DialogTitle>Edit Transaksi</DialogTitle>
                         <DialogDescription>
@@ -158,8 +158,8 @@ export const UpdateTransactionDialog = ({
                         </DialogDescription>
                     </DialogHeader>
 
-                    <FieldGroup className="flex flex-col gap-6">
-                        {/* Bagian 1: Ringkasan Invoice & Total Tagihan */}
+                    <FieldGroup className="flex flex-col gap-5">
+                        {/* 1. Ringkasan Invoice & Total Tagihan */}
                         <div className="rounded-xl border bg-muted/30 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                             <div className="space-y-0.5">
                                 <p className="text-xs font-medium text-muted-foreground">
@@ -189,172 +189,134 @@ export const UpdateTransactionDialog = ({
                             </div>
                         </div>
 
-                        {/* Bagian 2: Cabang & Tanggal Pengambilan */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Field>
-                                <Label htmlFor="branch_id">Cabang</Label>
-                                <Select
-                                    value={String(form.data.branch_id)}
-                                    onValueChange={(value) =>
-                                        form.setData("branch_id", value)
-                                    }
-                                    disabled={true || isPaidOff}
+                        {/* 2. Cabang (Full Width) */}
+                        <Field>
+                            <Label htmlFor="branch_id">Cabang</Label>
+                            <Select
+                                value={String(form.data.branch_id)}
+                                onValueChange={(value) =>
+                                    form.setData("branch_id", value)
+                                }
+                                disabled={true || isPaidOff}
+                            >
+                                <SelectTrigger
+                                    id="branch_id"
+                                    className="w-full bg-muted/40"
                                 >
-                                    <SelectTrigger
-                                        id="branch_id"
-                                        className="w-full bg-muted/40"
-                                    >
-                                        <SelectValue placeholder="Pilih Cabang..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {branches.map((branch) => (
-                                                <SelectItem
-                                                    key={branch.id}
-                                                    value={String(branch.id)}
-                                                >
-                                                    {branch.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={form.errors.branch_id} />
-                            </Field>
-
-                            <Field>
-                                <Label htmlFor="pickup_date">
-                                    Tanggal Diambil
-                                </Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            data-empty={!pickupDate}
-                                            className="justify-start text-left font-normal data-[empty=true]:text-muted-foreground w-full"
-                                        >
-                                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                                            {pickupDate ? (
-                                                format(pickupDate, "dd-MM-yyyy")
-                                            ) : (
-                                                <span>Pilih Tanggal</span>
-                                            )}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0">
-                                        <Calendar
-                                            mode="single"
-                                            selected={pickupDate}
-                                            onSelect={handleDateSelect}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                                <InputError message={form.errors.pickup_date} />
-                            </Field>
-                        </div>
-
-                        {/* Bagian 3: Layanan, Jumlah Sepatu & Diskon */}
-                        <div className="rounded-xl border bg-muted/30 p-4 space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {services && (
-                                    <Field>
-                                        <Label
-                                            htmlFor="service_id"
-                                            className="text-xs font-medium text-muted-foreground"
-                                        >
-                                            Layanan
-                                        </Label>
-                                        <Select
-                                            value={String(form.data.service_id)}
-                                            onValueChange={(value) =>
-                                                form.setData(
-                                                    "service_id",
-                                                    Number(value),
-                                                )
-                                            }
-                                            disabled={isPaidOff}
-                                        >
-                                            <SelectTrigger
-                                                id="service_id"
-                                                className="w-full bg-background"
+                                    <SelectValue placeholder="Pilih Cabang..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        {branches.map((branch) => (
+                                            <SelectItem
+                                                key={branch.id}
+                                                value={String(branch.id)}
                                             >
-                                                <SelectValue placeholder="Pilih Layanan" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {services.map((service) => (
-                                                        <SelectItem
-                                                            key={service.id}
-                                                            value={service.id.toString()}
-                                                        >
-                                                            {service.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <InputError
-                                            message={form.errors.service_id}
-                                        />
-                                    </Field>
-                                )}
+                                                {branch.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            <InputError message={form.errors.branch_id} />
+                        </Field>
 
-                                <Field
-                                    className={!services ? "sm:col-span-2" : ""}
-                                >
+                        {/* 3. Layanan & Jumlah Sepatu */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {services && (
+                                <Field>
                                     <Label
-                                        htmlFor="shoe_count"
+                                        htmlFor="service_id"
                                         className="text-xs font-medium text-muted-foreground"
                                     >
-                                        Jumlah Sepatu (Pasang)
+                                        Layanan
                                     </Label>
-                                    <Input
-                                        id="shoe_count"
-                                        type="number"
-                                        min={1}
-                                        className="bg-background"
-                                        value={form.data.shoe_count}
-                                        onChange={(e) =>
+                                    <Select
+                                        value={String(form.data.service_id)}
+                                        onValueChange={(value) =>
                                             form.setData(
-                                                "shoe_count",
-                                                Number(e.target.value),
+                                                "service_id",
+                                                Number(value),
                                             )
                                         }
                                         disabled={isPaidOff}
-                                    />
+                                    >
+                                        <SelectTrigger
+                                            id="service_id"
+                                            className="w-full bg-background"
+                                        >
+                                            <SelectValue placeholder="Pilih Layanan" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                {services.map((service) => (
+                                                    <SelectItem
+                                                        key={service.id}
+                                                        value={service.id.toString()}
+                                                    >
+                                                        {service.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
                                     <InputError
-                                        message={form.errors.shoe_count}
+                                        message={form.errors.service_id}
                                     />
                                 </Field>
-                            </div>
-
-                            <Field>
+                            )}
+                            <Field className={!services ? "sm:col-span-2" : ""}>
                                 <Label
-                                    htmlFor="discount"
+                                    htmlFor="shoe_count"
                                     className="text-xs font-medium text-muted-foreground"
                                 >
-                                    Diskon (Rp.)
+                                    Jumlah Sepatu (Pasang)
                                 </Label>
                                 <Input
-                                    id="discount"
+                                    id="shoe_count"
                                     type="number"
-                                    step={500}
+                                    min={1}
                                     className="bg-background"
-                                    value={form.data.discount}
+                                    value={form.data.shoe_count}
                                     onChange={(e) =>
                                         form.setData(
-                                            "discount",
+                                            "shoe_count",
                                             Number(e.target.value),
                                         )
                                     }
                                     disabled={isPaidOff}
                                 />
-                                <InputError message={form.errors.discount} />
+                                <InputError message={form.errors.shoe_count} />
                             </Field>
                         </div>
 
-                        {/* Bagian 4: Status Pengerjaan & Pembayaran */}
-                        <div className="space-y-4">
+                        {/* 4. Diskon */}
+                        <Field>
+                            <Label
+                                htmlFor="discount"
+                                className="text-xs font-medium text-muted-foreground"
+                            >
+                                Diskon (Rp.)
+                            </Label>
+                            <Input
+                                id="discount"
+                                type="number"
+                                step={500}
+                                className="bg-background"
+                                value={form.data.discount}
+                                onChange={(e) =>
+                                    form.setData(
+                                        "discount",
+                                        Number(e.target.value),
+                                    )
+                                }
+                                disabled={isPaidOff}
+                            />
+                            <InputError message={form.errors.discount} />
+                        </Field>
+
+                        {/* 5. Status Pengerjaan & Tanggal Pengambilan */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <Field>
                                 <Label htmlFor="transaction_status_id">
                                     Status Pengerjaan
@@ -398,97 +360,120 @@ export const UpdateTransactionDialog = ({
                                 />
                             </Field>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Field>
-                                    <Label htmlFor="payment_status">
-                                        Status Pembayaran
-                                    </Label>
-                                    <Select
-                                        value={String(
-                                            form.data.payment_status_id,
-                                        )}
-                                        onValueChange={(value) =>
-                                            form.setData(
-                                                "payment_status_id",
-                                                Number(value),
-                                            )
-                                        }
-                                        disabled={isPaidOff}
-                                    >
-                                        <SelectTrigger
-                                            id="payment_status"
-                                            className="w-full"
+                            <Field>
+                                <Label htmlFor="pickup_date">
+                                    Tanggal Diambil
+                                </Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            data-empty={!pickupDate}
+                                            className="justify-start text-left font-normal data-[empty=true]:text-muted-foreground w-full"
                                         >
-                                            <SelectValue placeholder="Status Pembayaran" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                {paymentStatuses.map(
-                                                    (paymentStatus) => (
-                                                        <SelectItem
-                                                            key={
-                                                                paymentStatus.id
-                                                            }
-                                                            value={paymentStatus.id.toString()}
-                                                        >
-                                                            {paymentStatus.name}
-                                                        </SelectItem>
-                                                    ),
-                                                )}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                    <InputError
-                                        message={form.errors.payment_status_id}
-                                    />
-                                </Field>
-
-                                <Field>
-                                    <Label htmlFor="payment_method_id">
-                                        Metode Pembayaran
-                                    </Label>
-                                    <Select
-                                        value={String(
-                                            form.data.payment_method_id,
-                                        )}
-                                        onValueChange={(value) =>
-                                            form.setData(
-                                                "payment_method_id",
-                                                Number(value),
-                                            )
-                                        }
-                                    >
-                                        <SelectTrigger
-                                            id="payment_method_id"
-                                            className="w-full"
-                                        >
-                                            <SelectValue placeholder="Metode Pembayaran" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                {paymentMethods.map(
-                                                    (paymentMethod) => (
-                                                        <SelectItem
-                                                            key={
-                                                                paymentMethod.id
-                                                            }
-                                                            value={paymentMethod.id.toString()}
-                                                        >
-                                                            {paymentMethod.name}
-                                                        </SelectItem>
-                                                    ),
-                                                )}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                    <InputError
-                                        message={form.errors.payment_method_id}
-                                    />
-                                </Field>
-                            </div>
+                                            <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                            {pickupDate ? (
+                                                format(pickupDate, "dd-MM-yyyy")
+                                            ) : (
+                                                <span>Pilih Tanggal</span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            selected={pickupDate}
+                                            onSelect={handleDateSelect}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                <InputError message={form.errors.pickup_date} />
+                            </Field>
                         </div>
 
-                        {/* Bagian 5: Deskripsi */}
+                        {/* 6. Status & Metode Pembayaran */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Field>
+                                <Label htmlFor="payment_status">
+                                    Status Pembayaran
+                                </Label>
+                                <Select
+                                    value={String(form.data.payment_status_id)}
+                                    onValueChange={(value) =>
+                                        form.setData(
+                                            "payment_status_id",
+                                            Number(value),
+                                        )
+                                    }
+                                    disabled={isPaidOff}
+                                >
+                                    <SelectTrigger
+                                        id="payment_status"
+                                        className="w-full"
+                                    >
+                                        <SelectValue placeholder="Status Pembayaran" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            {paymentStatuses.map(
+                                                (paymentStatus) => (
+                                                    <SelectItem
+                                                        key={paymentStatus.id}
+                                                        value={paymentStatus.id.toString()}
+                                                    >
+                                                        {paymentStatus.name}
+                                                    </SelectItem>
+                                                ),
+                                            )}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                                <InputError
+                                    message={form.errors.payment_status_id}
+                                />
+                            </Field>
+
+                            <Field>
+                                <Label htmlFor="payment_method_id">
+                                    Metode Pembayaran
+                                </Label>
+                                <Select
+                                    value={String(form.data.payment_method_id)}
+                                    onValueChange={(value) =>
+                                        form.setData(
+                                            "payment_method_id",
+                                            Number(value),
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="payment_method_id"
+                                        className="w-full"
+                                    >
+                                        <SelectValue placeholder="Metode Pembayaran" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            {paymentMethods.map(
+                                                (paymentMethod) => (
+                                                    <SelectItem
+                                                        key={paymentMethod.id}
+                                                        value={paymentMethod.id.toString()}
+                                                    >
+                                                        {paymentMethod.name}
+                                                    </SelectItem>
+                                                ),
+                                            )}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                                <InputError
+                                    message={form.errors.payment_method_id}
+                                />
+                            </Field>
+                        </div>
+
+                        {/* 7. Deskripsi */}
                         <Field>
                             <Label htmlFor="description">Deskripsi</Label>
                             <Textarea
@@ -503,9 +488,8 @@ export const UpdateTransactionDialog = ({
                             <InputError message={form.errors.description} />
                         </Field>
 
-                        {/* Bagian 6: Foto Sebelum & Sesudah */}
+                        {/* 8. Foto Sebelum & Sesudah */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Foto Sebelum */}
                             <Field>
                                 <Label htmlFor="before_image">
                                     Foto Sepatu (Sebelum)
@@ -557,7 +541,6 @@ export const UpdateTransactionDialog = ({
                                 <InputError message={form.errors.beforeImage} />
                             </Field>
 
-                            {/* Foto Sesudah */}
                             <Field>
                                 <Label htmlFor="after_image">
                                     Foto Sepatu (After)
@@ -611,7 +594,7 @@ export const UpdateTransactionDialog = ({
                         </div>
                     </FieldGroup>
 
-                    {/* Footer */}
+                    {/* Footer (Dikembalikan sesuai aslinya) */}
                     <DialogFooter className="gap-2 sm:gap-0">
                         <DialogClose asChild>
                             <Button variant="outline" type="button">

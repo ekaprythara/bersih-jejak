@@ -5,6 +5,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FinancialReportController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
@@ -21,18 +22,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('admin/{admin}/status', [UserController::class, 'updateStatus'])->name("admin.updateStatus");
     Route::patch('admin/{admin}/edit', [UserController::class, 'update'])->name("admin.update");
 
+    // 1. Rute GET Statis (Tanpa parameter dinamis di depannya)
     Route::get('transactions', [TransactionController::class, 'index'])->name("transactions.index");
+    Route::get('transactions/print', [TransactionController::class, 'printPdf'])->name('transactions.printPdf');
+    Route::get('transactions/export', [TransactionController::class, 'exportExcel'])->name('transactions.exportExcel');
+
+    // 2. Rute GET Dinamis (Menggunakan parameter {transaction})
+    Route::get('transactions/{transaction}/print-transaction', [TransactionController::class, 'printTransaction'])->name('transactions.printTransaction');
+    Route::get('/transactions/{transaction}/invoice', [TransactionController::class, 'printTransaction'])
+        ->name('transactions.invoice');
+
+    // 3. Rute POST & PATCH (Untuk aksi simpan, update, atau kirim data)
     Route::post('transactions/create', [TransactionController::class, 'store'])->name("transactions.store");
     Route::patch('transactions/{transaction}/edit', [TransactionController::class, 'update'])->name('transactions.update');
-    Route::get('transactions/print', [TransactionController::class, 'printPdf'])->name('transactions.printPdf');
-    Route::get('transactions/{transaction}/print-transaction', [TransactionController::class, 'printTransaction'])->name('transactions.printTransaction');
-    Route::get('transactions/export', [TransactionController::class, 'exportExcel'])->name('transactions.exportExcel');
+
 
 
     Route::get('customers', [CustomerController::class, 'index'])->name("customers.index");
     Route::post('customers/create', [CustomerController::class, 'store'])->name("customers.store");
     Route::patch('customers/{customer}/status', [CustomerController::class, 'updateStatus'])->name('customers.updateStatus');
     Route::patch('customers/{customer}/edit', [CustomerController::class, 'update'])->name('customers.update');
+
+
 
     Route::middleware(['owner'])->group(function () {
         Route::get('services', [ServiceController::class, 'index'])->name("services.index");

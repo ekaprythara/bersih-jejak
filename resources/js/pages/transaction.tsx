@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { formatRupiah } from "@/lib/utils";
 import { useState } from "react";
+import ShowTransactionDialog from "@/components/partials/transaction/show-transaction-dialog";
 
 export default function Transaction({
     transactions,
@@ -246,17 +247,19 @@ export default function Transaction({
             cell: ({ row }) => {
                 const handlePrintPdf = (e: React.FormEvent) => {
                     e.preventDefault();
-
                     const url = new URL(
                         printTransaction.url(row.original.invoice_number),
                         window.location.origin,
                     );
-
                     window.open(url.toString(), "_blank");
                 };
 
                 return (
                     <div className="flex items-center justify-center gap-1">
+                        {/* Tombol Dialog Show Detail */}
+                        <ShowTransactionDialog transaction={row.original} />
+
+                        {/* Tombol Dialog Edit */}
                         <UpdateTransactionDialog
                             transaction={row.original}
                             branches={branchOptions}
@@ -265,10 +268,13 @@ export default function Transaction({
                             paymentStatuses={paymentStatuses}
                             transactionStatuses={transactionStatuses}
                         />
+
+                        {/* Tombol Print PDF */}
                         <Button
                             size="icon"
                             variant="outline"
                             onClick={handlePrintPdf}
+                            title="Print PDF"
                         >
                             <Printer className="w-4 h-4" />
                         </Button>

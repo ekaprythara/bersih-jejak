@@ -1,3 +1,4 @@
+import React from "react";
 import {
     Dialog,
     DialogClose,
@@ -178,24 +179,23 @@ export const CreateTransactionDialog = ({
                     <span className="font-semibold">Tambah Transaksi</span>
                 </Button>
             </DialogTrigger>
-
             <DialogContent className="sm:max-w-2xl overflow-y-auto scrollbar-none scroll-smooth max-h-[92dvh]">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                    {/* Header */}
+                    {/* Header (Tidak diubah) */}
                     <div className="flex flex-col gap-1 border-b pb-4">
                         <h2 className="text-lg font-semibold text-foreground">
                             Tambah Transaksi Baru
                         </h2>
                         <p className="text-sm text-muted-foreground">
-                            Menambahkan transaksi baru ke dalam sistem, dan
+                            Menambahkan transaksi baru kedalam sistem, dan
                             tentukan cabang operasionalnya.
                         </p>
                     </div>
 
-                    <FieldGroup className="flex flex-col gap-6">
-                        {/* Bagian 1: Pelanggan & Cabang/Layanan */}
-                        <div className="space-y-4">
-                            <Field>
+                    <FieldGroup className="flex flex-col gap-5">
+                        {/* 1. Pelanggan & Cabang */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Field className="sm:col-span-2">
                                 <Label htmlFor="customer_id">Pelanggan</Label>
                                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                     <div className="flex-1">
@@ -241,112 +241,138 @@ export const CreateTransactionDialog = ({
                                 </div>
                                 <InputError message={form.errors.customer_id} />
                             </Field>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {isOwner && (
-                                    <Field>
-                                        <Label htmlFor="branch_id">
-                                            Pilih Cabang
-                                        </Label>
-                                        <Select
-                                            value={form.data.branch_id}
-                                            onValueChange={(value) =>
-                                                form.setData("branch_id", value)
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                id="branch_id"
-                                                className="w-full"
-                                            >
-                                                <SelectValue placeholder="Pilih Cabang..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {branches.map((branch) => (
-                                                        <SelectItem
-                                                            key={branch.id}
-                                                            value={String(
-                                                                branch.id,
-                                                            )}
-                                                        >
-                                                            {branch.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                        <InputError
-                                            message={form.errors.branch_id}
-                                        />
-                                    </Field>
-                                )}
-
-                                <Field
-                                    className={!isOwner ? "sm:col-span-2" : ""}
+                        </div>
+                        {isOwner && (
+                            <Field>
+                                <Label htmlFor="branch_id">Pilih Cabang</Label>
+                                <Select
+                                    value={form.data.branch_id}
+                                    onValueChange={(value) =>
+                                        form.setData("branch_id", value)
+                                    }
                                 >
-                                    <Label htmlFor="service_id">
-                                        Pilih Layanan
-                                    </Label>
-                                    <Select
-                                        value={form.data.service_id}
-                                        onValueChange={(value) =>
-                                            form.setData("service_id", value)
-                                        }
+                                    <SelectTrigger
+                                        id="branch_id"
+                                        className="w-full"
                                     >
-                                        <SelectTrigger
-                                            id="service_id"
-                                            className="w-full"
-                                        >
-                                            <SelectValue placeholder="Pilih Layanan" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                {services.map((service) => (
-                                                    <SelectItem
-                                                        key={service.id}
-                                                        value={service.id.toString()}
-                                                    >
-                                                        {service.name} (
-                                                        {service.estimated_days}{" "}
-                                                        Hari)
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                    <InputError
-                                        message={form.errors.service_id}
-                                    />
-                                </Field>
-                            </div>
+                                        <SelectValue placeholder="Pilih Cabang..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            {branches.map((branch) => (
+                                                <SelectItem
+                                                    key={branch.id}
+                                                    value={String(branch.id)}
+                                                >
+                                                    {branch.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={form.errors.branch_id} />
+                            </Field>
+                        )}
+
+                        {/* 2. Layanan & Jumlah Sepatu */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Field>
+                                <Label htmlFor="service_id">
+                                    Pilih Layanan
+                                </Label>
+                                <Select
+                                    value={form.data.service_id}
+                                    onValueChange={(value) =>
+                                        form.setData("service_id", value)
+                                    }
+                                >
+                                    <SelectTrigger
+                                        id="service_id"
+                                        className="w-full"
+                                    >
+                                        <SelectValue placeholder="Pilih Layanan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            {services.map((service) => (
+                                                <SelectItem
+                                                    key={service.id}
+                                                    value={service.id.toString()}
+                                                >
+                                                    {service.name} (
+                                                    {service.estimated_days}{" "}
+                                                    Hari)
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={form.errors.service_id} />
+                            </Field>
+
+                            <Field>
+                                <Label
+                                    htmlFor="shoe_count"
+                                    className="text-xs font-medium text-muted-foreground"
+                                >
+                                    Jumlah Sepatu (Pasang)
+                                </Label>
+                                <Input
+                                    id="shoe_count"
+                                    type="number"
+                                    step={1}
+                                    min={1}
+                                    className="bg-background"
+                                    value={form.data.shoe_count}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            "shoe_count",
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError message={form.errors.shoe_count} />
+                            </Field>
                         </div>
 
-                        {/* Bagian 2: Kalkulasi Harga & Diskon */}
+                        {/* 3. Kalkulasi Harga & Diskon */}
                         <div className="rounded-xl border bg-muted/30 p-4 space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <Field>
                                     <Label
-                                        htmlFor="shoe_count"
+                                        htmlFor="discount"
                                         className="text-xs font-medium text-muted-foreground"
                                     >
-                                        Jumlah Sepatu (Pasang)
+                                        Diskon (Rp.)
                                     </Label>
                                     <Input
-                                        id="shoe_count"
+                                        id="discount"
                                         type="number"
-                                        step={1}
-                                        min={1}
+                                        placeholder="0"
+                                        step={500}
+                                        min={0}
+                                        max={calculateSubtotal()}
                                         className="bg-background"
-                                        value={form.data.shoe_count}
-                                        onChange={(e) =>
-                                            form.setData(
-                                                "shoe_count",
-                                                e.target.value,
-                                            )
-                                        }
+                                        value={form.data.discount}
+                                        onChange={(e) => {
+                                            const val = Number(e.target.value);
+                                            const subtotal =
+                                                calculateSubtotal();
+                                            if (val <= subtotal) {
+                                                form.setData(
+                                                    "discount",
+                                                    e.target.value,
+                                                );
+                                            } else {
+                                                form.setData(
+                                                    "discount",
+                                                    subtotal.toString(),
+                                                );
+                                            }
+                                        }}
                                     />
                                     <InputError
-                                        message={form.errors.shoe_count}
+                                        message={form.errors.discount}
                                     />
                                 </Field>
 
@@ -355,7 +381,7 @@ export const CreateTransactionDialog = ({
                                         htmlFor="total_amount"
                                         className="text-xs font-medium text-muted-foreground"
                                     >
-                                        Harga Total
+                                        Harga Total Akhir
                                     </Label>
                                     <Input
                                         id="total_amount"
@@ -366,44 +392,9 @@ export const CreateTransactionDialog = ({
                                     />
                                 </Field>
                             </div>
-
-                            <Field>
-                                <Label
-                                    htmlFor="discount"
-                                    className="text-xs font-medium text-muted-foreground"
-                                >
-                                    Diskon (Rp.)
-                                </Label>
-                                <Input
-                                    id="discount"
-                                    type="number"
-                                    placeholder="0"
-                                    step={500}
-                                    min={0}
-                                    max={calculateSubtotal()}
-                                    className="bg-background"
-                                    value={form.data.discount}
-                                    onChange={(e) => {
-                                        const val = Number(e.target.value);
-                                        const subtotal = calculateSubtotal();
-                                        if (val <= subtotal) {
-                                            form.setData(
-                                                "discount",
-                                                e.target.value,
-                                            );
-                                        } else {
-                                            form.setData(
-                                                "discount",
-                                                subtotal.toString(),
-                                            );
-                                        }
-                                    }}
-                                />
-                                <InputError message={form.errors.discount} />
-                            </Field>
                         </div>
 
-                        {/* Bagian 3: Status & Metode Pembayaran */}
+                        {/* 4. Status & Metode Pembayaran */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <Field>
                                 <Label htmlFor="payment_status">
@@ -485,7 +476,7 @@ export const CreateTransactionDialog = ({
                             </Field>
                         </div>
 
-                        {/* Bagian 4: Tanggal Transaksi & Tanggal Ambil */}
+                        {/* 5. Tanggal Transaksi & Tanggal Ambil */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <Field>
                                 <Label htmlFor="transaction_date">
@@ -550,7 +541,7 @@ export const CreateTransactionDialog = ({
                             </Field>
                         </div>
 
-                        {/* Bagian 5: Deskripsi & Foto Sepatu */}
+                        {/* 6. Deskripsi & Foto Sepatu */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                             <Field className="h-full flex flex-col">
                                 <Label htmlFor="description">Deskripsi</Label>
@@ -587,7 +578,7 @@ export const CreateTransactionDialog = ({
                                                     Pilih gambar atau
                                                     drag-and-drop disini.
                                                 </p>
-                                                <p className="text-[11px]text-muted-foreground">
+                                                <p className="text-[11px] text-muted-foreground">
                                                     PNG, JPG, dan WEBP
                                                     <br />
                                                     Maks. 2MB
@@ -624,7 +615,7 @@ export const CreateTransactionDialog = ({
                         </div>
                     </FieldGroup>
 
-                    {/* Footer */}
+                    {/* Footer (Tidak diubah sesuai permintaan) */}
                     <div className="flex items-center justify-end gap-2 pt-4 border-t">
                         <DialogClose asChild>
                             <Button variant="outline" type="button">

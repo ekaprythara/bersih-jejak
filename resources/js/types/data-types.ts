@@ -87,7 +87,10 @@ export type TransactionType = {
     customer_id: number;
     transaction_date: string; // Bisa menggunakan string (YYYY-MM-DD) atau Date
     pickup_date: string;
+    shoe_count: number;
+    discount: number;
     service_id: number;
+    payment_method: string;
     transaction_status_id: number;
     payment_status_id: number;
     user_id: number;
