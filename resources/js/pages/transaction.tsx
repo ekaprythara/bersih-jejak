@@ -6,6 +6,15 @@ import { updateStatus } from "@/routes/customers";
 import { Head, router, usePage } from "@inertiajs/react";
 import { ColumnDef } from "@tanstack/react-table";
 import { toast } from "sonner";
+import {
+    CalendarArrowDown,
+    CalendarCheck2,
+    CircleCheck,
+    Sparkles,
+    Store,
+    Tag,
+    User,
+} from "lucide-react";
 import type {
     BranchType,
     CustomerType,
@@ -86,101 +95,123 @@ export default function Transaction({
     const columns: ColumnDef<typeof features, TransactionType>[] = [
         {
             accessorKey: "invoice_number",
-            header: "No. Invoice",
-            cell: ({ row }) => {
-                return (
-                    <span className="font-mono font-medium text-xs">
+            header: "Invoice & Cabang",
+            cell: ({ row }) => (
+                <div className="flex flex-col items-start gap-1 text-xs sm:text-sm whitespace-nowrap">
+                    <span className="font-medium">
                         {row.original.invoice_number}
                     </span>
-                );
-            },
+                    <div className="flex items-center gap-1.5 text-xs opacity-70">
+                        <span className="inline-flex items-center gap-1">
+                            <Store className="size-3 shrink-0" />
+                            {row.original.branch?.name ?? "-"}
+                        </span>
+                        <span>•</span>
+                        <span className="inline-flex items-center gap-1">
+                            <User className="size-3 shrink-0" />
+                            {row.original.user?.name ?? "-"}
+                        </span>
+                    </div>
+                </div>
+            ),
         },
         {
             accessorKey: "transaction_date",
-            header: "Tanggal Transaksi",
-            cell: ({ row }) => {
-                const transactionDate = row.original.transaction_date;
-                return (
-                    <span className="font-mono text-xs">{transactionDate}</span>
-                );
-            },
-        },
-        {
-            accessorKey: "pickup_date",
-            header: "Tanggal Ambil",
-            cell: ({ row }) => {
-                const pickupDate = row.original.pickup_date;
-                return <span className="font-mono text-xs">{pickupDate}</span>;
-            },
-        },
-        {
-            accessorKey: "branch.name",
-            header: "Cabang",
-            cell: ({ row }) => {
-                const branchName = row.original.branch?.name ?? "-";
-                return <Badge variant="secondary">{branchName}</Badge>;
-            },
+            header: "Tanggal",
+            cell: ({ row }) => (
+                <div className="flex flex-col items-start gap-1 text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1.5">
+                        <CalendarArrowDown className="size-3.5 shrink-0 opacity-70" />
+                        {row.original.transaction_date ?? "-"}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs opacity-70">
+                        <CalendarCheck2 className="size-3 shrink-0" />
+                        {row.original.pickup_date ?? "-"}
+                    </span>
+                </div>
+            ),
         },
         {
             accessorKey: "customer.name",
-            header: "Nama Pelanggan",
-            cell: ({ row }) => (
-                <span className="text-sm font-medium">
-                    {row.original.customer?.name ?? "-"}
-                </span>
-            ),
-        },
-        {
-            accessorKey: "service.name",
-            header: "Layanan",
-            cell: ({ row }) => (
-                <span className="text-sm">
-                    {row.original.service?.name ?? "-"}
-                </span>
-            ),
-        },
-        {
-            id: "subtotal",
-            header: "Subtotal",
+            header: "Pelanggan & Layanan",
             cell: ({ row }) => {
-                const servicePrice = Number(row.original.service?.price ?? 0);
-                const shoeCount = Number(row.original.shoe_count ?? 1);
-                const subtotal = servicePrice * shoeCount;
+                const customerName = row.original.customer?.name ?? "-";
+                const serviceName = row.original.service?.name ?? "-";
+                const shoeCount = row.original.shoe_count ?? 1;
+
                 return (
-                    <span className="font-mono text-xs text-muted-foreground">
-                        {subtotal > 0 ? formatRupiah(subtotal) : "-"}
-                    </span>
-                );
-            },
-        },
-        {
-            accessorKey: "discount",
-            header: "Diskon",
-            cell: ({ row }) => {
-                const discount = row.original.discount;
-                return (
-                    <span className="font-mono text-xs text-muted-foreground">
-                        {discount && Number(discount) > 0
-                            ? formatRupiah(Number(discount))
-                            : "-"}
-                    </span>
+                    <div className="min-w-[160px] max-w-[240px] sm:max-w-xs flex flex-col items-start gap-1 text-xs sm:text-sm whitespace-normal break-words leading-relaxed">
+                        <span className="font-medium">{customerName}</span>
+                        <span className="inline-flex items-center gap-1 text-xs opacity-70">
+                            <Sparkles className="size-3 shrink-0" />
+                            <span>
+                                {serviceName} ({shoeCount} pasang)
+                            </span>
+                        </span>
+                    </div>
                 );
             },
         },
         {
             accessorKey: "total_amount",
-            header: "Bayar",
+            header: "Total Bayar",
             cell: ({ row }) => {
+                const servicePrice = Number(row.original.service?.price ?? 0);
+                const shoeCount = Number(row.original.shoe_count ?? 1);
+                const subtotal = servicePrice * shoeCount;
+                const discount = Number(row.original.discount ?? 0);
+                const total = Number(row.original.total_amount ?? 0);
+
+                // Cek berbagai kemungkinan struktur data status pembayaran dari backend
+                const paymentObj = row.original.payment_status;
+
+                // Jika payment_status berupa relasi object, ambil name atau slug-nya
+                // Atau jika berupa ID langsung (misal ID 2 = Lunas/Paid), sesuaikan angkanya
+                const statusName =
+                    typeof paymentObj === "object" && paymentObj !== null
+                        ? (paymentObj.name ?? "").toLowerCase()
+                        : String(paymentObj ?? "").toLowerCase();
+
+                // Deteksi apakah lunas/paid (pastikan tidak tertukar dengan unpaid)
+                const isPaid =
+                    statusName === "paid" ||
+                    statusName === "lunas" ||
+                    statusName.includes("paid");
+
                 return (
-                    <span className="font-mono font-semibold text-sm text-foreground">
-                        {formatRupiah(Number(row.original.total_amount))}
-                    </span>
+                    <div className="flex flex-col items-start gap-1 text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                            <span className="font-medium">
+                                {formatRupiah(total)}
+                            </span>
+                            <span
+                                title={
+                                    typeof paymentObj === "object"
+                                        ? paymentObj?.name
+                                        : String(paymentObj)
+                                }
+                            >
+                                {isPaid ? (
+                                    <CircleCheck className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                                ) : (
+                                    <Clock className="size-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
+                                )}
+                            </span>
+                        </div>
+                        {discount > 0 && (
+                            <span className="inline-flex items-center gap-1 text-xs opacity-70">
+                                <Tag className="size-3 shrink-0" />
+                                {formatRupiah(subtotal)} - Diskon{" "}
+                                {formatRupiah(discount)}
+                            </span>
+                        )}
+                    </div>
                 );
             },
         },
         {
             accessorKey: "transaction_status.name",
-            header: "Status Pengerjaan",
+            header: "Status",
             cell: ({ row }) => {
                 const statusName =
                     row.original.transaction_status?.name?.toLowerCase() || "";
@@ -196,50 +227,22 @@ export default function Transaction({
                     | "dark" = "secondary";
 
                 if (statusName.includes("selesai")) {
-                    badgeVariant = "success"; // Hijau
+                    badgeVariant = "success";
                 } else if (statusName.includes("proses")) {
-                    badgeVariant = "info"; // Biru / Sky
+                    badgeVariant = "info";
                 } else if (statusName.includes("pending")) {
-                    badgeVariant = "warning"; // Kuning / Amber
+                    badgeVariant = "warning";
                 }
 
                 return (
                     <Badge
                         variant={badgeVariant}
-                        className="uppercase text-[10px] tracking-wide"
+                        className="uppercase text-[10px] tracking-wide whitespace-nowrap"
                     >
                         {row.original.transaction_status?.name ?? "-"}
                     </Badge>
                 );
             },
-        },
-        {
-            accessorKey: "payment_status.name",
-            header: "Status Pembayaran",
-            cell: ({ row }) => {
-                const payStatus =
-                    row.original.payment_status?.name?.toLowerCase() || "";
-                const isLunas =
-                    payStatus.includes("lunas") || payStatus.includes("paid");
-
-                return (
-                    <Badge
-                        variant={isLunas ? "success" : "outline"}
-                        className="uppercase text-[10px] tracking-wide"
-                    >
-                        {row.original.payment_status?.name ?? "Belum Lunas"}
-                    </Badge>
-                );
-            },
-        },
-        {
-            accessorKey: "user.name",
-            header: "Dibuat Oleh",
-            cell: ({ row }) => (
-                <span className="text-xs text-muted-foreground">
-                    {row.original.user?.name ?? "-"}
-                </span>
-            ),
         },
         {
             id: "actions",
@@ -255,11 +258,9 @@ export default function Transaction({
                 };
 
                 return (
-                    <div className="flex items-center justify-center gap-1">
-                        {/* Tombol Dialog Show Detail */}
+                    <div className="flex items-center justify-start gap-1">
                         <ShowTransactionDialog transaction={row.original} />
 
-                        {/* Tombol Dialog Edit */}
                         <UpdateTransactionDialog
                             transaction={row.original}
                             branches={branchOptions}
@@ -269,7 +270,6 @@ export default function Transaction({
                             transactionStatuses={transactionStatuses}
                         />
 
-                        {/* Tombol Print PDF */}
                         <Button
                             size="icon"
                             variant="outline"

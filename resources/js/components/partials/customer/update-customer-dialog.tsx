@@ -27,6 +27,7 @@ import InputError from "@/components/input-error";
 import { CustomerType } from "@/types/data-types";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { SquarePen } from "lucide-react";
 
 export const UpdateCustomerDialog = ({
     customer,
@@ -60,7 +61,9 @@ export const UpdateCustomerDialog = ({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Edit</Button>
+                <Button size="icon" variant="warning">
+                    <SquarePen />
+                </Button>
             </DialogTrigger>
 
             <DialogContent>

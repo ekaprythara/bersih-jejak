@@ -222,11 +222,11 @@ const SortTransactionForm = ({
 
     return (
         <div className="w-full flex flex-col gap-2">
-            <div className="p-3 sm:p-4 border border-neutral-200/80 rounded-xl flex flex-col gap-3 bg-white shadow-xs">
+            <div className="flex flex-col gap-3">
                 {/* Baris Atas: Input Pencarian & Tombol Aksi */}
                 <div className="flex flex-col sm:flex-row gap-2.5 justify-between items-stretch sm:items-center">
                     {/* Input Search */}
-                    <div className="w-full sm:max-w-xs relative flex items-center">
+                    <div className="w-full relative flex items-center">
                         <InputGroup className="w-full">
                             <InputGroupInput
                                 placeholder="Cari pada tabel..."

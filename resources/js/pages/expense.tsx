@@ -26,6 +26,7 @@ import {
     Download,
     PieChart,
     Printer,
+    SquarePen,
     Wallet,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -78,74 +79,79 @@ export default function Expense({
         );
     };
 
-    console.log(expenses);
-
     const columns: ColumnDef<typeof features, ExpenseType>[] = [
         {
             header: "Tanggal",
             accessorKey: "expense_date",
             cell: ({ row }) => (
-                <span className="font-mono text-xs sm:text-sm">
+                <span className="text-xs sm:text-sm whitespace-nowrap">
                     {row.original.expense_date}
                 </span>
             ),
         },
         {
             header: "Cabang",
-            cell: ({ row }) => {
-                const branchName = row.original.branch
-                    ? row.original.branch.name
-                    : "-";
-                return <Badge variant="secondary">{branchName}</Badge>;
-            },
+            cell: ({ row }) => (
+                <span className="text-xs sm:text-sm whitespace-nowrap">
+                    {row.original.branch?.name ?? "-"}
+                </span>
+            ),
         },
         {
             header: "Kategori",
-            cell: ({ row }) => {
-                const categoryName = row.original.expense_category?.name ?? "-";
-                return <Badge variant="outline">{categoryName}</Badge>;
-            },
+            cell: ({ row }) => (
+                <span className="text-xs sm:text-sm whitespace-nowrap">
+                    {row.original.expense_category?.name ?? "-"}
+                </span>
+            ),
         },
         {
             header: "Keterangan",
             accessorKey: "description",
-            cell: ({ row }) => {
-                return (
-                    <div className="max-w-[200px] sm:max-w-xs md:max-w-md text-xs text-neutral-600 text-wrap leading-relaxed">
-                        {row.original.description}
-                    </div>
-                );
-            },
+            cell: ({ row }) => (
+                <div className="min-w-[180px] max-w-[50px] sm:max-w-xs md:max-w-md text-xs sm:text-sm whitespace-normal break-words leading-relaxed">
+                    {row.original.description || "-"}
+                </div>
+            ),
         },
         {
             header: "Pembuat",
-            cell: ({ row }) => {
-                return (
-                    <span className="text-xs sm:text-sm">
-                        {row.original.user.name}
-                    </span>
-                );
-            },
+            cell: ({ row }) => (
+                <span className="text-xs sm:text-sm whitespace-nowrap">
+                    {row.original.user?.name ?? "-"}
+                </span>
+            ),
         },
         {
             header: "Nominal",
-            cell: ({ row }) => {
-                return (
-                    <span className="font-mono font-medium text-xs sm:text-sm">
-                        {formatRupiah(row.original.amount)}
-                    </span>
-                );
-            },
+            accessorKey: "amount",
+            cell: ({ row }) => (
+                <span className="font-medium text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                    {formatRupiah(row.original.amount)}
+                </span>
+            ),
         },
         {
             header: "Aksi",
+            id: "actions",
             cell: ({ row }) => {
                 if (!canModify(row.original)) {
-                    return null;
+                    return (
+                        <div className="flex items-center justify-start">
+                            <Button
+                                size="icon-sm"
+                                variant="ghost"
+                                disabled
+                                className="opacity-40"
+                            >
+                                <SquarePen className="size-4" />
+                            </Button>
+                        </div>
+                    );
                 }
 
                 return (
-                    <div className="flex items-center justify-center gap-1">
+                    <div className="flex items-center justify-start gap-1">
                         <UpdateExpenseDialog
                             expense={row.original}
                             expenseCategories={expenseCategories}

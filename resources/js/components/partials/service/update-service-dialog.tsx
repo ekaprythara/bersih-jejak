@@ -18,6 +18,7 @@ import InputError from "@/components/input-error";
 import { CustomerType, ServiceType } from "@/types/data-types";
 import { Input } from "@/components/ui/input";
 import { update } from "@/routes/services";
+import { SquarePen } from "lucide-react";
 
 export const UpdateServiceDialog = ({ service }: { service: ServiceType }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -47,7 +48,9 @@ export const UpdateServiceDialog = ({ service }: { service: ServiceType }) => {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Edit</Button>
+                <Button size="icon" variant="warning">
+                    <SquarePen />
+                </Button>
             </DialogTrigger>
 
             <DialogContent>

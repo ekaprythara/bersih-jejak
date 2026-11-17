@@ -27,6 +27,7 @@ import { update } from "@/routes/admin";
 import InputError from "@/components/input-error";
 import { BranchType, UserType } from "@/types/data-types";
 import { Badge } from "@/components/ui/badge";
+import { SquarePen } from "lucide-react";
 
 export const UpdateAdminDialog = ({
     admin,
@@ -62,7 +63,9 @@ export const UpdateAdminDialog = ({
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Edit</Button>
+                <Button size="icon" variant="warning">
+                    <SquarePen />
+                </Button>
             </DialogTrigger>
 
             <DialogContent>

@@ -51,33 +51,33 @@ export default function Service({
             header: "Nama",
             accessorKey: "name",
             cell: ({ row }) => (
-                <span className="font-medium">{row.original.name}</span>
+                <div className="min-w-[160px] max-w-[220px] sm:max-w-xs md:max-w-md font-medium text-xs sm:text-sm whitespace-normal break-words leading-relaxed">
+                    {row.original.name || "-"}
+                </div>
             ),
         },
         {
             header: "Harga",
             accessorKey: "price",
-            cell: ({ row }) => {
-                const price = row.original.price;
-                return (
-                    <span className="font-mono font-medium text-sm">
-                        {formatRupiah(price)}
-                    </span>
-                );
-            },
+            cell: ({ row }) => (
+                <span className="font-medium text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                    {formatRupiah(row.original.price)}
+                </span>
+            ),
         },
         {
             header: "Estimasi Waktu (Hari)",
             accessorKey: "estimated_days",
-            cell: ({ row }) => {
-                const days = row.original.estimated_days;
-                return <span className="font-mono text-xs">{days} Hari</span>;
-            },
+            cell: ({ row }) => (
+                <span className="text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                    {row.original.estimated_days} Hari
+                </span>
+            ),
         },
         {
             header: "Status",
-            cell: ({ row }) => {
-                return (
+            cell: ({ row }) => (
+                <div className="flex items-center justify-start">
                     <ServiceStatusSwitch
                         checked={row.original.status}
                         onCheckedChange={() =>
@@ -87,18 +87,17 @@ export default function Service({
                             )
                         }
                     />
-                );
-            },
+                </div>
+            ),
         },
         {
             header: "Aksi",
-            cell: ({ row }) => {
-                return (
-                    <div className="flex items-center justify-center gap-1">
-                        <UpdateServiceDialog service={row.original} />
-                    </div>
-                );
-            },
+            id: "actions",
+            cell: ({ row }) => (
+                <div className="flex items-center justify-start gap-1">
+                    <UpdateServiceDialog service={row.original} />
+                </div>
+            ),
         },
     ];
 

@@ -173,11 +173,11 @@ const SortExpenseForm = ({
 
     return (
         <div className="w-full flex flex-col gap-2">
-            <div className="p-3 sm:p-4 border border-neutral-200/80 rounded-xl flex flex-col gap-3 bg-white shadow-xs">
+            <div className="flex flex-col gap-3">
                 {/* Bagian Atas: Search Bar & Tombol Aksi */}
                 <div className="flex flex-col sm:flex-row gap-2.5 justify-between items-stretch sm:items-center">
                     {/* SearchBar */}
-                    <div className="w-full sm:max-w-xs relative flex items-center">
+                    <div className="w-full relative flex items-center">
                         <InputGroup className="w-full">
                             <InputGroupInput
                                 placeholder="Cari pada tabel..."
@@ -455,8 +455,7 @@ const SortExpenseForm = ({
                 {/* Bagian Filter Aktif menggunakan Badge */}
                 {isFiltered && (
                     <>
-                        <Separator className="border-neutral-200/80 flex mx-auto" />
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
                             <div className="flex flex-wrap items-center gap-1.5">
                                 <span className="text-xs text-neutral-500 font-medium mr-1">
                                     Filter Aktif:

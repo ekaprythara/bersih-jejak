@@ -18,6 +18,7 @@ import { SubmitEventHandler, useState } from "react";
 import { update } from "@/routes/branches";
 import InputError from "@/components/input-error";
 import { BranchType } from "@/types/data-types";
+import { SquarePen } from "lucide-react";
 
 export const UpdateBranchDialog = ({ branch }: { branch: BranchType }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -47,7 +48,9 @@ export const UpdateBranchDialog = ({ branch }: { branch: BranchType }) => {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Edit</Button>
+                <Button size="icon" variant="warning">
+                    <SquarePen />
+                </Button>
             </DialogTrigger>
 
             <DialogContent>

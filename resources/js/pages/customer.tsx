@@ -62,18 +62,19 @@ export default function Customer({
             header: "Nama",
             accessorKey: "name",
             cell: ({ row }) => (
-                <span className="font-medium">{row.original.name}</span>
+                <div className="min-w-[160px] max-w-[220px] sm:max-w-xs md:max-w-md font-medium text-xs sm:text-sm whitespace-normal break-words leading-relaxed">
+                    {row.original.name || "-"}
+                </div>
             ),
         },
         {
             header: "No. Telepon",
             accessorKey: "phone_number",
-            cell: ({ row }) => {
-                const phone = row.original.phone_number;
-                return (
-                    <span className="font-mono text-xs">{phone ?? "-"}</span>
-                );
-            },
+            cell: ({ row }) => (
+                <span className="text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                    {row.original.phone_number ?? "-"}
+                </span>
+            ),
         },
         {
             header: "Bergabung pada",
@@ -83,25 +84,37 @@ export default function Customer({
                 if (isNaN(date.getTime())) return "-";
 
                 const day = String(date.getDate()).padStart(2, "0");
-                const month = String(date.getMonth() + 1).padStart(2, "0"); // +1 karena getMonth() mulai dari 0
+                const month = String(date.getMonth() + 1).padStart(2, "0");
                 const year = date.getFullYear();
 
                 return `${day}-${month}-${year}`;
             },
             cell: ({ row }) => {
                 const createdAt = row.original.created_at;
-                if (!createdAt)
-                    return <span className="font-mono text-xs">-</span>;
+                if (!createdAt) {
+                    return (
+                        <span className="text-xs sm:text-sm whitespace-nowrap">
+                            -
+                        </span>
+                    );
+                }
                 const date = new Date(createdAt);
-                if (isNaN(date.getTime()))
-                    return <span className="font-mono text-xs">-</span>;
+                if (isNaN(date.getTime())) {
+                    return (
+                        <span className="text-xs sm:text-sm whitespace-nowrap">
+                            -
+                        </span>
+                    );
+                }
 
                 const day = String(date.getDate()).padStart(2, "0");
                 const month = String(date.getMonth() + 1).padStart(2, "0");
                 const year = date.getFullYear();
 
                 return (
-                    <span className="font-mono text-xs">{`${day}-${month}-${year}`}</span>
+                    <span className="text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                        {`${day}-${month}-${year}`}
+                    </span>
                 );
             },
         },
@@ -112,16 +125,16 @@ export default function Customer({
                 const transactionCount = row.original.transactions?.length ?? 0;
 
                 return (
-                    <Badge variant="secondary" className="font-mono text-xs">
+                    <span className="text-xs sm:text-sm tabular-nums whitespace-nowrap">
                         {transactionCount}x Transaksi
-                    </Badge>
+                    </span>
                 );
             },
         },
         {
             header: "Status",
-            cell: ({ row }) => {
-                return (
+            cell: ({ row }) => (
+                <div className="flex items-center justify-start">
                     <CustomerStatusSwitch
                         checked={row.original.status}
                         onCheckedChange={() =>
@@ -131,18 +144,17 @@ export default function Customer({
                             )
                         }
                     />
-                );
-            },
+                </div>
+            ),
         },
         {
             header: "Aksi",
-            cell: ({ row }) => {
-                return (
-                    <div className="flex items-center justify-center gap-1">
-                        <UpdateCustomerDialog customer={row.original} />
-                    </div>
-                );
-            },
+            id: "actions",
+            cell: ({ row }) => (
+                <div className="flex items-center justify-start gap-1">
+                    <UpdateCustomerDialog customer={row.original} />
+                </div>
+            ),
         },
     ];
 
