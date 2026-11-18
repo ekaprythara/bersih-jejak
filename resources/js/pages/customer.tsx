@@ -190,7 +190,7 @@ export default function Customer({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                            <span className="text-xl font-bold text-neutral-900 tracking-tight block truncate">
                                 {card.total_customers}
                             </span>
                         </div>
@@ -212,7 +212,7 @@ export default function Customer({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-emerald-600 tracking-tight font-mono block truncate">
+                            <span className="text-xl font-bold text-emerald-600 tracking-tight block truncate">
                                 +{card.new_customers}
                             </span>
                         </div>
@@ -234,7 +234,7 @@ export default function Customer({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                            <span className="text-xl font-bold text-neutral-900 tracking-tight block truncate">
                                 {card.loyal_customers}
                             </span>
                         </div>
@@ -256,7 +256,7 @@ export default function Customer({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                            <span className="text-xl font-bold text-neutral-900 tracking-tight block truncate">
                                 {card.avg_transactions}
                             </span>
                         </div>

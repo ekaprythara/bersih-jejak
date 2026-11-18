@@ -118,18 +118,46 @@ export default function Transaction({
         {
             accessorKey: "transaction_date",
             header: "Tanggal",
-            cell: ({ row }) => (
-                <div className="flex flex-col items-start gap-1 text-xs sm:text-sm tabular-nums whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1.5">
-                        <CalendarArrowDown className="size-3.5 shrink-0 opacity-70" />
-                        {row.original.transaction_date ?? "-"}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 text-xs opacity-70">
-                        <CalendarCheck2 className="size-3 shrink-0" />
-                        {row.original.pickup_date ?? "-"}
-                    </span>
-                </div>
-            ),
+            cell: ({ row }) => {
+                const pickupDateStr = row.original.pickup_date;
+                const statusName =
+                    row.original.transaction_status?.name?.toLowerCase() || "";
+
+                // Cek apakah status transaksi belum selesai
+                const isCompleted = statusName.includes("selesai");
+
+                // Cek keterlambatan (jika ada pickup_date dan belum selesai)
+                let isLate = false;
+                if (pickupDateStr && !isCompleted) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Reset jam ke 00:00 untuk perbandingan akurat
+
+                    const pickupDate = new Date(pickupDateStr);
+                    pickupDate.setHours(0, 0, 0, 0);
+
+                    isLate = today > pickupDate; // True jika hari ini melebihi tanggal pengambilan
+                }
+
+                return (
+                    <div className="flex flex-col items-start gap-1 text-xs sm:text-sm tabular-nums whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5">
+                            <CalendarArrowDown className="size-3.5 shrink-0 opacity-70" />
+                            {row.original.transaction_date ?? "-"}
+                        </span>
+                        <div className="inline-flex items-center gap-1.5 text-xs opacity-70">
+                            <CalendarCheck2 className="size-3 shrink-0" />
+                            <span>{pickupDateStr ?? "-"}</span>
+
+                            {/* Badge Late */}
+                            {isLate && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 ml-1">
+                                    Late
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                );
+            },
         },
         {
             accessorKey: "customer.name",
@@ -305,114 +333,119 @@ export default function Transaction({
 
                 <div className="flex flex-col gap-4">
                     {/* Ini adalah Section Card */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 w-full">
-                        {/* 1. Total Transaksi */}
-                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="flex flex-col space-y-1 overflow-hidden">
-                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
-                                        Total Transaksi
-                                    </span>
-                                    <span className="text-sm text-neutral-700 font-semibold truncate">
-                                        Keseluruhan
+                    <div className="flex flex-col gap-4">
+                        {/* Ini adalah Section Card */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 w-full">
+                            {/* 1. Total Transaksi */}
+                            <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex flex-col space-y-1 overflow-hidden">
+                                        <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
+                                            Total Transaksi
+                                        </span>
+                                        <span className="text-sm text-neutral-700 font-semibold truncate">
+                                            Keseluruhan
+                                        </span>
+                                    </div>
+                                    <div className="p-2.5 bg-sky-50 text-sky-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                        <FileText className="w-5 h-5" />
+                                    </div>
+                                </div>
+                                <div className="mt-4 pt-3">
+                                    <span className="text-xl font-bold text-neutral-900 tracking-tight block truncate">
+                                        {card.total_transactions}
                                     </span>
                                 </div>
-                                <div className="p-2.5 bg-sky-50 text-sky-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                    <FileText className="w-5 h-5" />
-                                </div>
                             </div>
-                            <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
-                                    {card.total_transactions}
-                                </span>
-                            </div>
-                        </div>
 
-                        {/* 2. Sukses */}
-                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="flex flex-col space-y-1 overflow-hidden">
-                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
-                                        Sukses
-                                    </span>
-                                    <span className="text-sm text-neutral-700 font-semibold truncate">
-                                        Transaksi Selesai
+                            {/* 2. Sukses */}
+                            <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex flex-col space-y-1 overflow-hidden">
+                                        <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
+                                            Sukses
+                                        </span>
+                                        <span className="text-sm text-neutral-700 font-semibold truncate">
+                                            Transaksi Selesai
+                                        </span>
+                                    </div>
+                                    <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                        <CheckCircle2 className="w-5 h-5" />
+                                    </div>
+                                </div>
+                                <div className="mt-4 pt-3">
+                                    <span className="text-xl font-bold text-neutral-900 tracking-tight block truncate">
+                                        {card.success_transactions}
                                     </span>
                                 </div>
-                                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                    <CheckCircle2 className="w-5 h-5" />
-                                </div>
                             </div>
-                            <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
-                                    {card.success_transactions}
-                                </span>
-                            </div>
-                        </div>
 
-                        {/* 3. Pending */}
-                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="flex flex-col space-y-1 overflow-hidden">
-                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
-                                        Pending
-                                    </span>
-                                    <span className="text-sm font-semibold text-neutral-700 truncate">
-                                        Transaksi Pending
+                            {/* 3. Pending */}
+                            <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex flex-col space-y-1 overflow-hidden">
+                                        <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
+                                            Pending
+                                        </span>
+                                        <span className="text-sm font-semibold text-neutral-700 truncate">
+                                            Transaksi Pending
+                                        </span>
+                                    </div>
+                                    <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                        <Clock className="w-5 h-5" />
+                                    </div>
+                                </div>
+                                <div className="mt-4 pt-3">
+                                    <span className="text-xl font-bold text-neutral-900 tracking-tight block truncate">
+                                        {card.pending_transactions}
                                     </span>
                                 </div>
-                                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                    <Clock className="w-5 h-5" />
-                                </div>
                             </div>
-                            <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
-                                    {card.pending_transactions}
-                                </span>
-                            </div>
-                        </div>
 
-                        {/* 4. Total Cash Hari Ini */}
-                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="flex flex-col space-y-1 overflow-hidden">
-                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
-                                        Total Cash Hari Ini
-                                    </span>
-                                    <span className="text-sm font-semibold text-neutral-700 truncate">
-                                        Pembayaran Tunai
+                            {/* 4. Total Cash Hari Ini */}
+                            <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex flex-col space-y-1 overflow-hidden">
+                                        <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
+                                            Total Cash Hari Ini
+                                        </span>
+                                        <span className="text-sm font-semibold text-neutral-700 truncate">
+                                            Pembayaran Tunai
+                                        </span>
+                                    </div>
+                                    <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                        <Banknote className="w-5 h-5" />
+                                    </div>
+                                </div>
+                                <div className="mt-4 pt-3">
+                                    <span className="text-lg font-bold text-neutral-900 tracking-tight block truncate">
+                                        {formatRupiah(card.total_cash_today)}
                                     </span>
                                 </div>
-                                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                    <Banknote className="w-5 h-5" />
-                                </div>
                             </div>
-                            <div className="mt-4 pt-3">
-                                <span className="text-lg font-bold text-neutral-900 tracking-tight font-mono block truncate">
-                                    {formatRupiah(card.total_cash_today)}
-                                </span>
-                            </div>
-                        </div>
 
-                        {/* 5. Total Transfer Hari Ini */}
-                        <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between sm:col-span-2 lg:col-span-1">
-                            <div className="flex items-start justify-between gap-2">
-                                <div className="flex flex-col space-y-1 overflow-hidden">
-                                    <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
-                                        Total Transfer Hari Ini
-                                    </span>
-                                    <span className="text-sm font-semibold text-neutral-700 truncate">
-                                        Pembayaran Digital
+                            {/* 5. Total Transfer Hari Ini */}
+                            <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group flex flex-col justify-between sm:col-span-2 lg:col-span-1">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex flex-col space-y-1 overflow-hidden">
+                                        <span className="font-semibold text-neutral-400 uppercase text-xs tracking-wider truncate">
+                                            Total Transfer Hari Ini
+                                        </span>
+                                        <span className="text-sm font-semibold text-neutral-700 truncate">
+                                            Pembayaran Digital
+                                        </span>
+                                    </div>
+                                    <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
+                                        <CreditCard className="w-5 h-5" />
+                                    </div>
+                                </div>
+                                <div className="mt-4 pt-3">
+                                    <span className="text-lg font-bold text-neutral-900 tracking-tight block truncate">
+                                        {formatRupiah(
+                                            card.total_transfer_today,
+                                        )}
                                     </span>
                                 </div>
-                                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0">
-                                    <CreditCard className="w-5 h-5" />
-                                </div>
-                            </div>
-                            <div className="mt-4 pt-3">
-                                <span className="text-lg font-bold text-neutral-900 tracking-tight font-mono block truncate">
-                                    {formatRupiah(card.total_transfer_today)}
-                                </span>
                             </div>
                         </div>
                     </div>

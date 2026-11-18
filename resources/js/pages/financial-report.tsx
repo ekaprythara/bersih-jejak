@@ -16,6 +16,7 @@ import { index, printPdf } from "@/routes/financial/report";
 import { formatRupiah } from "@/lib/utils";
 import {
     CreditCard,
+    Download,
     Printer,
     ReceiptText,
     Sheet,
@@ -144,7 +145,6 @@ export default function FinancialReport({
             <Head title="Laporan Keuangan" />
 
             <div className="p-4">
-                {" "}
                 <div className="flex flex-col md:flex-row items-start gap-4 md:items-center md:justify-between mb-8">
                     <Heading
                         title="Laporan Keuangan"
@@ -152,7 +152,7 @@ export default function FinancialReport({
                     />
                 </div>
                 <div className="flex flex-col gap-4">
-                    <form className="flex gap-2">
+                    <form className="flex flex-wrap gap-2">
                         <Select
                             value={String(form.data.month)}
                             onValueChange={(value) =>
@@ -223,7 +223,7 @@ export default function FinancialReport({
                             variant="success"
                             onClick={handleExportExcel}
                         >
-                            <Sheet className="w-4 h-4 mr-1" />
+                            <Download className="w-4 h-4 mr-1" />
                             Ekspor
                         </Button>
 
@@ -237,7 +237,9 @@ export default function FinancialReport({
                             Cetak
                         </Button>
                     </form>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* 1. Pendapatan Tunai */}
                         <div className="relative overflow-hidden bg-white border border-neutral-200/80 rounded-xl p-5 shadow-xs hover:shadow-md transition-all duration-300 group">
                             <div className="flex items-start justify-between">
                                 <div className="flex flex-col space-y-1">
@@ -253,7 +255,7 @@ export default function FinancialReport({
                                 </div>
                             </div>
                             <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono">
+                                <span className="text-xl font-bold text-neutral-900 tracking-tight tabular-nums">
                                     {formatRupiah(summary.cashRevenue)}
                                 </span>
                             </div>
@@ -275,7 +277,7 @@ export default function FinancialReport({
                                 </div>
                             </div>
                             <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono">
+                                <span className="text-xl font-bold text-neutral-900 tracking-tight tabular-nums">
                                     {formatRupiah(
                                         summary.digitalRevenue.transferRevenue +
                                             summary.digitalRevenue.qrisRevenue,
@@ -300,7 +302,7 @@ export default function FinancialReport({
                                 </div>
                             </div>
                             <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono">
+                                <span className="text-xl font-bold text-neutral-900 tracking-tight tabular-nums">
                                     {formatRupiah(summary.totalExpense)}
                                 </span>
                             </div>
@@ -322,12 +324,13 @@ export default function FinancialReport({
                                 </div>
                             </div>
                             <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono">
+                                <span className="text-xl font-bold text-neutral-900 tracking-tight tabular-nums">
                                     {formatRupiah(summary.netProfit)}
                                 </span>
                             </div>
                         </div>
                     </div>
+
                     <div className="bg-white border border-neutral-200/80 rounded-xl p-6 shadow-xs space-y-6">
                         <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
                             <h2 className="text-base font-semibold text-neutral-800">
@@ -343,13 +346,13 @@ export default function FinancialReport({
                             <div className="flex flex-col gap-2.5 pl-4 text-sm text-neutral-600">
                                 <div className="flex justify-between items-center">
                                     <span>Pendapatan Cash</span>
-                                    <span className="font-medium text-neutral-800 font-mono">
+                                    <span className="font-medium text-neutral-800 tabular-nums">
                                         {formatRupiah(summary.cashRevenue)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span>Pendapatan Transfer</span>
-                                    <span className="font-medium text-neutral-800 font-mono">
+                                    <span className="font-medium text-neutral-800 tabular-nums">
                                         {formatRupiah(
                                             summary.digitalRevenue
                                                 .transferRevenue,
@@ -358,7 +361,7 @@ export default function FinancialReport({
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span>Pendapatan QRIS</span>
-                                    <span className="font-medium text-neutral-800 font-mono">
+                                    <span className="font-medium text-neutral-800 tabular-nums">
                                         {formatRupiah(
                                             summary.digitalRevenue.qrisRevenue,
                                         )}
@@ -372,13 +375,14 @@ export default function FinancialReport({
                         {/* Subtotal Pendapatan */}
                         <div className="flex justify-between items-center text-sm font-bold text-neutral-900 py-0.5">
                             <span>Total Pendapatan</span>
-                            <span className="font-mono text-base">
+                            <span className="text-base tabular-nums">
                                 {formatRupiah(summary.totalRevenue)}
                             </span>
                         </div>
 
                         <Separator className="bg-neutral-100" />
 
+                        {/* Section 2: Pengeluaran */}
                         <div className="space-y-3">
                             <span className="font-bold text-sm text-neutral-900 block">
                                 Pengeluaran
@@ -389,14 +393,14 @@ export default function FinancialReport({
                                     (expense) => expense.amount > 0,
                                 ).length > 0 ? (
                                     summary.expenses
-                                        .filter((expense) => expense.amount > 0) // Sembunyikan jika amount 0 atau kurang
+                                        .filter((expense) => expense.amount > 0)
                                         .map((expense) => (
                                             <div
                                                 key={expense.id}
                                                 className="flex justify-between items-center"
                                             >
                                                 <span>{expense.name}</span>
-                                                <span className="font-medium text-neutral-800 font-mono">
+                                                <span className="font-medium text-neutral-800 tabular-nums">
                                                     {formatRupiah(
                                                         expense.amount,
                                                     )}
@@ -416,7 +420,7 @@ export default function FinancialReport({
                         {/* Subtotal Pengeluaran */}
                         <div className="flex justify-between items-center text-sm font-bold text-neutral-900 py-0.5">
                             <span>Total Pengeluaran</span>
-                            <span className="font-mono text-base">
+                            <span className="text-base tabular-nums">
                                 {formatRupiah(summary.totalExpense)}
                             </span>
                         </div>
@@ -431,13 +435,13 @@ export default function FinancialReport({
                             <div className="flex flex-col gap-2.5 pl-4 text-sm text-neutral-600">
                                 <div className="flex justify-between items-center">
                                     <span>Total Pendapatan</span>
-                                    <span className="font-medium text-neutral-800 font-mono">
+                                    <span className="font-medium text-neutral-800 tabular-nums">
                                         {formatRupiah(summary.totalRevenue)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span>Total Pengeluaran</span>
-                                    <span className="font-medium text-neutral-800 font-mono">
+                                    <span className="font-medium text-neutral-800 tabular-nums">
                                         {formatRupiah(summary.totalExpense)}
                                     </span>
                                 </div>
@@ -455,7 +459,7 @@ export default function FinancialReport({
                             }`}
                         >
                             <span>Total Laba Bersih</span>
-                            <span className="font-mono text-lg">
+                            <span className="text-lg tabular-nums">
                                 {formatRupiah(summary.netProfit)}
                             </span>
                         </div>

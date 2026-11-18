@@ -131,7 +131,7 @@ export default function Service({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                            <span className="text-xl font-bold text-neutral-900 tracking-tight block truncate">
                                 {card.total_services}
                             </span>
                         </div>
@@ -153,7 +153,7 @@ export default function Service({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-emerald-600 tracking-tight font-mono block truncate">
+                            <span className="text-xl font-bold text-emerald-600 tracking-tight block truncate">
                                 {card.active_services}
                             </span>
                         </div>
@@ -175,7 +175,7 @@ export default function Service({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-rose-600 tracking-tight font-mono block truncate">
+                            <span className="text-xl font-bold text-rose-600 tracking-tight block truncate">
                                 {card.inactive_services}
                             </span>
                         </div>
@@ -197,7 +197,7 @@ export default function Service({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-lg font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                            <span className="text-lg font-bold text-neutral-900 tracking-tight block truncate">
                                 {formatRupiah(card.avg_price)}
                             </span>
                         </div>

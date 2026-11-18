@@ -63,9 +63,7 @@ export default function Dashboard({
             ...form.data,
             ...updatedFields,
         };
-
         form.setData(newData as any);
-
         router.get(dashboard(), newData, {
             preserveState: true,
             preserveScroll: true,
@@ -77,7 +75,6 @@ export default function Dashboard({
         form.setData({
             branch_id: "all",
         });
-
         router.get(
             dashboard(),
             {},
@@ -109,7 +106,7 @@ export default function Dashboard({
                 <div className="flex flex-col md:flex-row items-start gap-4 md:items-center md:justify-between">
                     <Heading
                         title="Dashboard"
-                        description="Ringkasan pendapatan, pengeluaran, dan laba bersih bulan ini dari keseluruhan cabang."
+                        description="Ringkasan pendapatan, pengeluaran, dan laba bersih bulanan dari keseluruhan cabang."
                     />
                     <div className="flex items-center gap-2">
                         {currentUser.is_owner && (
@@ -130,7 +127,6 @@ export default function Dashboard({
                                         <SelectItem value="all">
                                             Semua Cabang
                                         </SelectItem>
-
                                         {branches.map((branch) => (
                                             <SelectItem
                                                 key={branch.id}
@@ -171,7 +167,7 @@ export default function Dashboard({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono">
+                            <span className="text-xl font-bold text-neutral-950 tracking-tight tabular-nums">
                                 {formatRupiah(card.total_revenue)}
                             </span>
                         </div>
@@ -193,7 +189,7 @@ export default function Dashboard({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono">
+                            <span className="text-xl font-bold text-neutral-950 tracking-tight tabular-nums">
                                 {formatRupiah(card.total_expense)}
                             </span>
                         </div>
@@ -222,9 +218,9 @@ export default function Dashboard({
                         </div>
                         <div className="mt-4 pt-3">
                             <span
-                                className={`text-xl font-bold tracking-tight font-mono ${
+                                className={`text-xl font-bold tracking-tight tabular-nums ${
                                     card.net_profit >= 0
-                                        ? "text-neutral-900"
+                                        ? "text-neutral-950"
                                         : "text-rose-600"
                                 }`}
                             >
@@ -392,13 +388,12 @@ export default function Dashboard({
                     <h3 className="text-base font-bold text-neutral-900 mb-6">
                         Ringkasan Keuangan Keseluruhan
                     </h3>
-
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
                         <div className="flex flex-col space-y-1">
                             <span className="text-xs sm:text-sm font-medium text-neutral-400">
                                 Total Cash
                             </span>
-                            <span className="text-base sm:text-lg font-bold text-neutral-900 font-mono">
+                            <span className="text-base sm:text-lg font-bold text-neutral-900 tabular-nums">
                                 {formatRupiah(card.total_cash)}
                             </span>
                         </div>
@@ -406,7 +401,7 @@ export default function Dashboard({
                             <span className="text-xs sm:text-sm font-medium text-neutral-400">
                                 Total Transfer
                             </span>
-                            <span className="text-base sm:text-lg font-bold text-neutral-900 font-mono">
+                            <span className="text-base sm:text-lg font-bold text-neutral-900 tabular-nums">
                                 {formatRupiah(card.total_transfer)}
                             </span>
                         </div>
@@ -414,7 +409,7 @@ export default function Dashboard({
                             <span className="text-xs sm:text-sm font-medium text-neutral-400">
                                 Total Pendapatan
                             </span>
-                            <span className="text-base sm:text-lg font-bold text-neutral-900 font-mono">
+                            <span className="text-base sm:text-lg font-bold text-neutral-900 tabular-nums">
                                 {formatRupiah(card.total_revenue)}
                             </span>
                         </div>
@@ -422,7 +417,7 @@ export default function Dashboard({
                             <span className="text-xs sm:text-sm font-medium text-neutral-400">
                                 Total Pengeluaran
                             </span>
-                            <span className="text-base sm:text-lg font-bold text-rose-600 font-mono">
+                            <span className="text-base sm:text-lg font-bold text-rose-600 tabular-nums">
                                 {formatRupiah(card.total_expense)}
                             </span>
                         </div>
@@ -431,7 +426,11 @@ export default function Dashboard({
                                 Total Laba Bersih
                             </span>
                             <span
-                                className={`text-base sm:text-lg font-bold font-mono ${card.net_profit >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                                className={`text-base sm:text-lg font-bold tabular-nums ${
+                                    card.net_profit >= 0
+                                        ? "text-emerald-600"
+                                        : "text-rose-600"
+                                }`}
                             >
                                 {formatRupiah(card.net_profit)}
                             </span>

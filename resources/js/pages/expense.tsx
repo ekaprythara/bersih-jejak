@@ -200,7 +200,7 @@ export default function Expense({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                            <span className="text-xl font-bold text-neutral-900 tracking-tight block truncate">
                                 {formatRupiah(dashboardCard.totalExpense)}
                             </span>
                         </div>
@@ -222,7 +222,7 @@ export default function Expense({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                            <span className="text-xl font-bold text-neutral-900 tracking-tight block truncate">
                                 {formatRupiah(dashboardCard.monthlyExpense)}
                             </span>
                         </div>
@@ -247,7 +247,7 @@ export default function Expense({
                             </div>
                         </div>
                         <div className="mt-4 pt-3">
-                            <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                            <span className="text-xl font-bold text-neutral-900 tracking-tight block truncate">
                                 {formatRupiah(dashboardCard.topCategory.total)}
                             </span>
                         </div>
@@ -276,7 +276,7 @@ export default function Expense({
                                 </div>
                             </div>
                             <div className="mt-4 pt-3">
-                                <span className="text-xl font-bold text-neutral-900 tracking-tight font-mono block truncate">
+                                <span className="text-xl font-bold text-neutral-900 tracking-tight block truncate">
                                     {formatRupiah(
                                         dashboardCard.topBranch.total,
                                     )}
