@@ -11,9 +11,7 @@ import {
     rowPaginationFeature,
     createPaginatedRowModel,
 } from "@tanstack/react-table";
-
 import type { ColumnDef, RowData } from "@tanstack/react-table";
-
 import {
     Table,
     TableBody,
@@ -40,7 +38,9 @@ export const features = tableFeatures({
     columnFilteringFeature,
     globalFilteringFeature,
     filteredRowModel: createFilteredRowModel(),
-    filterFns: { includesString: filterFn_includesString },
+    filterFns: {
+        includesString: filterFn_includesString,
+    },
     sortedRowModel: createSortedRowModel(),
     rowPaginationFeature,
     paginatedRowModel: createPaginatedRowModel(),
@@ -49,6 +49,8 @@ export const features = tableFeatures({
 type DataTableProps<TData extends RowData> = {
     columns: ColumnDef<typeof features, any>[];
     data: TData[];
+    globalFilter?: any;
+    setGlobalFilter?: any;
 };
 
 const DataTable = <TData extends RowData>({
@@ -74,13 +76,13 @@ const DataTable = <TData extends RowData>({
     return (
         <div className="flex flex-col gap-4">
             {/* Tabel */}
-            <div className="rounded-xl border border-sidebar-border/70 bg-card shadow-sm overflow-hidden">
+            <div className="rounded-xl border border-neutral-200 bg-card shadow-sm overflow-hidden">
                 <Table>
-                    <TableHeader className="bg-muted/50">
+                    <TableHeader className="bg-muted">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow
                                 key={headerGroup.id}
-                                className="border-b border-sidebar-border/70 hover:bg-transparent"
+                                className="border-b border-neutral-200 hover:bg-transparent"
                             >
                                 {headerGroup.headers.map((header) => (
                                     <TableHead
@@ -118,8 +120,7 @@ const DataTable = <TData extends RowData>({
                             </TableRow>
                         ))}
                     </TableHeader>
-
-                    <TableBody className="divide-y divide-sidebar-border/50">
+                    <TableBody className="divide-y divide-neutral-200">
                         {table.getRowModel().rows.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow
@@ -156,9 +157,10 @@ const DataTable = <TData extends RowData>({
             {/* Pagination */}
             <div className="flex items-center justify-between">
                 <div className="text-muted-foreground font-medium text-sm">
-                    {`Halaman ${table.state.pagination.pageIndex + 1} dari ${table.getPageCount().toLocaleString()}`}
+                    {`Halaman ${
+                        table.state.pagination.pageIndex + 1
+                    } dari ${table.getPageCount().toLocaleString()}`}
                 </div>
-
                 <div className="flex items-center gap-1.5">
                     <Button
                         variant="outline"

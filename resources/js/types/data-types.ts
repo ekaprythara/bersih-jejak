@@ -62,8 +62,6 @@ export type ExpenseType = {
     user_id: number;
     user: UserType;
     image?: File | string;
-    image_url?: string;
-    image_public_id: string;
     branch_id: number;
     branch: BranchType;
     created_at: string;

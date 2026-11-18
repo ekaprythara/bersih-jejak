@@ -106,7 +106,7 @@ export const CreateExpenseDialog = ({
                 </Button>
             </DialogTrigger>
 
-            <DialogContent>
+            <DialogContent className="max-h-[90dvh] overflow-y-auto overscroll-contain scrollbar-none">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <DialogHeader>
                         <DialogTitle>Tambah Pengeluaran</DialogTitle>
@@ -117,7 +117,7 @@ export const CreateExpenseDialog = ({
 
                     <FieldGroup>
                         {/* Field Tanggal Pengeluaran */}
-                        <Field>
+                        <Field data-invalid={!!form.errors.expense_date}>
                             <Label htmlFor="expense_date">
                                 Tanggal Pengeluaran
                             </Label>
@@ -127,6 +127,9 @@ export const CreateExpenseDialog = ({
                                         variant="outline"
                                         data-empty={!date}
                                         className="justify-start text-left font-normal data-[empty=true]:text-muted-foreground w-full"
+                                        aria-invalid={
+                                            !!form.errors.expense_date
+                                        }
                                     >
                                         <CalendarIcon className="mr-2 h-4 w-4" />
                                         {date ? (
@@ -148,7 +151,7 @@ export const CreateExpenseDialog = ({
                         </Field>
 
                         {/* Field Deskripsi */}
-                        <Field>
+                        <Field data-invalid={!!form.errors.description}>
                             <Label htmlFor="description">Deskripsi</Label>
                             <Textarea
                                 id="description"
@@ -157,12 +160,13 @@ export const CreateExpenseDialog = ({
                                 onChange={(e) =>
                                     form.setData("description", e.target.value)
                                 }
+                                aria-invalid={!!form.errors.description}
                             />
                             <InputError message={form.errors.description} />
                         </Field>
 
                         {/* Field Jumlah Nominal */}
-                        <Field>
+                        <Field data-invalid={!!form.errors.amount}>
                             <Label htmlFor="amount">Jumlah Nominal</Label>
                             <Input
                                 id="amount"
@@ -175,12 +179,12 @@ export const CreateExpenseDialog = ({
                                 onChange={(e) =>
                                     form.setData("amount", e.target.value)
                                 }
+                                aria-invalid={!!form.errors.amount}
                             />
                             <InputError message={form.errors.amount} />
                         </Field>
 
-                        {/* Field Kategori */}
-                        <Field>
+                        <Field data-invalid={!!form.errors.expense_category_id}>
                             <Label htmlFor="expense_category_id">
                                 Kategori
                             </Label>
@@ -193,6 +197,9 @@ export const CreateExpenseDialog = ({
                                 <SelectTrigger
                                     id="expense_category_id"
                                     className="w-full"
+                                    aria-invalid={
+                                        !!form.errors.expense_category_id
+                                    }
                                 >
                                     <SelectValue placeholder="Pilih Kategori..." />
                                 </SelectTrigger>
@@ -216,7 +223,7 @@ export const CreateExpenseDialog = ({
 
                         {/* Field Cabang */}
                         {isOwner && (
-                            <Field>
+                            <Field data-invalid={!!form.errors.branch_id}>
                                 <Label htmlFor="branch_id">
                                     Pilih Cabang...
                                 </Label>
@@ -229,6 +236,7 @@ export const CreateExpenseDialog = ({
                                     <SelectTrigger
                                         id="branch_id"
                                         className="w-full"
+                                        aria-invalid={!!form.errors.branch_id}
                                     >
                                         <SelectValue placeholder="Pilih Cabang..." />
                                     </SelectTrigger>
@@ -250,12 +258,16 @@ export const CreateExpenseDialog = ({
                         )}
 
                         <Field>
-                            <Label htmlFor="image">Image</Label>
+                            <Label htmlFor="image">Gambar</Label>
 
                             <div className="mt-2 w-full">
                                 <label
                                     htmlFor="image"
-                                    className="group relative flex min-h-40 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-2 text-center transition-all hover:border-gray-400 hover:bg-gray-50"
+                                    className={`group relative flex min-h-40 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-2 text-center transition-all ${
+                                        form.errors.image
+                                            ? "border-red-500 bg-red-50/10 hover:border-red-600" // <-- Style saat terjadi error
+                                            : "border-gray-200 bg-gray-50/50 hover:border-gray-400 hover:bg-gray-50" // <-- Style normal
+                                    }`}
                                 >
                                     {!previewImage ? (
                                         <div className="flex flex-col items-center gap-4">
@@ -281,13 +293,18 @@ export const CreateExpenseDialog = ({
                                                     drop it here.
                                                 </p>
                                                 <p className="text-xs text-gray-400">
-                                                    PNG, JPG, dan WEBP. Max 5
-                                                    MB.
+                                                    PNG, JPG, dan WEBP. Max 2MB.
                                                 </p>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="relative w-full overflow-hidden rounded-xl border border-gray-100 bg-white p-2">
+                                        <div
+                                            className={`relative w-full overflow-hidden rounded-xl bg-white p-2 border ${
+                                                form.errors.image
+                                                    ? "border-red-500"
+                                                    : "border-gray-100"
+                                            }`}
+                                        >
                                             <img
                                                 src={previewImage}
                                                 alt="Preview Bukti"
@@ -310,7 +327,7 @@ export const CreateExpenseDialog = ({
                                     />
                                 </label>
                             </div>
-                            <InputError>{form.errors.image}</InputError>
+                            <InputError message={form.errors.image} />
                         </Field>
                     </FieldGroup>
 

@@ -14,6 +14,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ExpenseController extends Controller
@@ -118,67 +119,54 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function store(StoreExpenseRequest $request, CloudinaryService $cloudinaryService)
+    public function store(StoreExpenseRequest $request)
     {
-        // dd($request->all());
-        // dd(Auth::user()->is_owner);
+        // $request->validated() sudah otomatis memvalidasi semua field (termasuk branch_id dari prepareForValidation)
+        $validatedData = $request->validated();
+
         $imageUrl = null;
-        $imagePublicId = null;
 
-        // 3. Cek apakah ada file gambar yang di-upload dari form React
+        // 3. Cek apakah ada file gambar yang di-upload
         if ($request->hasFile('image')) {
-            $uploadedFile = $cloudinaryService->upload($request->file('image'), 'expenses');
-
-            // Ambil URL aman dan Public ID dari respons Cloudinary
-            $imageUrl = $uploadedFile['secure_url'] ?? null;
-            $imagePublicId = $uploadedFile['public_id'] ?? null;
+            // Menyimpan file ke folder 'storage/app/public/expenses'
+            // Method store() mengembalikan path relatif, contoh: "expenses/xxxxxx.jpg"
+            $imageUrl = $request->file('image')->store('expenses', 'public');
         }
 
         // 4. Simpan ke database beserta data gambar dan user_id
-        Expense::create(array_merge(
-            $request->validated(),
-            [
-                'user_id' => Auth::id(),
-                'image_url' => $imageUrl,             // Sesuaikan dengan nama kolom di database Anda
-                'image_public_id' => $imagePublicId, // Penting untuk fitur hapus nanti
-            ]
-        ));
+        Expense::create(array_merge($validatedData, [
+            'user_id' => Auth::id(),
+            'image' => $imageUrl,    // Dikosongkan karena tidak pakai Cloudinary lagi
+        ]));
 
         return redirect()->route('expenses.index');
     }
 
-    public function update(UpdateExpenseRequest $request, Expense $expense, CloudinaryService $cloudinaryService)
+    public function update(UpdateExpenseRequest $request, Expense $expense)
     {
         $this->authorize('update', $expense);
 
         $validatedData = $request->validated();
 
-        $imageUrl = $expense->image_url;
-        $imagePublicId = $expense->image_public_id;
+        $imagePath = $expense->image; // Pertahankan path lama jika tidak ada file baru
 
         // Jika user mengupload gambar baru
         if ($request->hasFile('image')) {
-            // Hapus gambar lama di Cloudinary jika ada
-            if ($expense->image_public_id) {
-                $cloudinaryService->destroy($expense->image_public_id);
+            // 1. Hapus gambar lama dari storage lokal jika ada
+            if ($expense->image && Storage::disk('public')->exists($expense->image)) {
+                Storage::disk('public')->delete($expense->image);
             }
 
-            // Upload gambar baru
-            $uploadedFile = $cloudinaryService->upload($request->file('image'), 'expenses');
-            $imageUrl = $uploadedFile['secure_url'] ?? null;
-            $imagePublicId = $uploadedFile['public_id'] ?? null;
+            // 2. Upload gambar baru ke storage lokal
+            $imagePath = $request->file('image')->store('expenses', 'public');
         }
 
-        $expense->update(array_merge(
-            $validatedData,
-            [
-                'image_url'       => $imageUrl,
-                'image_public_id' => $imagePublicId,
-            ]
-        ));
+        // Update data ke database
+        $expense->update(array_merge($validatedData, [
+            'image'       => $imagePath,
+        ]));
 
-        return redirect()->route('expenses.index')
-            ->with('success', 'Pengeluaran berhasil diperbarui.');
+        return redirect()->route('expenses.index')->with('success', 'Pengeluaran berhasil diperbarui.');
     }
 
     public function printPdf(Request $request)

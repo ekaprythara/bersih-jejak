@@ -81,7 +81,7 @@ export const CreateTransactionDialog = ({
         transaction_status_id: "",
         payment_status_id: "1",
         description: "",
-        before_image: null as File | null,
+        image_before: null as File | null, // <-- Diubah dari before_image menjadi image_before
     });
 
     const isPaid =
@@ -116,7 +116,7 @@ export const CreateTransactionDialog = ({
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            form.setData("before_image", file);
+            form.setData("image_before", file); // <-- Diubah ke image_before
             setPreviewImage(URL.createObjectURL(file));
         }
     };
@@ -157,6 +157,7 @@ export const CreateTransactionDialog = ({
     const handleSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
         e.preventDefault();
         form.post(store.url(), {
+            forceFormData: true, // Wajib agar file terkirim dengan benar via Inertia
             onSuccess: () => {
                 toast.success("Transaksi berhasil ditambahkan.");
                 form.reset();
@@ -179,15 +180,14 @@ export const CreateTransactionDialog = ({
                     <span className="font-semibold">Tambah Transaksi</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl overflow-y-auto scrollbar-none scroll-smooth max-h-[92dvh]">
+            <DialogContent className="sm:max-w-2xl overflow-y-auto scrollbar-none overscroll-contain max-h-[92dvh]">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                    {/* Header (Tidak diubah) */}
                     <div className="flex flex-col gap-1 border-b pb-4">
                         <h2 className="text-lg font-semibold text-foreground">
                             Tambah Transaksi Baru
                         </h2>
                         <p className="text-sm text-muted-foreground">
-                            Menambahkan transaksi baru kedalam sistem, dan
+                            Menambahkan transaksi baru ke dalam sistem, dan
                             tentukan cabang operasionalnya.
                         </p>
                     </div>
@@ -195,7 +195,10 @@ export const CreateTransactionDialog = ({
                     <FieldGroup className="flex flex-col gap-5">
                         {/* 1. Pelanggan & Cabang */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Field className="sm:col-span-2">
+                            <Field
+                                data-invalid={!!form.errors.customer_id}
+                                className="sm:col-span-2"
+                            >
                                 <Label htmlFor="customer_id">Pelanggan</Label>
                                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                     <div className="flex-1">
@@ -242,8 +245,9 @@ export const CreateTransactionDialog = ({
                                 <InputError message={form.errors.customer_id} />
                             </Field>
                         </div>
+
                         {isOwner && (
-                            <Field>
+                            <Field data-invalid={!!form.errors.branch_id}>
                                 <Label htmlFor="branch_id">Pilih Cabang</Label>
                                 <Select
                                     value={form.data.branch_id}
@@ -254,6 +258,7 @@ export const CreateTransactionDialog = ({
                                     <SelectTrigger
                                         id="branch_id"
                                         className="w-full"
+                                        aria-invalid={!!form.errors.branch_id}
                                     >
                                         <SelectValue placeholder="Pilih Cabang..." />
                                     </SelectTrigger>
@@ -276,7 +281,7 @@ export const CreateTransactionDialog = ({
 
                         {/* 2. Layanan & Jumlah Sepatu */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Field>
+                            <Field data-invalid={!!form.errors.service_id}>
                                 <Label htmlFor="service_id">
                                     Pilih Layanan
                                 </Label>
@@ -289,6 +294,7 @@ export const CreateTransactionDialog = ({
                                     <SelectTrigger
                                         id="service_id"
                                         className="w-full"
+                                        aria-invalid={!!form.errors.service_id}
                                     >
                                         <SelectValue placeholder="Pilih Layanan" />
                                     </SelectTrigger>
@@ -310,7 +316,7 @@ export const CreateTransactionDialog = ({
                                 <InputError message={form.errors.service_id} />
                             </Field>
 
-                            <Field>
+                            <Field data-invalid={!!form.errors.shoe_count}>
                                 <Label
                                     htmlFor="shoe_count"
                                     className="text-xs font-medium text-muted-foreground"
@@ -330,6 +336,7 @@ export const CreateTransactionDialog = ({
                                             e.target.value,
                                         )
                                     }
+                                    aria-invalid={!!form.errors.shoe_count}
                                 />
                                 <InputError message={form.errors.shoe_count} />
                             </Field>
@@ -338,7 +345,7 @@ export const CreateTransactionDialog = ({
                         {/* 3. Kalkulasi Harga & Diskon */}
                         <div className="rounded-xl border bg-muted/30 p-4 space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <Field>
+                                <Field data-invalid={!!form.errors.discount}>
                                     <Label
                                         htmlFor="discount"
                                         className="text-xs font-medium text-muted-foreground"
@@ -370,6 +377,7 @@ export const CreateTransactionDialog = ({
                                                 );
                                             }
                                         }}
+                                        aria-invalid={!!form.errors.discount}
                                     />
                                     <InputError
                                         message={form.errors.discount}
@@ -396,7 +404,9 @@ export const CreateTransactionDialog = ({
 
                         {/* 4. Status & Metode Pembayaran */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Field>
+                            <Field
+                                data-invalid={!!form.errors.payment_status_id}
+                            >
                                 <Label htmlFor="payment_status">
                                     Status Pembayaran
                                 </Label>
@@ -409,6 +419,9 @@ export const CreateTransactionDialog = ({
                                     <SelectTrigger
                                         id="payment_status"
                                         className="w-full"
+                                        aria-invalid={
+                                            !!form.errors.payment_status_id
+                                        }
                                     >
                                         <SelectValue placeholder="Status Pembayaran" />
                                     </SelectTrigger>
@@ -432,7 +445,9 @@ export const CreateTransactionDialog = ({
                                 />
                             </Field>
 
-                            <Field>
+                            <Field
+                                data-invalid={!!form.errors.payment_method_id}
+                            >
                                 <Label htmlFor="payment_method_id">
                                     Metode Pembayaran
                                 </Label>
@@ -446,6 +461,9 @@ export const CreateTransactionDialog = ({
                                     <SelectTrigger
                                         id="payment_method_id"
                                         className="w-full"
+                                        aria-invalid={
+                                            !!form.errors.payment_method_id
+                                        }
                                     >
                                         <SelectValue
                                             placeholder={
@@ -478,7 +496,9 @@ export const CreateTransactionDialog = ({
 
                         {/* 5. Tanggal Transaksi & Tanggal Ambil */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Field>
+                            <Field
+                                data-invalid={!!form.errors.transaction_date}
+                            >
                                 <Label htmlFor="transaction_date">
                                     Tanggal Transaksi
                                 </Label>
@@ -486,7 +506,7 @@ export const CreateTransactionDialog = ({
                                     <PopoverTrigger asChild disabled>
                                         <Button
                                             variant="outline"
-                                            className="justify-start text-left font-normal w-full bg-muted/40"
+                                            className="justify-start text-left font-normal w-full bg-muted/45"
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                                             {today ? (
@@ -509,7 +529,7 @@ export const CreateTransactionDialog = ({
                                 />
                             </Field>
 
-                            <Field>
+                            <Field data-invalid={!!form.errors.pickup_date}>
                                 <Label htmlFor="pickup_date">
                                     Tanggal Diambil
                                 </Label>
@@ -519,6 +539,9 @@ export const CreateTransactionDialog = ({
                                             variant="outline"
                                             data-empty={!pickupDate}
                                             className="justify-start text-left font-normal data-[empty=true]:text-muted-foreground w-full"
+                                            aria-invalid={
+                                                !!form.errors.pickup_date
+                                            }
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                                             {pickupDate ? (
@@ -543,7 +566,10 @@ export const CreateTransactionDialog = ({
 
                         {/* 6. Deskripsi & Foto Sepatu */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-                            <Field className="h-full flex flex-col">
+                            <Field
+                                data-invalid={!!form.errors.description}
+                                className="h-full flex flex-col"
+                            >
                                 <Label htmlFor="description">Deskripsi</Label>
                                 <Textarea
                                     id="description"
@@ -556,66 +582,78 @@ export const CreateTransactionDialog = ({
                                             e.target.value,
                                         )
                                     }
+                                    aria-invalid={!!form.errors.description}
                                 />
                                 <InputError message={form.errors.description} />
                             </Field>
 
                             <Field>
-                                <Label htmlFor="before_image">
+                                <Label htmlFor="image_before">
                                     Foto Sepatu (Sebelum)
                                 </Label>
-                                <label
-                                    htmlFor="before_image"
-                                    className="group relative flex min-h-36 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/20 p-3 text-center transition-all hover:border-primary/50 hover:bg-muted/40"
-                                >
-                                    {!previewImage ? (
-                                        <div className="flex flex-col items-center gap-2">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background shadow-xs border">
-                                                <ImagePlus className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                <div className="mt-2 w-full">
+                                    <label
+                                        htmlFor="image_before"
+                                        className={`group relative flex min-h-36 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-3 text-center transition-all ${
+                                            form.errors.image_before
+                                                ? "border-red-500 bg-red-50/10 hover:border-red-600"
+                                                : "border-muted-foreground/25 bg-muted/20 hover:border-primary/50 hover:bg-muted/40"
+                                        }`}
+                                    >
+                                        {!previewImage ? (
+                                            <div className="flex flex-col items-center gap-2">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background shadow-xs border">
+                                                    <ImagePlus className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                                </div>
+                                                <div className="space-y-0.5">
+                                                    <p className="text-xs font-medium text-foreground">
+                                                        Pilih gambar atau
+                                                        drag-and-drop disini.
+                                                    </p>
+                                                    <p className="text-[11px] text-muted-foreground">
+                                                        PNG, JPG, dan WEBP
+                                                        <br />
+                                                        Maks. 2MB
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div className="space-y-0.5">
-                                                <p className="text-xs font-medium text-foreground">
-                                                    Pilih gambar atau
-                                                    drag-and-drop disini.
-                                                </p>
-                                                <p className="text-[11px] text-muted-foreground">
-                                                    PNG, JPG, dan WEBP
-                                                    <br />
-                                                    Maks. 2MB
-                                                </p>
+                                        ) : (
+                                            <div
+                                                className={`relative w-full overflow-hidden rounded-lg bg-white p-2 border ${
+                                                    form.errors.image_before
+                                                        ? "border-red-500"
+                                                        : "border-gray-100"
+                                                }`}
+                                            >
+                                                <img
+                                                    src={previewImage}
+                                                    alt="Preview Bukti"
+                                                    className="h-32 w-full object-contain rounded-md"
+                                                />
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 rounded-md">
+                                                    <span className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-gray-800 shadow">
+                                                        Klik untuk mengganti
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ) : (
-                                        <div className="relative w-full overflow-hidden rounded-lg">
-                                            <img
-                                                src={previewImage}
-                                                alt="Preview Bukti"
-                                                className="h-32 w-full object-contain rounded-md"
-                                            />
-                                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100 rounded-md">
-                                                <span className="rounded-md bg-white px-2.5 py-1 text-xs font-medium text-gray-800 shadow">
-                                                    Klik untuk mengganti
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
-                                    <input
-                                        id="before_image"
-                                        type="file"
-                                        name="before_image"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={handleImageChange}
-                                    />
-                                </label>
+                                        )}
+                                        <input
+                                            id="image_before"
+                                            type="file"
+                                            name="image_before"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleImageChange}
+                                        />
+                                    </label>
+                                </div>
                                 <InputError
-                                    message={form.errors.before_image}
+                                    message={form.errors.image_before}
                                 />
                             </Field>
                         </div>
                     </FieldGroup>
 
-                    {/* Footer (Tidak diubah sesuai permintaan) */}
                     <div className="flex items-center justify-end gap-2 pt-4 border-t">
                         <DialogClose asChild>
                             <Button variant="outline" type="button">

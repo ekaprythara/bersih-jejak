@@ -47,7 +47,7 @@ class UpdateExpenseRequest extends FormRequest
             'expense_category_id' => ['required', 'exists:expense_categories,id'],
             'amount'              => ['required', 'numeric', 'min:0'],
             'branch_id'           => ['required', 'exists:branches,id'],
-            'image'               => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'], // Max 5MB
+            'image'               => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'], // Max 5MB
         ];
     }
 
@@ -67,7 +67,7 @@ class UpdateExpenseRequest extends FormRequest
             'branch_id.exists'             => 'Cabang yang dipilih tidak valid.',
             'image.image'                  => 'Berkas yang diunggah harus berupa gambar.',
             'image.mimes'                  => 'Format gambar harus berjenis: jpeg, png, jpg, atau webp.',
-            'image.max'                    => 'Ukuran gambar maksimal adalah 5 MB.',
+            'image.max'                    => 'Ukuran gambar maksimal adalah 2 MB.',
         ];
     }
 }

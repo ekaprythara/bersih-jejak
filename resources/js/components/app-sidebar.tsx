@@ -137,7 +137,7 @@ export function AppSidebar() {
                     onClick={handleLogout}
                     data-test="logout-button"
                 >
-                    <div className="flex items-center gap-3 overflow-hidden transition-all duration-300 text-red-500/50">
+                    <div className="flex items-center gap-3 overflow-hidden transition-all duration-300 text-[#e05a47]">
                         <LogOut size={18} className="shrink-0" />
 
                         <span

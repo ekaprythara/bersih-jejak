@@ -44,7 +44,7 @@ class StoreExpenseRequest extends FormRequest
                 'required',
                 Rule::exists('branches', 'id')->where('status', true)
             ],
-            'image'               => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
         ];
     }
 
@@ -62,7 +62,7 @@ class StoreExpenseRequest extends FormRequest
             'branch_id.exists'             => 'Cabang tidak ditemukan atau sudah tidak aktif.',
             'image.image'                  => 'Berkas yang diunggah harus berupa gambar.',
             'image.mimes'                  => 'Format gambar harus berjenis: jpeg, png, jpg, atau webp.',
-            'image.max'                    => 'Ukuran gambar maksimal adalah 5 MB.',
+            'image.max' => 'Ukuran gambar maksimal adalah 2MB.',
         ];
     }
 }

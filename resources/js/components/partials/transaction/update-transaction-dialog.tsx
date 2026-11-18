@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
     Dialog,
     DialogClose,
@@ -57,6 +57,8 @@ export const UpdateTransactionDialog = ({
         discount?: number;
         shoe_count?: number;
         service_id?: number;
+        image_before?: string;
+        image_after?: string;
     };
     branches: BranchType[];
     paymentMethods: PaymentMethodType[];
@@ -69,10 +71,25 @@ export const UpdateTransactionDialog = ({
     const [pickupDate, setPickupDate] = useState<Date | undefined>(
         transaction.pickup_date ? parseISO(transaction.pickup_date) : undefined,
     );
+
     const [previewImage, setPreviewImage] = useState({
-        before: transaction.before_image_url || "",
-        after: transaction.after_image_url || "",
-    });
+        before: transaction.image_before
+            ? `/storage/${transaction.image_before}`
+            : "",
+        after: transaction.image_after
+            ? `/storage/${transaction.image_after}`
+            : "",
+    }); // Tambahkan useEffect ini di bawah deklarasi state:
+    useEffect(() => {
+        setPreviewImage({
+            before: transaction.image_before
+                ? `/storage/${transaction.image_before}`
+                : "",
+            after: transaction.image_after
+                ? `/storage/${transaction.image_after}`
+                : "",
+        });
+    }, [transaction]);
 
     const form = useForm({
         pickup_date: transaction.pickup_date || "",
@@ -84,8 +101,8 @@ export const UpdateTransactionDialog = ({
         service_id: transaction.service_id ?? "",
         description: transaction.description || "",
         branch_id: transaction.branch_id || "",
-        beforeImage: null as File | null,
-        afterImage: null as File | null,
+        image_before: null as File | null,
+        image_after: null as File | null,
     });
 
     const selectedPaymentStatus = paymentStatuses.find(
@@ -122,7 +139,7 @@ export const UpdateTransactionDialog = ({
     const handleImageBeforeChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            form.setData("beforeImage", file);
+            form.setData("image_before", file);
             setPreviewImage((prev) => ({
                 ...prev,
                 before: URL.createObjectURL(file),
@@ -133,7 +150,7 @@ export const UpdateTransactionDialog = ({
     const handleImageAfterChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            form.setData("afterImage", file);
+            form.setData("image_after", file);
             setPreviewImage((prev) => ({
                 ...prev,
                 after: URL.createObjectURL(file),
@@ -148,9 +165,8 @@ export const UpdateTransactionDialog = ({
                     <SquarePen />
                 </Button>
             </DialogTrigger>
-            <DialogContent className="overflow-y-auto scrollbar-none scroll-smooth max-h-[92dvh] sm:max-w-2xl">
+            <DialogContent className="overflow-y-auto scrollbar-none overscroll-contain max-h-[92dvh] sm:max-w-2xl">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                    {/* Header (Dikembalikan sesuai aslinya) */}
                     <DialogHeader>
                         <DialogTitle>Edit Transaksi</DialogTitle>
                         <DialogDescription>
@@ -174,11 +190,7 @@ export const UpdateTransactionDialog = ({
                                     Total Tagihan
                                 </p>
                                 <p
-                                    className={`text-lg font-bold font-mono ${
-                                        isPaidOff
-                                            ? "text-emerald-600"
-                                            : "text-rose-600"
-                                    }`}
+                                    className={`text-lg font-bold font-mono ${isPaidOff ? "text-emerald-600" : "text-rose-600"}`}
                                 >
                                     {new Intl.NumberFormat("id-ID", {
                                         style: "currency",
@@ -189,8 +201,8 @@ export const UpdateTransactionDialog = ({
                             </div>
                         </div>
 
-                        {/* 2. Cabang (Full Width) */}
-                        <Field>
+                        {/* 2. Cabang */}
+                        <Field data-invalid={!!form.errors.branch_id}>
                             <Label htmlFor="branch_id">Cabang</Label>
                             <Select
                                 value={String(form.data.branch_id)}
@@ -202,6 +214,7 @@ export const UpdateTransactionDialog = ({
                                 <SelectTrigger
                                     id="branch_id"
                                     className="w-full bg-muted/40"
+                                    aria-invalid={!!form.errors.branch_id}
                                 >
                                     <SelectValue placeholder="Pilih Cabang..." />
                                 </SelectTrigger>
@@ -224,7 +237,7 @@ export const UpdateTransactionDialog = ({
                         {/* 3. Layanan & Jumlah Sepatu */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {services && (
-                                <Field>
+                                <Field data-invalid={!!form.errors.service_id}>
                                     <Label
                                         htmlFor="service_id"
                                         className="text-xs font-medium text-muted-foreground"
@@ -244,6 +257,9 @@ export const UpdateTransactionDialog = ({
                                         <SelectTrigger
                                             id="service_id"
                                             className="w-full bg-background"
+                                            aria-invalid={
+                                                !!form.errors.service_id
+                                            }
                                         >
                                             <SelectValue placeholder="Pilih Layanan" />
                                         </SelectTrigger>
@@ -265,7 +281,11 @@ export const UpdateTransactionDialog = ({
                                     />
                                 </Field>
                             )}
-                            <Field className={!services ? "sm:col-span-2" : ""}>
+
+                            <Field
+                                data-invalid={!!form.errors.shoe_count}
+                                className={!services ? "sm:col-span-2" : ""}
+                            >
                                 <Label
                                     htmlFor="shoe_count"
                                     className="text-xs font-medium text-muted-foreground"
@@ -285,13 +305,14 @@ export const UpdateTransactionDialog = ({
                                         )
                                     }
                                     disabled={isPaidOff}
+                                    aria-invalid={!!form.errors.shoe_count}
                                 />
                                 <InputError message={form.errors.shoe_count} />
                             </Field>
                         </div>
 
                         {/* 4. Diskon */}
-                        <Field>
+                        <Field data-invalid={!!form.errors.discount}>
                             <Label
                                 htmlFor="discount"
                                 className="text-xs font-medium text-muted-foreground"
@@ -311,13 +332,18 @@ export const UpdateTransactionDialog = ({
                                     )
                                 }
                                 disabled={isPaidOff}
+                                aria-invalid={!!form.errors.discount}
                             />
                             <InputError message={form.errors.discount} />
                         </Field>
 
                         {/* 5. Status Pengerjaan & Tanggal Pengambilan */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Field>
+                            <Field
+                                data-invalid={
+                                    !!form.errors.transaction_status_id
+                                }
+                            >
                                 <Label htmlFor="transaction_status_id">
                                     Status Pengerjaan
                                 </Label>
@@ -335,6 +361,9 @@ export const UpdateTransactionDialog = ({
                                     <SelectTrigger
                                         id="transaction_status_id"
                                         className="w-full"
+                                        aria-invalid={
+                                            !!form.errors.transaction_status_id
+                                        }
                                     >
                                         <SelectValue placeholder="Status Pengerjaan" />
                                     </SelectTrigger>
@@ -360,7 +389,7 @@ export const UpdateTransactionDialog = ({
                                 />
                             </Field>
 
-                            <Field>
+                            <Field data-invalid={!!form.errors.pickup_date}>
                                 <Label htmlFor="pickup_date">
                                     Tanggal Diambil
                                 </Label>
@@ -370,6 +399,9 @@ export const UpdateTransactionDialog = ({
                                             variant="outline"
                                             data-empty={!pickupDate}
                                             className="justify-start text-left font-normal data-[empty=true]:text-muted-foreground w-full"
+                                            aria-invalid={
+                                                !!form.errors.pickup_date
+                                            }
                                         >
                                             <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                                             {pickupDate ? (
@@ -393,7 +425,9 @@ export const UpdateTransactionDialog = ({
 
                         {/* 6. Status & Metode Pembayaran */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Field>
+                            <Field
+                                data-invalid={!!form.errors.payment_status_id}
+                            >
                                 <Label htmlFor="payment_status">
                                     Status Pembayaran
                                 </Label>
@@ -410,6 +444,9 @@ export const UpdateTransactionDialog = ({
                                     <SelectTrigger
                                         id="payment_status"
                                         className="w-full"
+                                        aria-invalid={
+                                            !!form.errors.payment_status_id
+                                        }
                                     >
                                         <SelectValue placeholder="Status Pembayaran" />
                                     </SelectTrigger>
@@ -433,7 +470,9 @@ export const UpdateTransactionDialog = ({
                                 />
                             </Field>
 
-                            <Field>
+                            <Field
+                                data-invalid={!!form.errors.payment_method_id}
+                            >
                                 <Label htmlFor="payment_method_id">
                                     Metode Pembayaran
                                 </Label>
@@ -449,6 +488,9 @@ export const UpdateTransactionDialog = ({
                                     <SelectTrigger
                                         id="payment_method_id"
                                         className="w-full"
+                                        aria-invalid={
+                                            !!form.errors.payment_method_id
+                                        }
                                     >
                                         <SelectValue placeholder="Metode Pembayaran" />
                                     </SelectTrigger>
@@ -474,7 +516,7 @@ export const UpdateTransactionDialog = ({
                         </div>
 
                         {/* 7. Deskripsi */}
-                        <Field>
+                        <Field data-invalid={!!form.errors.description}>
                             <Label htmlFor="description">Deskripsi</Label>
                             <Textarea
                                 id="description"
@@ -484,6 +526,7 @@ export const UpdateTransactionDialog = ({
                                 onChange={(e) =>
                                     form.setData("description", e.target.value)
                                 }
+                                aria-invalid={!!form.errors.description}
                             />
                             <InputError message={form.errors.description} />
                         </Field>
@@ -491,12 +534,16 @@ export const UpdateTransactionDialog = ({
                         {/* 8. Foto Sebelum & Sesudah */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <Field>
-                                <Label htmlFor="before_image">
+                                <Label htmlFor="image_before">
                                     Foto Sepatu (Sebelum)
                                 </Label>
                                 <label
-                                    htmlFor="before_image"
-                                    className="group relative flex min-h-36 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/20 p-3 text-center transition-all hover:border-primary/50 hover:bg-muted/40"
+                                    htmlFor="image_before"
+                                    className={`group relative flex min-h-36 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-3 text-center transition-all ${
+                                        form.errors.image_before
+                                            ? "border-red-500 bg-red-50/10 hover:border-red-600"
+                                            : "border-muted-foreground/25 bg-muted/20 hover:border-primary/50 hover:bg-muted/40"
+                                    }`}
                                 >
                                     {!previewImage.before ? (
                                         <div className="flex flex-col items-center gap-2">
@@ -511,12 +558,18 @@ export const UpdateTransactionDialog = ({
                                                 <p className="text-[11px] text-muted-foreground">
                                                     PNG, JPG, dan WEBP
                                                     <br />
-                                                    Maks. 5MB
+                                                    Maks. 2MB
                                                 </p>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="relative w-full overflow-hidden rounded-lg">
+                                        <div
+                                            className={`relative w-full overflow-hidden rounded-lg bg-white p-2 border ${
+                                                form.errors.image_before
+                                                    ? "border-red-500"
+                                                    : "border-gray-100"
+                                            }`}
+                                        >
                                             <img
                                                 src={previewImage.before}
                                                 alt="Preview Before"
@@ -530,24 +583,30 @@ export const UpdateTransactionDialog = ({
                                         </div>
                                     )}
                                     <input
-                                        id="before_image"
+                                        id="image_before"
                                         type="file"
-                                        name="before_image"
+                                        name="image_before"
                                         accept="image/*"
                                         className="hidden"
                                         onChange={handleImageBeforeChange}
                                     />
                                 </label>
-                                <InputError message={form.errors.beforeImage} />
+                                <InputError
+                                    message={form.errors.image_before}
+                                />
                             </Field>
 
                             <Field>
-                                <Label htmlFor="after_image">
-                                    Foto Sepatu (After)
+                                <Label htmlFor="image_after">
+                                    Foto Sepatu (Sesudah)
                                 </Label>
                                 <label
-                                    htmlFor="after_image"
-                                    className="group relative flex min-h-36 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/20 p-3 text-center transition-all hover:border-primary/50 hover:bg-muted/40"
+                                    htmlFor="image_after"
+                                    className={`group relative flex min-h-36 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-3 text-center transition-all ${
+                                        form.errors.image_after
+                                            ? "border-red-500 bg-red-50/10 hover:border-red-600"
+                                            : "border-muted-foreground/25 bg-muted/20 hover:border-primary/50 hover:bg-muted/40"
+                                    }`}
                                 >
                                     {!previewImage.after ? (
                                         <div className="flex flex-col items-center gap-2">
@@ -562,12 +621,18 @@ export const UpdateTransactionDialog = ({
                                                 <p className="text-[11px] text-muted-foreground">
                                                     PNG, JPG, dan WEBP
                                                     <br />
-                                                    Maks. 5MB
+                                                    Maks. 2MB
                                                 </p>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="relative w-full overflow-hidden rounded-lg">
+                                        <div
+                                            className={`relative w-full overflow-hidden rounded-lg bg-white p-2 border ${
+                                                form.errors.image_after
+                                                    ? "border-red-500"
+                                                    : "border-gray-100"
+                                            }`}
+                                        >
                                             <img
                                                 src={previewImage.after}
                                                 alt="Preview After"
@@ -581,20 +646,19 @@ export const UpdateTransactionDialog = ({
                                         </div>
                                     )}
                                     <input
-                                        id="after_image"
+                                        id="image_after"
                                         type="file"
-                                        name="after_image"
+                                        name="image_after"
                                         accept="image/*"
                                         className="hidden"
                                         onChange={handleImageAfterChange}
                                     />
                                 </label>
-                                <InputError message={form.errors.afterImage} />
+                                <InputError message={form.errors.image_after} />
                             </Field>
                         </div>
                     </FieldGroup>
 
-                    {/* Footer (Dikembalikan sesuai aslinya) */}
                     <DialogFooter className="gap-2 sm:gap-0">
                         <DialogClose asChild>
                             <Button variant="outline" type="button">

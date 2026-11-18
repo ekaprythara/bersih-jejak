@@ -170,7 +170,7 @@ class TransactionController extends Controller
         ]);
     }
 
-    public function store(StoreTransactionRequest $request, CloudinaryService $cloudinaryService)
+    public function store(StoreTransactionRequest $request)
     {
         // 1. Generate unique invoice_number dengan awalan TRX
         $datePart = date('Ymd');
@@ -199,35 +199,31 @@ class TransactionController extends Controller
         // 8. Jika status pembayaran masih Belum Lunas (ID 1), paksa payment_method_id menjadi null
         $paymentMethodId = ($paymentStatusId == 1) ? null : $request->input('payment_method_id');
 
-        // 9. Handle upload foto "Before"
-        $beforeImageUrl = null;
-        $beforeImagePublicId = null;
-        if ($request->hasFile('before_image')) {
-            $uploadedBefore = $cloudinaryService->upload($request->file('before_image'), 'transactions/before');
-            $beforeImageUrl = $uploadedBefore['secure_url'] ?? null;
-            $beforeImagePublicId = $uploadedBefore['public_id'] ?? null;
+        // 9. Handle upload foto "Before" ke Local Storage (public disk)
+        $imageBeforePath = null;
+        if ($request->hasFile('image_before')) {
+            $imageBeforePath = $request->file('image_before')->store('transactions/before', 'public');
         }
 
         // 10. Simpan data ke database
         Transaction::create(array_merge($request->validated(), [
-            'invoice_number'          => $invoiceNumber,
-            'user_id'                 => Auth::id(),
-            'total_amount'            => $totalAmount,
-            'discount'                => $discount,
-            'payment_status_id'       => $paymentStatusId,
-            'payment_method_id'       => $paymentMethodId,
-            'transaction_status_id'   => $defaultTransactionStatusId,
-            'before_image_url'        => $beforeImageUrl,
-            'before_image_public_id'  => $beforeImagePublicId,
-            'after_image_url'         => null,
-            'after_image_public_id'   => null,
+            'invoice_number' => $invoiceNumber,
+            'user_id' => Auth::id(),
+            'total_amount' => $totalAmount,
+            'discount' => $discount,
+            'payment_status_id' => $paymentStatusId,
+            'payment_method_id' => $paymentMethodId,
+            'transaction_status_id' => $defaultTransactionStatusId,
+            'image_before' => $imageBeforePath, // Sesuai dengan kolom migration
+            'image_after' => null,
         ]));
 
         // 11. Redirect dengan pesan sukses
         return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil ditambahkan!');
     }
 
-    public function update(UpdateTransactionRequest $request, Transaction $transaction, CloudinaryService $cloudinaryService)
+
+    public function update(UpdateTransactionRequest $request, Transaction $transaction)
     {
         $validatedData = $request->validated();
 
@@ -235,45 +231,43 @@ class TransactionController extends Controller
         if ($request->has('service_id') || $request->has('shoe_count')) {
             $serviceId = $request->service_id ?? $transaction->service_id;
             $shoeCount = $request->shoe_count ?? $transaction->shoe_count;
-
             $service = Service::findOrFail($serviceId);
             $validatedData['total_amount'] = $service->price * $shoeCount;
         }
 
-        // --- TAMBAHAN PERHITUNGAN DISKON & PENYESUAIAN TOTAL AMOUNT ---
-        // Ambil harga subtotal (bisa dari total_amount yang baru dihitung atau dari data transaksi lama)
-        $currentTotal = $validatedData['total_amount'] ?? $transaction->total_amount + ($transaction->discount ?? 0);
-
-        // Ambil nilai diskon dari request, atau gunakan diskon lama jika tidak dikirim (misal saat form diskon disembunyikan)
+        // --- PERHITUNGAN DISKON & TOTAL AMOUNT ---
+        $currentTotal = $validatedData['total_amount'] ?? ($transaction->total_amount + ($transaction->discount ?? 0));
         $discount = $request->has('discount') ? ($request->input('discount') ?? 0) : ($transaction->discount ?? 0);
 
-        // Pastikan diskon tidak melebihi subtotal kotor
         $subtotalKotor = $currentTotal;
         $discount = min($subtotalKotor, $discount);
 
-        // Masukkan ke validatedData
         $validatedData['discount'] = $discount;
         $validatedData['total_amount'] = max(0, $subtotalKotor - $discount);
-        // -----------------------------------------------------------
+        // -----------------------------------------
 
-        // 2. Handle update Foto Before (jika ada file baru yang diunggah)
-        if ($request->hasFile('beforeImage')) {
-            // (Opsional) Hapus foto lama di Cloudinary jika ada public_id-nya
-            // if ($transaction->before_image_public_id) { $cloudinaryService->delete($transaction->before_image_public_id); }
-
-            $uploadedBefore = $cloudinaryService->upload($request->file('beforeImage'), 'transactions/before');
-            $validatedData['before_image_url'] = $uploadedBefore['secure_url'] ?? null;
-            $validatedData['before_image_public_id'] = $uploadedBefore['public_id'] ?? null;
+        // 2. Handle update Foto Before
+        if ($request->hasFile('image_before')) {
+            // Hapus file lama di storage jika ada
+            if ($transaction->image_before && Storage::disk('public')->exists($transaction->image_before)) {
+                Storage::disk('public')->delete($transaction->image_before);
+            }
+            $validatedData['image_before'] = $request->file('image_before')->store('transactions/before', 'public');
+        } else {
+            // PENTING: Jika tidak upload file baru, pertahankan data lama di database
+            unset($validatedData['image_before']);
         }
 
-        // 3. Handle update Foto After (jika ada file baru yang diunggah)
-        if ($request->hasFile('afterImage')) {
-            // (Opsional) Hapus foto lama di Cloudinary jika ada public_id-nya
-            // if ($transaction->after_image_public_id) { $cloudinaryService->delete($transaction->after_image_public_id); }
-
-            $uploadedAfter = $cloudinaryService->upload($request->file('afterImage'), 'transactions/after');
-            $validatedData['after_image_url'] = $uploadedAfter['secure_url'] ?? null;
-            $validatedData['after_image_public_id'] = $uploadedAfter['public_id'] ?? null;
+        // 3. Handle update Foto After
+        if ($request->hasFile('image_after')) {
+            // Hapus file lama di storage jika ada
+            if ($transaction->image_after && Storage::disk('public')->exists($transaction->image_after)) {
+                Storage::disk('public')->delete($transaction->image_after);
+            }
+            $validatedData['image_after'] = $request->file('image_after')->store('transactions/after', 'public');
+        } else {
+            // PENTING: Jika tidak upload file baru, pertahankan data lama di database
+            unset($validatedData['image_after']);
         }
 
         // 4. Update data ke database

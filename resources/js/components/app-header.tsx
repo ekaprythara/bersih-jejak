@@ -1,39 +1,39 @@
-import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-react';
-import AppLogo from '@/components/app-logo';
-import AppLogoIcon from '@/components/app-logo-icon';
-import { Breadcrumbs } from '@/components/breadcrumbs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Link, usePage } from "@inertiajs/react";
+import { BookOpen, Folder, LayoutGrid, Menu, Search } from "lucide-react";
+import AppLogo from "@/components/app-logo";
+import AppLogoIcon from "@/components/app-logo-icon";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
     NavigationMenu,
     NavigationMenuItem,
     NavigationMenuList,
     navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu';
+} from "@/components/ui/navigation-menu";
 import {
     Sheet,
     SheetContent,
     SheetHeader,
     SheetTitle,
     SheetTrigger,
-} from '@/components/ui/sheet';
+} from "@/components/ui/sheet";
 import {
     Tooltip,
     TooltipContent,
     TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { UserMenuContent } from '@/components/user-menu-content';
-import { useCurrentUrl } from '@/hooks/use-current-url';
-import { useInitials } from '@/hooks/use-initials';
-import { cn, toUrl } from '@/lib/utils';
-import { dashboard } from '@/routes';
-import type { BreadcrumbItem, NavItem } from '@/types';
+} from "@/components/ui/tooltip";
+import { UserMenuContent } from "@/components/user-menu-content";
+import { useCurrentUrl } from "@/hooks/use-current-url";
+import { useInitials } from "@/hooks/use-initials";
+import { cn, toUrl } from "@/lib/utils";
+import { dashboard } from "@/routes";
+import type { BreadcrumbItem, NavItem } from "@/types";
 
 type Props = {
     breadcrumbs?: BreadcrumbItem[];
@@ -41,7 +41,7 @@ type Props = {
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
+        title: "Dashboard",
         href: dashboard(),
         icon: LayoutGrid,
     },
@@ -49,19 +49,19 @@ const mainNavItems: NavItem[] = [
 
 const rightNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
+        title: "Repository",
+        href: "https://github.com/laravel/react-starter-kit",
         icon: Folder,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
+        title: "Documentation",
+        href: "https://laravel.com/docs/starter-kits#react",
         icon: BookOpen,
     },
 ];
 
 const activeItemStyles =
-    'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
+    "text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100";
 
 export function AppHeader({ breadcrumbs = [] }: Props) {
     const page = usePage();
@@ -159,7 +159,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                                     item.href,
                                                     activeItemStyles,
                                                 ),
-                                                'h-9 cursor-pointer px-3',
+                                                "h-9 cursor-pointer px-3",
                                             )}
                                         >
                                             {item.icon && (
@@ -183,7 +183,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                 size="icon"
                                 className="group h-9 w-9 cursor-pointer"
                             >
-                                <Search className="!size-5 opacity-80 group-hover:opacity-100" />
+                                <Search className="size-5! opacity-80 group-hover:opacity-100" />
                             </Button>
                             <div className="ml-1 hidden gap-1 lg:flex">
                                 {rightNavItems.map((item) => (
@@ -222,7 +222,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                             alt={auth.user?.name}
                                         />
                                         <AvatarFallback className="rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white">
-                                            {getInitials(auth.user?.name ?? '')}
+                                            {getInitials(auth.user?.name ?? "")}
                                         </AvatarFallback>
                                     </Avatar>
                                 </Button>

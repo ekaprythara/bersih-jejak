@@ -12,15 +12,18 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { TransactionType } from "@/types/data-types";
-import { Eye } from "lucide-react";
+import { Eye, Image as ImageIcon } from "lucide-react";
 import { formatRupiah } from "@/lib/utils";
 
 const ShowTransactionDialog = ({
     transaction,
 }: {
-    transaction: TransactionType;
+    transaction: TransactionType & {
+        image_before?: string;
+        image_after?: string;
+    };
 }) => {
-    const handleSendWhatsAppMsg = (e) => {
+    const handleSendWhatsAppMsg = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
 
         // 1. Membuat full link secara dinamis
@@ -49,33 +52,33 @@ const ShowTransactionDialog = ({
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button>
-                    <Eye />
+                <Button size="icon" variant="outline">
+                    <Eye className="h-4 w-4" />
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90dvh] overflow-y-auto overscroll-contain scrollbar-none sm:max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle>Edit profile</DialogTitle>
+                    <DialogTitle>Rincian Transaksi</DialogTitle>
                     <DialogDescription>
                         Make changes to your profile here. Click save when
                         you&apos;re done.
                     </DialogDescription>
                 </DialogHeader>
 
-                {/* Bagian Rincian menggunakan Teks Rapi */}
+                {/* Bagian Rincian dengan Tampilan Lebih Rapi & Compact */}
                 <div className="space-y-4 py-2 text-sm">
-                    {/* Baris 1: Invoice & Tanggal */}
-                    <div className="grid grid-cols-2 gap-4 p-3 bg-muted/40 rounded-lg">
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                    {/* Grid Informasi Utama */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 No. Invoice
                             </span>
-                            <span className="font-semibold text-foreground">
+                            <span className="font-semibold text-foreground font-mono">
                                 {transaction.invoice_number || "-"}
                             </span>
                         </div>
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 Tanggal Transaksi
                             </span>
                             <span className="font-medium text-foreground">
@@ -84,18 +87,18 @@ const ShowTransactionDialog = ({
                         </div>
                     </div>
 
-                    {/* Baris 2: Pelanggan & No. Telepon */}
-                    <div className="grid grid-cols-2 gap-4 p-3 bg-muted/40 rounded-lg">
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                    {/* Pelanggan & Telepon */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 Nama Pelanggan
                             </span>
                             <span className="font-medium text-foreground">
                                 {transaction.customer?.name || "-"}
                             </span>
                         </div>
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 No. Telepon Pelanggan
                             </span>
                             <span className="font-medium text-foreground">
@@ -104,18 +107,18 @@ const ShowTransactionDialog = ({
                         </div>
                     </div>
 
-                    {/* Baris 3: Layanan & Jumlah Sepatu */}
-                    <div className="grid grid-cols-2 gap-4 p-3 bg-muted/40 rounded-lg">
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                    {/* Layanan & Jumlah Sepatu */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 Layanan
                             </span>
                             <span className="font-medium text-foreground">
                                 {transaction.service?.name || "-"}
                             </span>
                         </div>
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 Jumlah Sepatu
                             </span>
                             <span className="font-medium text-foreground">
@@ -124,10 +127,10 @@ const ShowTransactionDialog = ({
                         </div>
                     </div>
 
-                    {/* Baris 4: Diskon & Total Biaya */}
-                    <div className="grid grid-cols-2 gap-4 p-3 bg-muted/40 rounded-lg">
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                    {/* Diskon & Total Biaya */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 Diskon
                             </span>
                             <span className="font-medium text-foreground">
@@ -136,28 +139,28 @@ const ShowTransactionDialog = ({
                                     : "Rp 0"}
                             </span>
                         </div>
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 Total Biaya
                             </span>
-                            <span className="font-semibold text-primary">
+                            <span className="font-bold text-primary font-mono text-base">
                                 {formatRupiah(transaction.total_amount || 0)}
                             </span>
                         </div>
                     </div>
 
-                    {/* Baris 5: Tanggal Pengambilan & Metode Pembayaran */}
-                    <div className="grid grid-cols-2 gap-4 p-3 bg-muted/40 rounded-lg">
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                    {/* Tanggal Pengambilan & Metode Pembayaran */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 Tanggal Pengambilan
                             </span>
                             <span className="font-medium text-foreground">
                                 {transaction.pickup_date || "-"}
                             </span>
                         </div>
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 Metode Pembayaran
                             </span>
                             <span className="font-medium text-foreground">
@@ -166,18 +169,18 @@ const ShowTransactionDialog = ({
                         </div>
                     </div>
 
-                    {/* Baris 6: Status Bayar & Status Transaksi */}
-                    <div className="grid grid-cols-2 gap-4 p-3 bg-muted/40 rounded-lg">
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                    {/* Status Bayar & Status Transaksi */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 Status Bayar
                             </span>
                             <span className="font-medium text-foreground">
                                 {transaction.payment_status?.name || "-"}
                             </span>
                         </div>
-                        <div>
-                            <span className="block text-xs font-medium text-muted-foreground">
+                        <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 Status Transaksi
                             </span>
                             <span className="font-medium text-foreground">
@@ -186,9 +189,9 @@ const ShowTransactionDialog = ({
                         </div>
                     </div>
 
-                    {/* Baris 7: Cabang */}
-                    <div className="p-3 bg-muted/40 rounded-lg">
-                        <span className="block text-xs font-medium text-muted-foreground">
+                    {/* Cabang */}
+                    <div className="p-3 bg-muted/30 border rounded-xl flex flex-col justify-center">
+                        <span className="text-xs font-medium text-muted-foreground">
                             Cabang
                         </span>
                         <span className="font-medium text-foreground">
@@ -196,6 +199,60 @@ const ShowTransactionDialog = ({
                                 ? `${transaction.branch.name} - ${transaction.branch.address}`
                                 : "-"}
                         </span>
+                    </div>
+
+                    {/* Bagian Foto Before & After */}
+                    <div className="pt-2">
+                        <span className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                            Dokumentasi Foto Sepatu
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {/* Foto Before */}
+                            <div className="p-3 bg-muted/30 border rounded-xl flex flex-col gap-2">
+                                <span className="text-xs font-medium text-muted-foreground">
+                                    Foto Sebelum (Before)
+                                </span>
+                                {transaction.image_before ? (
+                                    <div className="relative w-full h-36 overflow-hidden rounded-lg border bg-background">
+                                        <img
+                                            src={`/storage/${transaction.image_before}`}
+                                            alt="Foto Before"
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="w-full h-36 rounded-lg border border-dashed flex flex-col items-center justify-center text-muted-foreground bg-muted/20 gap-1">
+                                        <ImageIcon className="h-5 w-5 opacity-40" />
+                                        <span className="text-xs">
+                                            Tidak ada foto
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Foto After */}
+                            <div className="p-3 bg-muted/30 border rounded-xl flex flex-col gap-2">
+                                <span className="text-xs font-medium text-muted-foreground">
+                                    Foto Sesudah (After)
+                                </span>
+                                {transaction.image_after ? (
+                                    <div className="relative w-full h-36 overflow-hidden rounded-lg border bg-background">
+                                        <img
+                                            src={`/storage/${transaction.image_after}`}
+                                            alt="Foto After"
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="w-full h-36 rounded-lg border border-dashed flex flex-col items-center justify-center text-muted-foreground bg-muted/20 gap-1">
+                                        <ImageIcon className="h-5 w-5 opacity-40" />
+                                        <span className="text-xs">
+                                            Tidak ada foto
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 

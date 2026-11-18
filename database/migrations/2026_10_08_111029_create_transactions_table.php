@@ -32,13 +32,9 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained("users");
             $table->text('description')->nullable();
 
-            // Foto Before
-            $table->string('before_image_url')->nullable();
-            $table->string('before_image_public_id')->nullable();
+            $table->string('image_before')->nullable();
+            $table->string('image_after')->nullable();
 
-            // Foto After
-            $table->string('after_image_url')->nullable();
-            $table->string('after_image_public_id')->nullable();
 
             $table->timestamps();
         });

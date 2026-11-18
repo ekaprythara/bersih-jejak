@@ -14,9 +14,7 @@ use Illuminate\Database\Eloquent\Model;
     "amount",
     "user_id",
     "branch_id",
-    "image_url",
-    "image_public_id"
-
+    "image"
 ])]
 
 
