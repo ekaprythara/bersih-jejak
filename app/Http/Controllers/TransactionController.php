@@ -193,32 +193,37 @@ class TransactionController extends Controller
         // 6. Tentukan status transaksi awal secara otomatis (misal: ID 1 untuk Status Baru/Proses)
         $defaultTransactionStatusId = 1;
 
-        // 7. Ambil status pembayaran (default 1 jika kosong)
-        $paymentStatusId = $request->input('payment_status_id', 1);
+        // 7. Tentukan metode pembayaran & status pembayaran otomatis:
+        // Jika payment_method_id terisi -> Lunas (ID 2), jika kosong -> Belum Lunas (ID 1)
+        $paymentMethodId = $request->filled('payment_method_id')
+            ? $request->input('payment_method_id')
+            : null;
+        $paymentStatusId = $paymentMethodId ? 2 : 1;
 
-        // 8. Jika status pembayaran masih Belum Lunas (ID 1), paksa payment_method_id menjadi null
-        $paymentMethodId = ($paymentStatusId == 1) ? null : $request->input('payment_method_id');
-
-        // 9. Handle upload foto "Before" ke Local Storage (public disk)
+        // 8. Handle upload foto "Before" ke LocalStorage (public disk)
         $imageBeforePath = null;
         if ($request->hasFile('image_before')) {
             $imageBeforePath = $request->file('image_before')->store('transactions/before', 'public');
         }
 
-        // 10. Simpan data ke database
-        Transaction::create(array_merge($request->validated(), [
-            'invoice_number' => $invoiceNumber,
-            'user_id' => Auth::id(),
-            'total_amount' => $totalAmount,
-            'discount' => $discount,
-            'payment_status_id' => $paymentStatusId,
-            'payment_method_id' => $paymentMethodId,
-            'transaction_status_id' => $defaultTransactionStatusId,
-            'image_before' => $imageBeforePath, // Sesuai dengan kolom migration
-            'image_after' => null,
-        ]));
+        // 9. Simpan data ke database
+        Transaction::create(array_merge(
+            $request->validated(),
+            [
+                'invoice_number' => $invoiceNumber,
+                'user_id' => Auth::id(),
+                'total_amount' => $totalAmount,
+                'discount' => $discount,
+                'payment_status_id' => $paymentStatusId,
+                'payment_method_id' => $paymentMethodId,
+                'transaction_status_id' => $defaultTransactionStatusId,
+                'image_before' => $imageBeforePath,
+                // Sesuai dengan kolom migration
+                'image_after' => null,
+            ]
+        ));
 
-        // 11. Redirect dengan pesan sukses
+        // 10. Redirect dengan pesan sukses
         return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil ditambahkan!');
     }
 
@@ -226,6 +231,8 @@ class TransactionController extends Controller
     public function update(UpdateTransactionRequest $request, Transaction $transaction)
     {
         $validatedData = $request->validated();
+        $validatedData['payment_method_id'] = $request->input('payment_method_id');
+        $validatedData['payment_status_id'] = $request->input('payment_status_id', 1);
 
         // 1. Hitung ulang total_amount jika service_id atau shoe_count ikut diperbarui
         if ($request->has('service_id') || $request->has('shoe_count')) {
@@ -238,35 +245,29 @@ class TransactionController extends Controller
         // --- PERHITUNGAN DISKON & TOTAL AMOUNT ---
         $currentTotal = $validatedData['total_amount'] ?? ($transaction->total_amount + ($transaction->discount ?? 0));
         $discount = $request->has('discount') ? ($request->input('discount') ?? 0) : ($transaction->discount ?? 0);
-
         $subtotalKotor = $currentTotal;
         $discount = min($subtotalKotor, $discount);
-
         $validatedData['discount'] = $discount;
         $validatedData['total_amount'] = max(0, $subtotalKotor - $discount);
         // -----------------------------------------
 
         // 2. Handle update Foto Before
         if ($request->hasFile('image_before')) {
-            // Hapus file lama di storage jika ada
             if ($transaction->image_before && Storage::disk('public')->exists($transaction->image_before)) {
                 Storage::disk('public')->delete($transaction->image_before);
             }
             $validatedData['image_before'] = $request->file('image_before')->store('transactions/before', 'public');
         } else {
-            // PENTING: Jika tidak upload file baru, pertahankan data lama di database
             unset($validatedData['image_before']);
         }
 
         // 3. Handle update Foto After
         if ($request->hasFile('image_after')) {
-            // Hapus file lama di storage jika ada
             if ($transaction->image_after && Storage::disk('public')->exists($transaction->image_after)) {
                 Storage::disk('public')->delete($transaction->image_after);
             }
             $validatedData['image_after'] = $request->file('image_after')->store('transactions/after', 'public');
         } else {
-            // PENTING: Jika tidak upload file baru, pertahankan data lama di database
             unset($validatedData['image_after']);
         }
 

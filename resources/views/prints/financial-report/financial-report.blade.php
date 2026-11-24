@@ -80,7 +80,7 @@
 
     <div class="header">
         <h2>Laporan Laba Rugi</h2>
-        <p><strong>Cabang:</strong> {{ $selectedBranchName }} | <strong>Periode Bulan:</strong> {{ $selectedMonthName }}</p>
+        <p><strong>Cabang:</strong> {{ $selectedBranchName }} | <strong>Periode:</strong> {{ $selectedPeriodLabel ?? ($selectedMonthName ?? '-') }}</p>
         <p>Dicetak pada: {{ date('d/m/Y H:i') }}</p>
     </div>
 
@@ -99,6 +99,10 @@
             <tr>
                 <td class="indent">Pendapatan QRIS</td>
                 <td class="font-mono">Rp {{ number_format($qrisRevenue, 0, ',', '.') }}</td>
+            </tr>
+            <tr>
+                <td class="indent">Total Diskon Diberikan</td>
+                <td class="font-mono">Rp {{ number_format($totalDiscount ?? 0, 0, ',', '.') }}</td>
             </tr>
             <tr class="border-top bold">
                 <td>Total Pendapatan</td>

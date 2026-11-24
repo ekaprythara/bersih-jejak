@@ -14,12 +14,12 @@ export function NavMain({ items }: { items: NavItem[] }) {
 
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel className="font-bold uppercase tracking-wider">
+            <SidebarGroupLabel className="font-bold text-white uppercase tracking-wider">
                 Main Menu
             </SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => (
-                    <SidebarMenuItem key={item.title}>
+                    <SidebarMenuItem key={item.title} className="font-semibold">
                         <SidebarMenuButton
                             asChild
                             isActive={isCurrentUrl(item.href)}

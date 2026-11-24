@@ -58,7 +58,9 @@ export const CreateAdminDialog = ({ branches }: { branches: BranchType[] }) => {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Tambah Admin</Button>
+                <Button>
+                    <span className="font-semibold">Tambah Admin</span>
+                </Button>
             </DialogTrigger>
 
             <DialogContent>

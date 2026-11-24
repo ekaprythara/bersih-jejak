@@ -14,6 +14,7 @@ import {
     Store,
     Tag,
     User,
+    Wrench,
 } from "lucide-react";
 import type {
     BranchType,
@@ -171,7 +172,7 @@ export default function Transaction({
                     <div className="min-w-[160px] max-w-[240px] sm:max-w-xs flex flex-col items-start gap-1 text-xs sm:text-sm whitespace-normal break-words leading-relaxed">
                         <span className="font-medium">{customerName}</span>
                         <span className="inline-flex items-center gap-1 text-xs opacity-70">
-                            <Sparkles className="size-3 shrink-0" />
+                            <Wrench className="size-3 shrink-0" />
                             <span>
                                 {serviceName} ({shoeCount} pasang)
                             </span>
@@ -300,7 +301,7 @@ export default function Transaction({
 
                         <Button
                             size="icon"
-                            variant="outline"
+                            variant="success"
                             onClick={handlePrintPdf}
                             title="Print PDF"
                         >

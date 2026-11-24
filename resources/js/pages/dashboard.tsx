@@ -141,8 +141,8 @@ export default function Dashboard({
                         )}
                         {isFiltered && (
                             <button type="button" onClick={handleReset}>
-                                <span className="text-xs text-red-600 hover:cursor-pointer">
-                                    Hapus Filter
+                                <span className="text-xs text-red-500 hover:text-red-600 font-semibold hover:cursor-pointer text-left sm:text-right">
+                                    Reset Filter
                                 </span>
                             </button>
                         )}

@@ -46,7 +46,9 @@ export const CreateBranchDialog = () => {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Tambah Cabang</Button>
+                <Button>
+                    <span className="font-semibold">Tambah Cabang</span>
+                </Button>
             </DialogTrigger>
 
             <DialogContent>

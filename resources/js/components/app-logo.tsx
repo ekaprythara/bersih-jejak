@@ -16,7 +16,7 @@ export default function AppLogo() {
                     {name}
                 </span>
                 {auth.user.branch ? (
-                    <span className="text-xs text-neutral-500">
+                    <span className="text-xs text-white font-semibold">
                         {`Cabang ${auth.user.branch.name}`}
                     </span>
                 ) : null}

@@ -56,11 +56,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('branches/create', [BranchController::class, 'store'])->name("branches.store");
         Route::patch('branches/{branch}/status', [BranchController::class, 'updateStatus'])->name("branches.updateStatus");
         Route::patch('branches/{branch}/edit', [BranchController::class, 'update'])->name('branches.update');
-
-        Route::get('financial-report', [FinancialReportController::class, 'index'])->name("financial.report.index");
-        Route::get('financial-report/print', [FinancialReportController::class, 'printPdf'])->name("financial.report.printPdf");
-        Route::get('financial-report/export', [FinancialReportController::class, 'exportExcel'])->name('financial-report.exportExcel');
     });
+
+    Route::get('financial-report', [FinancialReportController::class, 'index'])->name("financial.report.index");
+    Route::get('financial-report/print', [FinancialReportController::class, 'printPdf'])->name("financial.report.printPdf");
+    Route::get('financial-report/export', [FinancialReportController::class, 'exportExcel'])->name('financial-report.exportExcel');
 
     Route::get('expenses', [ExpenseController::class, 'index'])->name("expenses.index");
     Route::post('expenses/create', [ExpenseController::class, 'store'])->name("expenses.store");

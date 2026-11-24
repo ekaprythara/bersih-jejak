@@ -82,13 +82,13 @@ export function AppSidebar() {
                       href: services.index(),
                       icon: Wrench,
                   },
-                  {
-                      title: "Laporan Keuangan",
-                      href: financial.report.index(),
-                      icon: ChartColumnIncreasing,
-                  },
               ]
             : []),
+        {
+            title: "Laporan Keuangan",
+            href: financial.report.index(),
+            icon: ChartColumnIncreasing,
+        },
         {
             title: "Pengeluaran",
             href: expenses.index(),
@@ -137,7 +137,7 @@ export function AppSidebar() {
                     onClick={handleLogout}
                     data-test="logout-button"
                 >
-                    <div className="flex items-center gap-3 overflow-hidden transition-all duration-300 text-[#e05a47]">
+                    <div className="flex items-center gap-3 overflow-hidden transition-all duration-300 text-red-500 font-semibold">
                         <LogOut size={18} className="shrink-0" />
 
                         <span

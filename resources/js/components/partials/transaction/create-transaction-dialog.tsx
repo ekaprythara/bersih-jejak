@@ -44,23 +44,23 @@ import {
     ComboboxItem,
     ComboboxList,
 } from "@/components/ui/combobox";
-import { CalendarIcon, Plus, ImagePlus } from "lucide-react";
+import { CalendarIcon, ImagePlus, AlertTriangleIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { format, addDays } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const CreateTransactionDialog = ({
     customers,
     services,
     branches,
     paymentMethods,
-    paymentStatuses,
 }: {
     customers: CustomerType[];
     services: ServiceType[];
     branches: BranchType[];
     paymentMethods: PaymentMethodType[];
-    paymentStatuses: PaymentStatusType[];
+    paymentStatuses?: PaymentStatusType[];
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const today = new Date();
@@ -79,20 +79,9 @@ export const CreateTransactionDialog = ({
         discount: "",
         payment_method_id: "",
         transaction_status_id: "",
-        payment_status_id: "1",
         description: "",
-        image_before: null as File | null, // <-- Diubah dari before_image menjadi image_before
+        image_before: null as File | null,
     });
-
-    const isPaid =
-        form.data.payment_status_id !== "" &&
-        form.data.payment_status_id !== "1";
-
-    useEffect(() => {
-        if (!isPaid && form.data.payment_method_id) {
-            form.setData("payment_method_id", "");
-        }
-    }, [form.data.payment_status_id, isPaid]);
 
     useEffect(() => {
         if (form.data.service_id) {
@@ -116,7 +105,7 @@ export const CreateTransactionDialog = ({
     const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            form.setData("image_before", file); // <-- Diubah ke image_before
+            form.setData("image_before", file);
             setPreviewImage(URL.createObjectURL(file));
         }
     };
@@ -157,7 +146,7 @@ export const CreateTransactionDialog = ({
     const handleSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
         e.preventDefault();
         form.post(store.url(), {
-            forceFormData: true, // Wajib agar file terkirim dengan benar via Inertia
+            forceFormData: true,
             onSuccess: () => {
                 toast.success("Transaksi berhasil ditambahkan.");
                 form.reset();
@@ -166,7 +155,7 @@ export const CreateTransactionDialog = ({
                 setIsOpen(false);
             },
             onError: (errors) => {
-                console.log("Validation Errors:", errors);
+                console.log("ValidationErrors:", errors);
                 toast.error("Gagal menyimpan data transaksi.");
             },
         });
@@ -176,7 +165,6 @@ export const CreateTransactionDialog = ({
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button>
-                    <Plus strokeWidth={2.75} className="mr-1 h-4 w-4" />
                     <span className="font-semibold">Tambah Transaksi</span>
                 </Button>
             </DialogTrigger>
@@ -394,7 +382,7 @@ export const CreateTransactionDialog = ({
                                     <Input
                                         id="total_amount"
                                         type="text"
-                                        readOnly
+                                        disabled
                                         className="bg-background font-semibold text-primary cursor-default"
                                         value={formatRupiah(getTotalAmount())}
                                     />
@@ -402,97 +390,53 @@ export const CreateTransactionDialog = ({
                             </div>
                         </div>
 
-                        {/* 4. Status & Metode Pembayaran */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Field
-                                data-invalid={!!form.errors.payment_status_id}
+                        {/* 4. Metode Pembayaran */}
+                        <Field data-invalid={!!form.errors.payment_method_id}>
+                            <Label htmlFor="payment_method_id">
+                                Metode Pembayaran
+                            </Label>
+                            <Select
+                                value={form.data.payment_method_id}
+                                onValueChange={(value) =>
+                                    form.setData("payment_method_id", value)
+                                }
                             >
-                                <Label htmlFor="payment_status">
-                                    Status Pembayaran
-                                </Label>
-                                <Select
-                                    value={form.data.payment_status_id}
-                                    onValueChange={(value) =>
-                                        form.setData("payment_status_id", value)
+                                <SelectTrigger
+                                    id="payment_method_id"
+                                    className="w-full"
+                                    aria-invalid={
+                                        !!form.errors.payment_method_id
                                     }
                                 >
-                                    <SelectTrigger
-                                        id="payment_status"
-                                        className="w-full"
-                                        aria-invalid={
-                                            !!form.errors.payment_status_id
-                                        }
-                                    >
-                                        <SelectValue placeholder="Status Pembayaran" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {paymentStatuses.map(
-                                                (paymentStatus) => (
-                                                    <SelectItem
-                                                        key={paymentStatus.id}
-                                                        value={paymentStatus.id.toString()}
-                                                    >
-                                                        {paymentStatus.name}
-                                                    </SelectItem>
-                                                ),
-                                            )}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                <InputError
-                                    message={form.errors.payment_status_id}
-                                />
-                            </Field>
+                                    <SelectValue placeholder="Pilih Metode Pembayaran" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        {paymentMethods.map((paymentMethod) => (
+                                            <SelectItem
+                                                key={paymentMethod.id}
+                                                value={paymentMethod.id.toString()}
+                                            >
+                                                {paymentMethod.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            <InputError
+                                message={form.errors.payment_method_id}
+                            />
+                        </Field>
 
-                            <Field
-                                data-invalid={!!form.errors.payment_method_id}
-                            >
-                                <Label htmlFor="payment_method_id">
-                                    Metode Pembayaran
-                                </Label>
-                                <Select
-                                    value={form.data.payment_method_id}
-                                    onValueChange={(value) =>
-                                        form.setData("payment_method_id", value)
-                                    }
-                                    disabled={!isPaid}
-                                >
-                                    <SelectTrigger
-                                        id="payment_method_id"
-                                        className="w-full"
-                                        aria-invalid={
-                                            !!form.errors.payment_method_id
-                                        }
-                                    >
-                                        <SelectValue
-                                            placeholder={
-                                                !isPaid
-                                                    ? "Pilih status lunas terlebih dahulu"
-                                                    : "Metode Pembayaran"
-                                            }
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {paymentMethods.map(
-                                                (paymentMethod) => (
-                                                    <SelectItem
-                                                        key={paymentMethod.id}
-                                                        value={paymentMethod.id.toString()}
-                                                    >
-                                                        {paymentMethod.name}
-                                                    </SelectItem>
-                                                ),
-                                            )}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                <InputError
-                                    message={form.errors.payment_method_id}
-                                />
-                            </Field>
-                        </div>
+                        <Alert className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
+                            <AlertTriangleIcon />
+                            <AlertTitle>Perhatian</AlertTitle>
+                            <AlertDescription>
+                                Biarkan kosong jika transaksi belum lunas.
+                                Transaksi akan otomatis dianggap lunas jika
+                                metode pembayaran diubah.
+                            </AlertDescription>
+                        </Alert>
 
                         {/* 5. Tanggal Transaksi & Tanggal Ambil */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -608,7 +552,7 @@ export const CreateTransactionDialog = ({
                                                 <div className="space-y-0.5">
                                                     <p className="text-xs font-medium text-foreground">
                                                         Pilih gambar atau
-                                                        drag-and-drop disini.
+                                                        drag-and-drop di sini.
                                                     </p>
                                                     <p className="text-[11px] text-muted-foreground">
                                                         PNG, JPG, dan WEBP

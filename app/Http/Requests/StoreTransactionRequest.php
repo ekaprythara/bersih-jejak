@@ -21,7 +21,7 @@ class StoreTransactionRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $user = Auth::user();
-        if (!$user->is_owner) {
+        if (! $user->is_owner) {
             $this->merge([
                 'branch_id' => $user->branch_id,
             ]);
@@ -58,6 +58,7 @@ class StoreTransactionRequest extends FormRequest
                     }
                 },
             ],
+            'payment_method_id' => ['nullable', Rule::exists('payment_methods', 'id')],
             'description' => ['nullable', 'string'],
             'branch_id' => ['required', Rule::exists('branches', 'id')->where('status', true)],
             'image_before' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
@@ -87,16 +88,16 @@ class StoreTransactionRequest extends FormRequest
             'shoe_count.min' => 'Jumlah sepatu minimal adalah 1.',
             'discount.numeric' => 'Diskon harus berupa angka.',
             'discount.min' => 'Diskon minimal adalah 0.',
+            'payment_method_id.exists' => 'Metode pembayaran yang dipilih tidak valid.',
             'branch_id.required' => 'Cabang wajib diisi.',
             'branch_id.exists' => 'Cabang tidak ditemukan atau sudah tidak aktif.',
             'description.string' => 'Catatan/deskripsi harus berupa teks.',
-
             // Disesuaikan dari before_image & after_image menjadi image_before & image_after
             'image_before.image' => 'File foto sebelum pengerjaan harus berupa gambar.',
-            'image_before.mimes' => 'Format foto sebelum pengerjaan harus berjenis: jpeg, png, jpg.',
+            'image_before.mimes' => 'Format foto sebelum pengerjaan harus berjenis: jpeg, png, jpg, webp.',
             'image_before.max' => 'Ukuran foto sebelum pengerjaan maksimal 2MB.',
             'image_after.image' => 'File foto sesudah pengerjaan harus berupa gambar.',
-            'image_after.mimes' => 'Format foto sesudah pengerjaan harus berjenis: jpeg, png, jpg.',
+            'image_after.mimes' => 'Format foto sesudah pengerjaan harus berjenis: jpeg, png, jpg, webp.',
             'image_after.max' => 'Ukuran foto sesudah pengerjaan maksimal 2MB.',
         ];
     }

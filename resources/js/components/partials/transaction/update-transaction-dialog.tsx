@@ -40,10 +40,15 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, SquarePen, ImagePlus } from "lucide-react";
+import {
+    CalendarIcon,
+    SquarePen,
+    ImagePlus,
+    AlertTriangleIcon,
+} from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { useAuth } from "@/hooks/use-auth";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export const UpdateTransactionDialog = ({
     transaction,
@@ -67,11 +72,9 @@ export const UpdateTransactionDialog = ({
     services?: ServiceType[];
 }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const { isOwner } = useAuth();
     const [pickupDate, setPickupDate] = useState<Date | undefined>(
         transaction.pickup_date ? parseISO(transaction.pickup_date) : undefined,
     );
-
     const [previewImage, setPreviewImage] = useState({
         before: transaction.image_before
             ? `/storage/${transaction.image_before}`
@@ -79,7 +82,8 @@ export const UpdateTransactionDialog = ({
         after: transaction.image_after
             ? `/storage/${transaction.image_after}`
             : "",
-    }); // Tambahkan useEffect ini di bawah deklarasi state:
+    });
+
     useEffect(() => {
         setPreviewImage({
             before: transaction.image_before
@@ -93,8 +97,9 @@ export const UpdateTransactionDialog = ({
 
     const form = useForm({
         pickup_date: transaction.pickup_date || "",
-        payment_method_id: transaction.payment_method_id,
-        payment_status_id: transaction.payment_status_id,
+        payment_method_id: transaction.payment_method_id
+            ? String(transaction.payment_method_id)
+            : "",
         transaction_status_id: transaction.transaction_status_id,
         discount: transaction.discount ?? 0,
         shoe_count: transaction.shoe_count ?? 1,
@@ -105,12 +110,19 @@ export const UpdateTransactionDialog = ({
         image_after: null as File | null,
     });
 
-    const selectedPaymentStatus = paymentStatuses.find(
-        (s) => s.id === Number(form.data.payment_status_id),
-    );
-    const isPaidOff =
-        selectedPaymentStatus?.name?.toLowerCase() === "lunas" ||
-        Number(form.data.payment_status_id) === 2;
+    const isPaidOff = Boolean(form.data.payment_method_id);
+
+    const handlePaymentMethodChange = (value: string) => {
+        const isEmpty = value === "__none__" || value === "";
+        const nextMethodId = isEmpty ? "" : value;
+        const nextStatusId = isEmpty ? 1 : 2;
+
+        form.setData((prev) => ({
+            ...prev,
+            payment_method_id: nextMethodId,
+            payment_status_id: nextStatusId,
+        }));
+    };
 
     const handleDateSelect = (selectedDate: Date | undefined) => {
         setPickupDate(selectedDate);
@@ -130,7 +142,7 @@ export const UpdateTransactionDialog = ({
                 setIsOpen(false);
             },
             onError: (errors) => {
-                console.log("Validation Errors:", errors);
+                console.log("ValidationErrors:", errors);
                 toast.error(`Gagal memperbarui data Transaksi.`);
             },
         });
@@ -190,7 +202,11 @@ export const UpdateTransactionDialog = ({
                                     Total Tagihan
                                 </p>
                                 <p
-                                    className={`text-lg font-bold font-mono ${isPaidOff ? "text-emerald-600" : "text-rose-600"}`}
+                                    className={`text-lg font-bold font-mono ${
+                                        isPaidOff
+                                            ? "text-emerald-600"
+                                            : "text-rose-600"
+                                    }`}
                                 >
                                     {new Intl.NumberFormat("id-ID", {
                                         style: "currency",
@@ -423,97 +439,54 @@ export const UpdateTransactionDialog = ({
                             </Field>
                         </div>
 
-                        {/* 6. Status & Metode Pembayaran */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Field
-                                data-invalid={!!form.errors.payment_status_id}
+                        <Field data-invalid={!!form.errors.payment_method_id}>
+                            <Label htmlFor="payment_method_id">
+                                Metode Pembayaran
+                            </Label>
+                            <Select
+                                value={form.data.payment_method_id}
+                                onValueChange={handlePaymentMethodChange}
+                                disabled={
+                                    transaction.payment_status?.name.toLowerCase() ===
+                                    "lunas"
+                                }
                             >
-                                <Label htmlFor="payment_status">
-                                    Status Pembayaran
-                                </Label>
-                                <Select
-                                    value={String(form.data.payment_status_id)}
-                                    onValueChange={(value) =>
-                                        form.setData(
-                                            "payment_status_id",
-                                            Number(value),
-                                        )
+                                <SelectTrigger
+                                    id="payment_method_id"
+                                    className="w-full"
+                                    aria-invalid={
+                                        !!form.errors.payment_method_id
                                     }
-                                    disabled={isPaidOff}
                                 >
-                                    <SelectTrigger
-                                        id="payment_status"
-                                        className="w-full"
-                                        aria-invalid={
-                                            !!form.errors.payment_status_id
-                                        }
-                                    >
-                                        <SelectValue placeholder="Status Pembayaran" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {paymentStatuses.map(
-                                                (paymentStatus) => (
-                                                    <SelectItem
-                                                        key={paymentStatus.id}
-                                                        value={paymentStatus.id.toString()}
-                                                    >
-                                                        {paymentStatus.name}
-                                                    </SelectItem>
-                                                ),
-                                            )}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                <InputError
-                                    message={form.errors.payment_status_id}
-                                />
-                            </Field>
+                                    <SelectValue placeholder="Pilih Metode Pembayaran" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        {paymentMethods.map((paymentMethod) => (
+                                            <SelectItem
+                                                key={paymentMethod.id}
+                                                value={paymentMethod.id.toString()}
+                                            >
+                                                {paymentMethod.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            <InputError
+                                message={form.errors.payment_method_id}
+                            />
+                        </Field>
 
-                            <Field
-                                data-invalid={!!form.errors.payment_method_id}
-                            >
-                                <Label htmlFor="payment_method_id">
-                                    Metode Pembayaran
-                                </Label>
-                                <Select
-                                    value={String(form.data.payment_method_id)}
-                                    onValueChange={(value) =>
-                                        form.setData(
-                                            "payment_method_id",
-                                            Number(value),
-                                        )
-                                    }
-                                >
-                                    <SelectTrigger
-                                        id="payment_method_id"
-                                        className="w-full"
-                                        aria-invalid={
-                                            !!form.errors.payment_method_id
-                                        }
-                                    >
-                                        <SelectValue placeholder="Metode Pembayaran" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {paymentMethods.map(
-                                                (paymentMethod) => (
-                                                    <SelectItem
-                                                        key={paymentMethod.id}
-                                                        value={paymentMethod.id.toString()}
-                                                    >
-                                                        {paymentMethod.name}
-                                                    </SelectItem>
-                                                ),
-                                            )}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                <InputError
-                                    message={form.errors.payment_method_id}
-                                />
-                            </Field>
-                        </div>
+                        <Alert className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
+                            <AlertTriangleIcon />
+                            <AlertTitle>Perhatian</AlertTitle>
+                            <AlertDescription>
+                                Biarkan kosong jika transaksi belum lunas.
+                                Transaksi akan otomatis dianggap lunas jika
+                                metode pembayaran diubah.
+                            </AlertDescription>
+                        </Alert>
 
                         {/* 7. Deskripsi */}
                         <Field data-invalid={!!form.errors.description}>
@@ -553,7 +526,7 @@ export const UpdateTransactionDialog = ({
                                             <div className="space-y-0.5">
                                                 <p className="text-xs font-medium text-foreground">
                                                     Pilih gambar atau
-                                                    drag-and-drop disini.
+                                                    drag-and-drop di sini.
                                                 </p>
                                                 <p className="text-[11px] text-muted-foreground">
                                                     PNG, JPG, dan WEBP
@@ -616,7 +589,7 @@ export const UpdateTransactionDialog = ({
                                             <div className="space-y-0.5">
                                                 <p className="text-xs font-medium text-foreground">
                                                     Pilih gambar atau
-                                                    drag-and-drop disini.
+                                                    drag-and-drop di sini.
                                                 </p>
                                                 <p className="text-[11px] text-muted-foreground">
                                                     PNG, JPG, dan WEBP
@@ -658,17 +631,18 @@ export const UpdateTransactionDialog = ({
                             </Field>
                         </div>
                     </FieldGroup>
-
-                    <DialogFooter className="gap-2 sm:gap-0">
-                        <DialogClose asChild>
-                            <Button variant="outline" type="button">
-                                Cancel
+                    <div className="flex items-center justify-end gap-2 pt-4 border-t">
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button variant="outline" type="button">
+                                    Cancel
+                                </Button>
+                            </DialogClose>
+                            <Button type="submit" disabled={form.processing}>
+                                {form.processing ? "Menyimpan..." : "Simpan"}
                             </Button>
-                        </DialogClose>
-                        <Button type="submit" disabled={form.processing}>
-                            {form.processing ? "Menyimpan..." : "Simpan"}
-                        </Button>
-                    </DialogFooter>
+                        </DialogFooter>
+                    </div>
                 </form>
             </DialogContent>
         </Dialog>

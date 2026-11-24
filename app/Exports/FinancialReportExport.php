@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -17,58 +18,72 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class FinancialReportExport implements FromArray, ShouldAutoSize, WithMapping, WithHeadings, WithEvents, WithCustomStartCell, WithTitle
+class FinancialReportExport implements
+    FromArray,
+    ShouldAutoSize,
+    WithMapping,
+    WithHeadings,
+    WithEvents,
+    WithCustomStartCell,
+    WithTitle
 {
     use Exportable;
 
-    protected string|int|null $month;
+    protected string $startDate;
+    protected string $endDate;
     protected string|int|null $branchId;
     protected ?int $authenticatedUserBranch;
     protected array $rowIndices = [];
 
-    public function __construct(string|int|null $month, string|int|null $branchId, ?int $authenticatedUserBranch)
-    {
-        $this->month = $month;
+    public function __construct(
+        string $startDate,
+        string $endDate,
+        string|int|null $branchId = 'all',
+        ?int $authenticatedUserBranch = null,
+    ) {
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
         $this->branchId = $branchId;
         $this->authenticatedUserBranch = $authenticatedUserBranch;
     }
 
     public function array(): array
     {
-        $transactionQuery = Transaction::query();
-        $expenseQuery = Expense::query();
+        $transactionQuery = Transaction::query()
+            ->whereBetween('transaction_date', [$this->startDate, $this->endDate]);
+
+        $expenseQuery = Expense::query()
+            ->whereBetween('expense_date', [$this->startDate, $this->endDate]);
 
         // 1. Filter Cabang
         if ($this->authenticatedUserBranch) {
-            $transactionQuery->where("branch_id", $this->authenticatedUserBranch);
-            $expenseQuery->where("branch_id", $this->authenticatedUserBranch);
-        } else if ($this->branchId && $this->branchId !== "all") {
-            $transactionQuery->where("branch_id", $this->branchId);
-            $expenseQuery->where("branch_id", $this->branchId);
+            $transactionQuery->where('branch_id', $this->authenticatedUserBranch);
+            $expenseQuery->where('branch_id', $this->authenticatedUserBranch);
+        } elseif ($this->branchId && $this->branchId !== 'all') {
+            $transactionQuery->where('branch_id', $this->branchId);
+            $expenseQuery->where('branch_id', $this->branchId);
         }
 
-        // 2. Filter Bulan
-        if ($this->month && $this->month !== 'all') {
-            $transactionQuery->whereMonth('transaction_date', $this->month);
-            $expenseQuery->whereMonth('expense_date', $this->month);
-        }
+        // 2. Hitung Pendapatan & Total Diskon (Lunas = payment_status_id 2)
+        $paidTransactionQuery = (clone $transactionQuery)->where('payment_status_id', 2);
 
-        // 3. Hitung Pendapatan
-        $cashRevenue = (clone $transactionQuery)->whereHas('paymentMethod', function ($q) {
-            $q->whereRaw('LOWER(name) LIKE ?', ['%cash%']);
-        })->sum('total_amount');
+        $totalDiscount = (clone $paidTransactionQuery)->sum('discount');
 
-        $transferRevenue = (clone $transactionQuery)->whereHas('paymentMethod', function ($q) {
-            $q->whereRaw('LOWER(name) LIKE ?', ['%transfer%']);
-        })->sum('total_amount');
+        $cashRevenue = (clone $paidTransactionQuery)
+            ->whereHas('paymentMethod', fn($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%cash%']))
+            ->sum('total_amount');
 
-        $qrisRevenue = (clone $transactionQuery)->whereHas('paymentMethod', function ($q) {
-            $q->whereRaw('LOWER(name) LIKE ?', ['%qris%']);
-        })->sum('total_amount');
+        $transferRevenue = (clone $paidTransactionQuery)
+            ->whereHas('paymentMethod', fn($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%transfer%']))
+            ->sum('total_amount');
+
+        $qrisRevenue = (clone $paidTransactionQuery)
+            ->whereHas('paymentMethod', fn($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%qris%']))
+            ->sum('total_amount');
 
         $totalRevenue = $cashRevenue + $transferRevenue + $qrisRevenue;
 
-        // 4. Hitung Pengeluaran per Kategori (hanya yang > 0)
+        // 3. Hitung Pengeluaran per Kategori (hanya yang > 0)
         $categories = ExpenseCategory::all();
         $expenses = $categories->map(function ($category) use ($expenseQuery) {
             $amount = (clone $expenseQuery)
@@ -85,24 +100,30 @@ class FinancialReportExport implements FromArray, ShouldAutoSize, WithMapping, W
         $netProfit = $totalRevenue - $totalExpense;
 
         $rows = [];
-        $currentRow = 5; // Data tabel dimulai dari baris ke-5 sesuai startCell 'A5'
+        // Baris 5 diisi headings(), sehingga data array mulai di baris ke-6
+        $currentRow = 6;
 
         // --- PENDAPATAN ---
         $rows[] = ['type' => 'header', 'label' => 'PENDAPATAN', 'amount' => ''];
         $this->rowIndices['section_header'][] = $currentRow++;
 
-        $rows[] = ['type' => 'item', 'label' => 'Pendapatan Cash', 'amount' => $cashRevenue];
-        $currentRow++;
-        $rows[] = ['type' => 'item', 'label' => 'Pendapatan Transfer', 'amount' => $transferRevenue];
-        $currentRow++;
-        $rows[] = ['type' => 'item', 'label' => 'Pendapatan QRIS', 'amount' => $qrisRevenue];
+        $rows[] = ['type' => 'item', 'label' => 'Pendapatan Cash', 'amount' => (float) $cashRevenue];
         $currentRow++;
 
-        // TOTAL PENDAPATAN (langsung tanpa space kosong di atasnya)
-        $rows[] = ['type' => 'total', 'label' => 'TOTAL PENDAPATAN', 'amount' => $totalRevenue];
+        $rows[] = ['type' => 'item', 'label' => 'Pendapatan Transfer', 'amount' => (float) $transferRevenue];
+        $currentRow++;
+
+        $rows[] = ['type' => 'item', 'label' => 'Pendapatan QRIS', 'amount' => (float) $qrisRevenue];
+        $currentRow++;
+
+        $rows[] = ['type' => 'item', 'label' => 'Total Diskon Diberikan', 'amount' => (float) $totalDiscount];
+        $currentRow++;
+
+        // TOTAL PENDAPATAN
+        $rows[] = ['type' => 'total', 'label' => 'TOTAL PENDAPATAN', 'amount' => (float) $totalRevenue];
         $this->rowIndices['subtotal'][] = $currentRow++;
 
-        // Row Pemisah Antar Kategori (Empty)
+        // Row Pemisah Antar Kategori
         $rows[] = ['type' => 'empty', 'label' => '', 'amount' => ''];
         $currentRow++;
 
@@ -120,11 +141,11 @@ class FinancialReportExport implements FromArray, ShouldAutoSize, WithMapping, W
             $currentRow++;
         }
 
-        // TOTAL PENGELUARAN (langsung tanpa space kosong di atasnya)
-        $rows[] = ['type' => 'total', 'label' => 'TOTAL PENGELUARAN', 'amount' => $totalExpense];
+        // TOTAL PENGELUARAN
+        $rows[] = ['type' => 'total', 'label' => 'TOTAL PENGELUARAN', 'amount' => (float) $totalExpense];
         $this->rowIndices['subtotal'][] = $currentRow++;
 
-        // Row Pemisah Antar Kategori (Empty)
+        // Row Pemisah Antar Kategori
         $rows[] = ['type' => 'empty', 'label' => '', 'amount' => ''];
         $currentRow++;
 
@@ -132,13 +153,14 @@ class FinancialReportExport implements FromArray, ShouldAutoSize, WithMapping, W
         $rows[] = ['type' => 'header', 'label' => 'RINGKASAN', 'amount' => ''];
         $this->rowIndices['section_header'][] = $currentRow++;
 
-        $rows[] = ['type' => 'ringkasan_item', 'label' => 'Total Pendapatan', 'amount' => $totalRevenue];
-        $currentRow++;
-        $rows[] = ['type' => 'ringkasan_item', 'label' => 'Total Pengeluaran', 'amount' => $totalExpense];
+        $rows[] = ['type' => 'ringkasan_item', 'label' => 'Total Pendapatan', 'amount' => (float) $totalRevenue];
         $currentRow++;
 
-        // TOTAL LABA BERSIH (langsung tanpa space kosong di atasnya)
-        $rows[] = ['type' => 'grand_total', 'label' => 'TOTAL LABA BERSIH', 'amount' => $netProfit];
+        $rows[] = ['type' => 'ringkasan_item', 'label' => 'Total Pengeluaran', 'amount' => (float) $totalExpense];
+        $currentRow++;
+
+        // TOTAL LABA BERSIH
+        $rows[] = ['type' => 'grand_total', 'label' => 'TOTAL LABA BERSIH', 'amount' => (float) $netProfit];
         $this->rowIndices['grand_total'] = $currentRow++;
 
         $this->rowIndices['last_row'] = $currentRow - 1;
@@ -172,35 +194,22 @@ class FinancialReportExport implements FromArray, ShouldAutoSize, WithMapping, W
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
 
-                // 1. Ambil Nama Cabang & Bulan untuk Header Info
+                // 1. Nama Cabang & Label Periode untuk Header Info
                 $selectedBranchName = 'Semua Cabang';
                 if ($this->authenticatedUserBranch) {
-                    $selectedBranchName = Branch::find($this->authenticatedUserBranch)?->name ?? 'Semua Cabang';
-                } else if ($this->branchId && $this->branchId !== 'all') {
+                    $selectedBranchName = Branch::find($this->authenticatedUserBranch)?->name ?? 'Cabang';
+                } elseif ($this->branchId && $this->branchId !== 'all') {
                     $selectedBranchName = Branch::find($this->branchId)?->name ?? 'Semua Cabang';
                 }
 
-                $monthsList = [
-                    1 => 'Januari',
-                    2 => 'Februari',
-                    3 => 'Maret',
-                    4 => 'April',
-                    5 => 'Mei',
-                    6 => 'Juni',
-                    7 => 'Juli',
-                    8 => 'Agustus',
-                    9 => 'September',
-                    10 => 'Oktober',
-                    11 => 'November',
-                    12 => 'Desember'
-                ];
-                $selectedMonthName = ($this->month && $this->month !== 'all') ? ($monthsList[(int)$this->month] ?? '-') : 'Semua Bulan';
+                $periodLabel = $this->startDate === $this->endDate
+                    ? Carbon::parse($this->startDate)->translatedFormat('d F Y')
+                    : Carbon::parse($this->startDate)->translatedFormat('d M Y') . ' - ' . Carbon::parse($this->endDate)->translatedFormat('d M Y');
 
                 // 2. Tulis & Merge Center Header Informasi di Baris 1 sampai 3
                 $sheet->mergeCells('A1:B1')
                     ->setCellValue('A1', 'LAPORAN LABA BERSIH')
-                    ->getStyle('A1')
-                    ->applyFromArray([
+                    ->getStyle('A1')->applyFromArray([
                         'font' => ['bold' => true, 'size' => 14],
                         'alignment' => [
                             'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -209,9 +218,8 @@ class FinancialReportExport implements FromArray, ShouldAutoSize, WithMapping, W
                     ]);
 
                 $sheet->mergeCells('A2:B2')
-                    ->setCellValue('A2', 'Cabang ' . $selectedBranchName)
-                    ->getStyle('A2')
-                    ->applyFromArray([
+                    ->setCellValue('A2', 'Cabang: ' . $selectedBranchName)
+                    ->getStyle('A2')->applyFromArray([
                         'font' => ['bold' => true],
                         'alignment' => [
                             'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -220,9 +228,8 @@ class FinancialReportExport implements FromArray, ShouldAutoSize, WithMapping, W
                     ]);
 
                 $sheet->mergeCells('A3:B3')
-                    ->setCellValue('A3', 'Periode ' . $selectedMonthName)
-                    ->getStyle('A3')
-                    ->applyFromArray([
+                    ->setCellValue('A3', 'Periode: ' . $periodLabel)
+                    ->getStyle('A3')->applyFromArray([
                         'font' => ['bold' => true],
                         'alignment' => [
                             'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -230,73 +237,57 @@ class FinancialReportExport implements FromArray, ShouldAutoSize, WithMapping, W
                         ],
                     ]);
 
-                $lastRow = $this->rowIndices['last_row'] ?? 35;
+                $dataStartRow = 6;
+                $lastRow = $this->rowIndices['last_row'] ?? $dataStartRow;
 
-                // 3. Format Angka Tanpa Titik (format '0')
-                $sheet->getStyle("B5:B{$lastRow}")
+                // 3. Format Angka & Indentasi
+                $sheet->getStyle("B{$dataStartRow}:B{$lastRow}")
                     ->getNumberFormat()
-                    ->setFormatCode('0');
+                    ->setFormatCode('#,##0');
 
-                // 4. Indentasi untuk item rincian di Kolom A
-                $sheet->getStyle("A5:A{$lastRow}")
+                $sheet->getStyle("A{$dataStartRow}:A{$lastRow}")
                     ->getAlignment()
                     ->setIndent(1);
 
-                // 5. Styling Section Header (PENDAPATAN, PENGELUARAN, RINGKASAN) -> UPPERCASE & BOLD
-                if (!empty($this->rowIndices['section_header'])) {
+                // 4. Styling Section Header
+                if (! empty($this->rowIndices['section_header'])) {
                     foreach ($this->rowIndices['section_header'] as $rowIndex) {
                         $sheet->getStyle("A{$rowIndex}")->applyFromArray([
-                            'font' => [
-                                'bold' => true,
-                                'size' => 11,
-                            ],
+                            'font' => ['bold' => true, 'size' => 11],
                         ]);
                         $sheet->getStyle("A{$rowIndex}")->getAlignment()->setIndent(0);
                     }
                 }
 
-                // 6. Styling Subtotal (Total Pendapatan & Total Pengeluaran)
-                if (!empty($this->rowIndices['subtotal'])) {
+                // 5. Styling Subtotal
+                if (! empty($this->rowIndices['subtotal'])) {
                     foreach ($this->rowIndices['subtotal'] as $rowIndex) {
                         $sheet->getStyle("A{$rowIndex}:B{$rowIndex}")->applyFromArray([
-                            'font' => [
-                                'bold' => true,
-                            ],
+                            'font' => ['bold' => true],
                         ]);
                         $sheet->getStyle("A{$rowIndex}")->getAlignment()->setIndent(0);
                     }
                 }
 
-                // 7. Paksa item di bawah RINGKASAN menjadi tidak tebal (polos)
+                // 6. Item di bawah RINGKASAN tetap polos (tidak bold)
                 $gtRow = $this->rowIndices['grand_total'] ?? 0;
                 if ($gtRow > 0) {
                     $ringkasanItemStart = $gtRow - 2;
                     $ringkasanItemEnd = $gtRow - 1;
-                    $sheet->getStyle("A{$ringkasanItemStart}:B{$ringkasanItemEnd}")->applyFromArray([
-                        'font' => [
-                            'bold' => false,
-                        ],
-                    ]);
-                    $sheet->getStyle("B{$ringkasanItemStart}:B{$ringkasanItemEnd}")->applyFromArray([
-                        'font' => [
-                            'bold' => false,
-                        ],
-                    ]);
+                    $sheet->getStyle("A{$ringkasanItemStart}:B{$ringkasanItemEnd}")
+                        ->applyFromArray(['font' => ['bold' => false]]);
                 }
 
-                // 8. Styling Grand Total Laba Bersih - Hanya tebal, tanpa border
+                // 7. Styling Grand Total Laba Bersih
                 if ($gtRow > 0) {
                     $sheet->getStyle("A{$gtRow}:B{$gtRow}")->applyFromArray([
-                        'font' => [
-                            'bold' => true,
-                            'size' => 11,
-                        ],
+                        'font' => ['bold' => true, 'size' => 11],
                     ]);
                     $sheet->getStyle("A{$gtRow}")->getAlignment()->setIndent(0);
                 }
 
                 // Alignment kanan untuk semua nilai di Kolom B
-                $sheet->getStyle("B5:B{$lastRow}")
+                $sheet->getStyle("B{$dataStartRow}:B{$lastRow}")
                     ->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_RIGHT);
             },

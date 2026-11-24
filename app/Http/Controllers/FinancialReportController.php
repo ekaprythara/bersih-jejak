@@ -8,63 +8,84 @@ use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Facades\Excel; // Pastikan menggunakan Facades\Excel
+use Maatwebsite\Excel\Facades\Excel;
+
 class FinancialReportController extends Controller
 {
-    public function index(Request $request)
+    /**
+     * Helper terpusat untuk menentukan filter & kalkulasi data berdasarkan Role (Owner vs Admin)
+     */
+    private function getReportData(Request $request): array
     {
-        $authenticatedUserBranch = Auth::user()->branch_id;
+        $user = Auth::user();
+        $isOwner = (bool) $user->is_owner;
+        $today = Carbon::today()->toDateString();
 
-        // Set default bulan ke bulan saat ini jika belum ada di request
-        $month = $request->input('month', date('m'));
-        $branchId = $request->input('branch_id', 'all');
+        // 1. Tentukan Filter Tanggal & Cabang berdasarkan Role
+        if ($isOwner) {
+            $startDate = $request->filled('start_date')
+                ? Carbon::parse($request->input('start_date'))->toDateString()
+                : $today;
+            $endDate = $request->filled('end_date')
+                ? Carbon::parse($request->input('end_date'))->toDateString()
+                : $startDate;
 
-        // Query Dasar Transaksi
-        $transactionQuery = Transaction::query();
+            if ($startDate > $endDate) {
+                [$startDate, $endDate] = [$endDate, $startDate];
+            }
 
-        // Query Dasar Pengeluaran (Expense)
-        $expenseQuery = Expense::query();
-
-        // 1. Filter Cabang
-        if ($authenticatedUserBranch) {
-            $transactionQuery->where("branch_id", $authenticatedUserBranch);
-            $expenseQuery->where("branch_id", $authenticatedUserBranch);
-        } else if ($branchId && $branchId !== "all") {
-            $transactionQuery->where("branch_id", $branchId);
-            $expenseQuery->where("branch_id", $branchId);
+            $branchId = $request->input('branch_id', 'all');
+        } else {
+            // Admin: Kunci ke hari ini dan cabang user
+            $startDate = $today;
+            $endDate = $today;
+            $branchId = $user->branch_id ? (string) $user->branch_id : 'all';
         }
 
-        // 2. Filter Bulan
-        if ($month && $month !== 'all') {
-            $transactionQuery->whereMonth('transaction_date', $month);
-            // Asumsi pada tabel expenses ada kolom 'expense_date' atau 'created_at'
-            $expenseQuery->whereMonth('expense_date', $month);
+        // 2. Query Dasar Transaksi & Pengeluaran
+        $transactionQuery = Transaction::query()
+            ->whereBetween('transaction_date', [$startDate, $endDate]);
+
+        $expenseQuery = Expense::query()
+            ->whereBetween('expense_date', [$startDate, $endDate]);
+
+        // 3. Terapkan Filter Cabang
+        if (! $isOwner && $user->branch_id) {
+            $transactionQuery->where('branch_id', $user->branch_id);
+            $expenseQuery->where('branch_id', $user->branch_id);
+        } elseif ($branchId && $branchId !== 'all') {
+            $transactionQuery->where('branch_id', $branchId);
+            $expenseQuery->where('branch_id', $branchId);
         }
 
-        // 3. Hitung Pendapatan
-        $cashRevenue = (clone $transactionQuery)->whereHas('paymentMethod', function ($q) {
-            $q->whereRaw('LOWER(name) LIKE ?', ['%cash%']);
-        })->sum('total_amount');
+        // 4. Hitung Pendapatan (Lunas = payment_status_id 2) & Total Diskon
+        $paidTransactionQuery = (clone $transactionQuery)->where('payment_status_id', 2);
 
-        $transferRevenue = (clone $transactionQuery)->whereHas('paymentMethod', function ($q) {
-            $q->whereRaw('LOWER(name) LIKE ?', ['%transfer%']);
-        })->sum('total_amount');
+        $totalDiscount = (clone $paidTransactionQuery)->sum('discount');
 
-        $qrisRevenue = (clone $transactionQuery)->whereHas('paymentMethod', function ($q) {
-            $q->whereRaw('LOWER(name) LIKE ?', ['%qris%']);
-        })->sum('total_amount');
+        $cashRevenue = (clone $paidTransactionQuery)
+            ->whereHas('paymentMethod', fn($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%cash%']))
+            ->sum('total_amount');
+
+        $transferRevenue = (clone $paidTransactionQuery)
+            ->whereHas('paymentMethod', fn($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%transfer%']))
+            ->sum('total_amount');
+
+        $qrisRevenue = (clone $paidTransactionQuery)
+            ->whereHas('paymentMethod', fn($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%qris%']))
+            ->sum('total_amount');
 
         $totalRevenue = $cashRevenue + $transferRevenue + $qrisRevenue;
 
-        // 4. Hitung Pengeluaran per Kategori
+        // 5. Hitung Pengeluaran per Kategori
         $categories = ExpenseCategory::all();
-
         $expenses = $categories->map(function ($category) use ($expenseQuery) {
             $amount = (clone $expenseQuery)
                 ->where('expense_category_id', $category->id)
-                ->sum('amount'); // Sesuaikan nama kolom jumlah uang pengeluaran ('amount' / 'total')
+                ->sum('amount');
 
             return [
                 'id' => $category->id,
@@ -76,10 +97,22 @@ class FinancialReportController extends Controller
         $totalExpense = $expenses->sum('amount');
         $netProfit = $totalRevenue - $totalExpense;
 
-        return inertia('financial-report', [
-            'branches' => Branch::get(['id', 'name']),
+        // 6. Nama Cabang & Label Periode untuk PDF/Export
+        $selectedBranchName = 'Semua Cabang';
+        if (! $isOwner && $user->branch_id) {
+            $selectedBranchName = Branch::find($user->branch_id)?->name ?? 'Cabang';
+        } elseif ($branchId !== 'all') {
+            $selectedBranchName = Branch::find($branchId)?->name ?? 'Semua Cabang';
+        }
+
+        $periodLabel = $startDate === $endDate
+            ? Carbon::parse($startDate)->translatedFormat('d F Y')
+            : Carbon::parse($startDate)->translatedFormat('d M Y') . ' - ' . Carbon::parse($endDate)->translatedFormat('d M Y');
+
+        return [
             'filters' => [
-                'month' => $month,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
                 'branch_id' => $branchId,
             ],
             'summary' => [
@@ -88,120 +121,62 @@ class FinancialReportController extends Controller
                     'transferRevenue' => (float) $transferRevenue,
                     'qrisRevenue' => (float) $qrisRevenue,
                 ],
+                'totalDiscount' => (float) $totalDiscount,
                 'totalRevenue' => (float) $totalRevenue,
                 'expenses' => $expenses,
                 'totalExpense' => (float) $totalExpense,
                 'netProfit' => (float) $netProfit,
             ],
+            'meta' => [
+                'selectedBranchName' => $selectedBranchName,
+                'periodLabel' => $periodLabel,
+            ],
+        ];
+    }
+
+    public function index(Request $request)
+    {
+        $data = $this->getReportData($request);
+
+        return inertia('financial-report', [
+            'branches' => Branch::get(['id', 'name']),
+            'filters' => $data['filters'],
+            'summary' => $data['summary'],
         ]);
     }
 
     public function printPdf(Request $request)
     {
-        $authenticatedUserBranch = Auth::user()->branch_id;
+        $data = $this->getReportData($request);
 
-        $month = $request->input('month', date('m'));
-        $branchId = $request->input('branch_id', 'all');
+        $pdf = Pdf::loadView('prints.financial-report.financial-report', [
+            'cashRevenue' => $data['summary']['cashRevenue'],
+            'transferRevenue' => $data['summary']['digitalRevenue']['transferRevenue'],
+            'qrisRevenue' => $data['summary']['digitalRevenue']['qrisRevenue'],
+            'totalDiscount' => $data['summary']['totalDiscount'],
+            'totalRevenue' => $data['summary']['totalRevenue'],
+            'expenses' => $data['summary']['expenses']->filter(fn($e) => $e['amount'] > 0),
+            'totalExpense' => $data['summary']['totalExpense'],
+            'netProfit' => $data['summary']['netProfit'],
+            'selectedBranchName' => $data['meta']['selectedBranchName'],
+            'selectedPeriodLabel' => $data['meta']['periodLabel'],
+        ])->setPaper('a4', 'portrait');
 
-        $transactionQuery = Transaction::query();
-        $expenseQuery = Expense::query();
-
-        // 1. Filter Cabang
-        if ($authenticatedUserBranch) {
-            $transactionQuery->where("branch_id", $authenticatedUserBranch);
-            $expenseQuery->where("branch_id", $authenticatedUserBranch);
-        } else if ($branchId && $branchId !== "all") {
-            $transactionQuery->where("branch_id", $branchId);
-            $expenseQuery->where("branch_id", $branchId);
-        }
-
-        // 2. Filter Bulan
-        if ($month && $month !== 'all') {
-            $transactionQuery->whereMonth('transaction_date', $month);
-            $expenseQuery->whereMonth('expense_date', $month);
-        }
-
-        // 3. Hitung Pendapatan
-        $cashRevenue = (clone $transactionQuery)->whereHas('paymentMethod', function ($q) {
-            $q->whereRaw('LOWER(name) LIKE ?', ['%cash%']);
-        })->sum('total_amount');
-
-        $transferRevenue = (clone $transactionQuery)->whereHas('paymentMethod', function ($q) {
-            $q->whereRaw('LOWER(name) LIKE ?', ['%transfer%']);
-        })->sum('total_amount');
-
-        $qrisRevenue = (clone $transactionQuery)->whereHas('paymentMethod', function ($q) {
-            $q->whereRaw('LOWER(name) LIKE ?', ['%qris%']);
-        })->sum('total_amount');
-
-        $totalRevenue = $cashRevenue + $transferRevenue + $qrisRevenue;
-
-        // 4. Hitung Pengeluaran per Kategori
-        $categories = ExpenseCategory::all();
-
-        $expenses = $categories->map(function ($category) use ($expenseQuery) {
-            $amount = (clone $expenseQuery)
-                ->where('expense_category_id', $category->id)
-                ->sum('amount');
-
-            return [
-                'id' => $category->id,
-                'name' => $category->name,
-                'amount' => (float) $amount,
-            ];
-        })->filter(fn($expense) => $expense['amount'] > 0);
-
-        $totalExpense = $expenses->sum('amount');
-        $netProfit = $totalRevenue - $totalExpense;
-
-        // Info Cabang & Bulan untuk Header PDF
-        $selectedBranchName = 'Semua Cabang';
-        if ($authenticatedUserBranch) {
-            $selectedBranchName = Branch::find($authenticatedUserBranch)?->name ?? 'Semua Cabang';
-        } else if ($branchId !== 'all') {
-            $selectedBranchName = Branch::find($branchId)?->name ?? 'Semua Cabang';
-        }
-
-        $monthsList = [
-            1 => 'Januari',
-            2 => 'Februari',
-            3 => 'Maret',
-            4 => 'April',
-            5 => 'Mei',
-            6 => 'Juni',
-            7 => 'Juli',
-            8 => 'Agustus',
-            9 => 'September',
-            10 => 'Oktober',
-            11 => 'November',
-            12 => 'Desember'
-        ];
-        $selectedMonthName = ($month && $month !== 'all') ? ($monthsList[(int)$month] ?? '-') : 'Semua Bulan';
-
-        $pdf = Pdf::loadView('prints.financial-report.financial-report', compact(
-            'cashRevenue',
-            'transferRevenue',
-            'qrisRevenue',
-            'totalRevenue',
-            'expenses',
-            'totalExpense',
-            'netProfit',
-            'selectedBranchName',
-            'selectedMonthName'
-        ))->setPaper('a4', 'portrait');
-
-        return $pdf->stream('laporan-keuangan.pdf');
+        return $pdf->stream('laporan-keuangan-' . $data['filters']['start_date'] . '.pdf');
     }
 
     public function exportExcel(Request $request)
     {
-        $authenticatedUserBranch = Auth::user()->branch_id;
-        $month = $request->input('month', date('m'));
-        $branchId = $request->input('branch_id', 'all');
+        $data = $this->getReportData($request);
+        $filters = $data['filters'];
 
-        // Beri nama file dinamis berdasarkan filter
-        $fileName = 'Laporan Keuangan Bulan' . $month . '.xlsx';
+        $fileName = $filters['start_date'] === $filters['end_date']
+            ? 'Laporan-Keuangan-' . $filters['start_date'] . '.xlsx'
+            : 'Laporan-Keuangan-' . $filters['start_date'] . '-sd-' . $filters['end_date'] . '.xlsx';
 
-        return Excel::download(new FinancialReportExport($month, $branchId, $authenticatedUserBranch), $fileName);
+        return Excel::download(
+            new FinancialReportExport($filters['start_date'], $filters['end_date'], $filters['branch_id']),
+            $fileName
+        );
     }
 }

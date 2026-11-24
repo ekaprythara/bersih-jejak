@@ -95,7 +95,7 @@ export const UpdateCustomerDialog = ({
                                 id="phone_number"
                                 name="phone_number"
                                 type="tel"
-                                placeholder="085588885555"
+                                placeholder="6285588885555"
                                 value={form.data.phone_number}
                                 onChange={(e) =>
                                     form.setData("phone_number", e.target.value)

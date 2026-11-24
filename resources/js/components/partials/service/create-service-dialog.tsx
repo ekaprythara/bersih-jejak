@@ -46,7 +46,9 @@ export const CreateServiceDialog = () => {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>Tambah Layanan</Button>
+                <Button>
+                    <span className="font-semibold">Tambah Layanan</span>
+                </Button>
             </DialogTrigger>
 
             <DialogContent>

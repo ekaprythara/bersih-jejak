@@ -88,7 +88,7 @@ export type TransactionType = {
     shoe_count: number;
     discount: number;
     service_id: number;
-    payment_method: string;
+    payment_method: PaymentMethodType;
     transaction_status_id: number;
     payment_status_id: number;
     user_id: number;

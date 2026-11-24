@@ -33,26 +33,69 @@ const ShowTransactionDialog = ({
         // 2. Format nomor telepon customer (0851... -> 62851... tanpa tanda +)
         let phoneNumber = transaction.customer?.phone_number || "";
         phoneNumber = phoneNumber.replace(/[^0-9]/g, "");
-
         if (phoneNumber.startsWith("0")) {
             phoneNumber = "62" + phoneNumber.slice(1);
         }
 
-        // 3. Susun pesan WhatsApp
-        const message = `Halo ${transaction.customer?.name || "Pelanggan"}, berikut adalah tautan invoice untuk transaksi #${transaction.invoice_number}:\n${invoiceUrl}`;
+        // 3. Siapkan detail transaksi untuk nota WhatsApp
+        const customerName = transaction.customer?.name || "Pelanggan";
+        const branchName = transaction.branch?.name || "-";
+        const branchAddress = transaction.branch?.address || "";
+        const serviceName = transaction.service?.name || "-";
+        const shoeCount = transaction.shoe_count || 0;
+        const discountText = transaction.discount
+            ? formatRupiah(transaction.discount)
+            : "Rp 0";
+        const totalAmountText = formatRupiah(transaction.total_amount || 0);
+        const paymentStatus = transaction.payment_status?.name || "-";
+        const paymentMethod = transaction.payment_method?.name || "-";
+        const transactionStatus = transaction.transaction_status?.name || "-";
 
-        // 4. Buat URL wa.me
+        // 4. Susun pesan nota dengan monospace backtick
+        // 4. Susun pesan nota dengan monospace backtick (di-escape dengan \`)
+        const receiptBlock = [
+            `NOTA TRANSAKSI`,
+            `==============================`,
+            `Invoice     : ${transaction.invoice_number}`,
+            `Tanggal     : ${transaction.transaction_date || "-"}`,
+            `Est. Ambil  : ${transaction.pickup_date || "-"}`,
+            `Pelanggan   : ${customerName}`,
+            `Cabang      : ${branchName}`,
+            ...(branchAddress ? [`Alamat      : ${branchAddress}`] : []),
+            `------------------------------`,
+            `Layanan     : ${serviceName}`,
+            `Jumlah      : ${shoeCount} Pasang`,
+            `Diskon      : ${discountText}`,
+            `------------------------------`,
+            `TOTAL BAYAR : ${totalAmountText}`,
+            `==============================`,
+            `Status Kerja: ${transactionStatus}`,
+            `Pembayaran  : ${paymentStatus} (${paymentMethod})`,
+            `------------------------------`,
+        ]
+
+            .map((line) => `\`${line}\``)
+            .join("\n");
+
+        const message = [
+            receiptBlock,
+            `Nota Digital: ${invoiceUrl}`,
+            ``,
+            `Terima kasih telah mempercayakan sepatu Anda kepada kami.`,
+        ].join("\n");
+
+        // 5. Buat URL wa.me
         const waUrl = new URL(`https://wa.me/${phoneNumber}`);
         waUrl.searchParams.set("text", message);
 
-        // 5. Buka tab baru ke WhatsApp
+        // 6. Buka tab baru ke WhatsApp
         window.open(waUrl.toString(), "_blank", "noopener,noreferrer");
     };
 
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button size="icon" variant="outline">
+                <Button size="icon" variant="info">
                     <Eye className="h-4 w-4" />
                 </Button>
             </DialogTrigger>

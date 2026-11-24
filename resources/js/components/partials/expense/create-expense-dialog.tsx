@@ -101,7 +101,6 @@ export const CreateExpenseDialog = ({
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button>
-                    <Plus strokeWidth={2.75} />
                     <span className="font-semibold">Tambah Pengeluaran</span>
                 </Button>
             </DialogTrigger>
